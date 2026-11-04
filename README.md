@@ -2,7 +2,7 @@
 
 A [Tern](https://docs.stencil.so/tern) plugin that keeps one global list of objectives and links each one to the tabs where its work happens. It opens as a clickable graph: objectives on the left, tabs on the right, and a line for every link. Clicking a tab or a pane jumps straight to it, in any session.
 
-![The objectives graph: six objectives with priority badges, due dates and tags on the left, tabs grouped by session on the right, coloured lines between them](docs/graph.png)
+![The objectives graph: seven objectives with priority badges, due dates and tags on the left, "Write release notes" selected; tabs grouped by session on the right, each pane row showing what it runs, the tab the graph was opened from outlined, and a Link or Unlink bar on every tab](docs/graph.png)
 
 ## Install
 

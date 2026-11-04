@@ -183,11 +183,17 @@ All checks run in the headless harness at `/tmp/tobj` (archived design D14) unle
 
 ## 6. Release and live check
 
-- [ ] 6.1 Set the version to `0.2.0` and refresh `docs/graph.png` from the harness, with rows open, an origin mark and a selection showing link bars.
+- [x] 6.1 Set the version to `0.2.0` and refresh `docs/graph.png` from the harness, with rows open, an origin mark and a selection showing link bars.
 
   Verify:
   - plugin-package "Manifest": Local install check; an install of the repo folder against an isolated config prints `installed objectives 0.2.0`, and `tern plugin list` shows it ready;
   - plugin-package "README": README contents.
+
+  Result:
+  - the harness was reset to the demo layout (web: "App build", "Components"; api: "Server", "Benchmarks"; docs: "Guides") with the eight demo objectives; the load-test data is kept in `/tmp/tobj/kv.load-backup.json`;
+  - `docs/graph.png` (1600 × 1452) was opened from the right-hand pane of "App build", with "Write release notes" selected;
+  - an isolated `tern plugin install .` printed `installed objectives 0.2.0`, and `tern plugin list` showed `objectives 0.2.0 … 1 blocks, 0 lenses, window ready`;
+  - the README holds the install command, ⌃⌘O, "Esc closes it too", the local-sessions limit, `plugin-data/objectives/`, the screenshot and the host half.
 - [ ] 6.2 Commit, push `main` and tag `v0.2.0`.
 
   Verify: `gh api repos/JakobMusik/tern-objectives/tags` lists `v0.2.0`.
