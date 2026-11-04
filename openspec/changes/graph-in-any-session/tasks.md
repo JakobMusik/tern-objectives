@@ -38,11 +38,20 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**. "For
 
 ## 2. Release and live check
 
-- [ ] 2.1 Version `0.3.0`: an isolated install prints `installed objectives 0.3.0`; commit, push `main`, tag `v0.3.0`; `tern plugin install github.com/JakobMusik/tern-objectives --force` live.
+- [x] 2.1 Version `0.3.0`: an isolated install prints `installed objectives 0.3.0`; commit, push `main`, tag `v0.3.0`; `tern plugin install github.com/JakobMusik/tern-objectives --force` live.
 
   Verify: the tags API lists `v0.3.0`, and live `tern plugin list` shows `objectives 0.3.0` ready.
+
+  Result: an isolated install printed `installed objectives 0.3.0`; release commit `d7053fc`; the tags API lists `v0.3.0` first; live `tern plugin list` shows `objectives 0.3.0 … 1 blocks, 0 lenses, window ready`, with `tabnav 0.1.0` untouched.
 - [ ] 2.2 **(live)** In the user's "devbox" session: ⌃⌘O opens the graph, devbox's tabs are listed, a click links and a pane row jumps, and ⌃⌘O closes it.
 
+
+  Smoke test (agent, live window, 0.3.0): `tern ctl session switch devbox` then ⌃⌘O focused a new pane labelled "Objectives".
+  - Its element tree held one `.ob-root` on the `plugin.tern.canvas` surface and none on the block.
+  - The tab column listed all six sessions with "devbox ● current", and devbox's tab "demo" carried the origin ring.
+  - A second ⌃⌘O closed it and returned focus to "demo"; the window then went back to "plugins".
+
+  Clicks, jumps and the redraw after a reload (design R5) are left for the user.
   Verify with the user; record the findings here.
 
 ## Workflow follow-up
