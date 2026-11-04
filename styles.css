@@ -326,6 +326,25 @@
 	color: var(--t3);
 	font-size: 11px;
 }
+[data-surface='plugin.tern.canvas'] .ob-root .ob-d-ok {
+	color: var(--ok);
+}
+[data-surface='plugin.tern.canvas'] .ob-root .ob-d-bad {
+	color: var(--bad);
+}
+[data-surface='plugin.tern.canvas'] .ob-root .ob-d-run,
+[data-surface='plugin.tern.canvas'] .ob-root .ob-d-working {
+	color: var(--accent);
+}
+[data-surface='plugin.tern.canvas'] .ob-root .ob-d-waiting_input {
+	color: var(--warn);
+}
+[data-surface='plugin.tern.canvas'] .ob-root .ob-d-state {
+	font-weight: 600;
+}
+[data-surface='plugin.tern.canvas'] .ob-root .ob-d-wait {
+	font-style: italic;
+}
 [data-surface='plugin.tern.canvas'] .ob-root .ob-line {
 	display: block;
 	overflow: hidden;

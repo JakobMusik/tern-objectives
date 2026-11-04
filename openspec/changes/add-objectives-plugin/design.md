@@ -213,7 +213,7 @@ Selection is kept in VM memory only.
 
 **Terminals:** use `PaneInfo.last` and `running`. Other kinds use `path`, `url`, `block` or `title`.
 
-Text is normalised by collapsing whitespace and cutting to 160 characters plus "…".
+Text is normalised by collapsing whitespace and cutting to 160 characters plus "…". omp ends `last_message` with a footer block (`\n·\n1.6s · 557 tok · …`), which is dropped before cutting, so the "omp" line is the reply itself.
 
 ### D12. Live refresh
 **Events:** while the canvas exists, these events schedule one render 150 ms later, coalesced:
@@ -222,9 +222,11 @@ Text is normalised by collapsing whitespace and cutting to 160 characters plus "
 
 These are registered with `tern.on` (L2247–2255).
 
-**Polling:** `pane_created` and `tab_created` miss CLI-made and restored panes, so a 750 ms poll compares a cheap signature (tab ids, pane ids and tabs, titles) and renders when it differs.
+**Polling:** `pane_created` and `tab_created` miss CLI-made and restored panes, so a 750 ms poll compares a cheap signature (tab ids, pane ids and tabs, titles, and each agent's state and reply length) and renders when it differs. The agent part catches a missed or late `agent_state`/`agent_finished` event within one poll.
 
 **Running commands:** a 1 s timer runs only while an expanded row shows a running command.
+
+**One heartbeat:** the transcript tick, the poll and the running clock share one 250 ms timer, re-armed each beat while the canvas exists (every beat, every 3rd and every 4th).
 
 All timers stop when the canvas is gone.
 
@@ -251,6 +253,8 @@ All timers stop when the canvas is gone.
 **Results:** kv dumps are read from `/tmp/tobj/config/plugin-data/objectives/kv.json`.
 
 **Agent rows:** run `omp --no-session` with a cheap model and one short prompt in a headless pane.
+
+**Timers in `serve`:** the headless app services plugin timers only while it has other activity; `ctl wait` alone doesn't fire them once it is idle (task 7.3 saw an armed render never fire). Tests that depend on `tern.timer` keep a harmless ticker running in a harness pane (`while true; do date +%T; sleep 0.25; done`). In the live app timers run on their own.
 
 **Daemon-restart cases** are not re-run in the harness, because `serve` renumbers ids from 1 (R11).
 

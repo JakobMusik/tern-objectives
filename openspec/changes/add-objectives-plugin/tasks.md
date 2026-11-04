@@ -166,22 +166,24 @@ All checks run in the headless harness from design.md D14 (`/tmp/tobj`) unless a
 
 ## 7. Pane details
 
-- [ ] 7.1 The ▸/▾ expand toggle, which doesn't jump and is remembered, and terminal details:
+- [x] 7.1 The ▸/▾ expand toggle, which doesn't jump and is remembered, and terminal details:
   - ✓ or ✗, the status, the duration and the command;
   - ⟳ with elapsed time while a command runs, updated by a 1 s timer;
   - "no command yet".
 
   Verify: run `false` and `sleep 30` in harness panes with `ctl type` and `key Enter`. Shots show "✗ 1 · …  false", and an elapsed time that rises between two shots one second apart.
-- [ ] 7.2 Details for other pane kinds: a file's path, a browser's URL, a plugin block's kind, otherwise the title.
+- [x] 7.2 Details for other pane kinds: a file's path, a browser's URL, a plugin block's kind, otherwise the title.
 
   Verify by a shot of an expanded file-pane row showing its path.
-- [ ] 7.3 Agent details (D11):
+- [x] 7.3 Agent details (D11):
   - the state badge;
   - the "omp" reply line, cut to 160 characters plus "…";
   - the "you" line from `transcript`, with a placeholder until it loads;
   - a cache that reads at most one transcript per 250 ms tick.
 
   Verify: start `omp --no-session` with a cheap model in a harness pane and send one short prompt. Shots show "working", then idle with "you" and "omp" lines, and the log shows render times under 20 ms.
+
+  Result: all passed with omp (Haiku) in a harness pane: "working" with the new "you" line, then "idle" with "you" and "omp" lines; a 364-character, 5-line reply showed as its first 160 characters on one line plus "…"; renders logged 2.5–7.8 ms, transcript ticks 0.1 ms. Findings: omp's turn footer is now dropped from the reply line, and the 750 ms poll also watches agent state (design D11, D12). Headless `serve` stalls plugin timers when idle, so timer-driven checks keep a ticker running (design D14).
 
 ## 8. Live refresh and durability
 
