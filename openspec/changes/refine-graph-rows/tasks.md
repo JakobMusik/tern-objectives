@@ -102,9 +102,14 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
   - "Using the graph" now says the origin's session and tab come first; describes pane types, folded rows, and the `you:` / `omp:` lines cut in the middle; and gives unlinked tabs as a grey fill with a dashed border. `grep` finds no "faded" and no "selectable".
   - The README never listed the selectable-text limit, so there was nothing to drop.
   - `docs/graph.png` is now shot `readme_graph` cropped to the glimpse (1573 × 1493). It shows docs first with the outlined omp tab, its open `omp · idle` row with both message lines, the other rows folded with `shell` / `file` labels, and the unlinked tab's grey fill; `edgecheck.py` passes on it. The image's alt text matches.
-- [ ] 5.2 Version `0.5.0`: an isolated install prints `installed objectives 0.5.0`; commit, push `main`, tag `v0.5.0`; `tern plugin install github.com/JakobMusik/tern-objectives --force` live.
+- [x] 5.2 Version `0.5.0`: an isolated install prints `installed objectives 0.5.0`; commit, push `main`, tag `v0.5.0`; `tern plugin install github.com/JakobMusik/tern-objectives --force` live.
 
   Verify: the tags API lists `v0.5.0`, and live `tern plugin list` shows `objectives 0.5.0` ready.
+
+  Result:
+  - a regression pass first (link bar on and off, pane-row jump, reopen order, ⌃⌘O close) all held;
+  - the isolated install printed `installed objectives 0.5.0` (`0 blocks, 0 lenses, window ready`); release commit `bea43bf`;
+  - the tags API lists `v0.5.0` first; live `tern plugin list` shows `objectives 0.5.0 … ready`, with `tabnav 0.1.0` untouched.
 - [ ] 5.3 **(live)** With the user:
   - the graph opened from a later tab lists that tab's session and tab first;
   - unlinked tabs read at full strength;
