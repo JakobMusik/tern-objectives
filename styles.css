@@ -1,0 +1,5 @@
+/* Objectives graph. Canvas content carries [data-surface='plugin.tern.canvas'];
+   every rule is scoped under .ob-root so nothing leaks into other canvases. */
+[data-surface='plugin.tern.canvas'] .ob-root {
+	font-size: 12.5px;
+}

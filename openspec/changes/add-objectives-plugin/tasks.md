@@ -4,22 +4,22 @@ All checks run in the headless harness from design.md D14 (`/tmp/tobj`) unless a
 
 ## 1. Scaffold and harness
 
-- [ ] 1.1 Create the package files:
+- [x] 1.1 Create the package files:
   - `plugin.toml`: schema 1, id `objectives`, name "Objectives", version `0.1.0`, a description, `window = "window.luau"`, `styles = ["styles.css"]`;
   - a loading `window.luau` and `styles.css`;
   - `LICENSE`: MIT, © 2026 nyclanker.
 
   Verify: `tern plugin install <repo>` against an isolated `TERN_CONFIG_DIR=/tmp/tobj-install/config` prints `installed objectives 0.1.0`, and `tern plugin list` there shows it ready.
-- [ ] 1.2 Build the harness from D14 under `/tmp/tobj`: the fixtures copy, the `tern serve` service and a ctl helper.
+- [x] 1.2 Build the harness from D14 under `/tmp/tobj`: the fixtures copy, the `tern serve` service and a ctl helper.
 
   Verify: `ctl plugins fixtures` loads `objectives` with no plugin errors in `/tmp/tobj/logs`, and `ctl state` answers.
-- [ ] 1.3 Start `README.md` with:
+- [x] 1.3 Start `README.md` with:
   - the install command;
   - that the plugin is window-half only and needs nothing on `PATH`;
   - the data location `plugin-data/objectives/kv.json`;
   - removal with `tern plugin remove objectives`.
 
-  Verify: the documented install command, run against the isolated config, succeeds as written.
+  Verify: the README's `tern plugin remove objectives`, and an install of the local repo folder, both succeed against the isolated config. The `github.com/…` form can only succeed once the repository exists, so it is checked in 9.4.
 
 ## 2. Risk checks before feature work
 
