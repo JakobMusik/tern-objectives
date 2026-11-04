@@ -214,16 +214,18 @@ All checks run in the headless harness from design.md D14 (`/tmp/tobj`) unless a
 - [x] 9.2 Final local install check.
 
   Verify: a fresh isolated config gets `installed objectives 0.1.0` and shows the plugin ready in `tern plugin list`.
-- [ ] 9.3 Publish: create the public repository `JakobMusik/tern-objectives` with `gh repo create --public`, set the topic `tern-plugin`, and push `main`.
+- [x] 9.3 Publish: create the public repository `JakobMusik/tern-objectives` with `gh repo create --public`, set the topic `tern-plugin`, and push `main`.
 
   Verify: `gh repo view JakobMusik/tern-objectives --json visibility,repositoryTopics,licenseInfo` reports public, `tern-plugin` and MIT.
-- [ ] 9.4 Install from GitHub.
+- [x] 9.4 Install from GitHub.
 
   Verify: `tern plugin install github.com/JakobMusik/tern-objectives` against a fresh isolated config installs `objectives`, and it loads ready.
-- [ ] 9.5 Tag `v0.1.0` and push the tag.
+
+  Result: installed `objectives 0.1.0`, listed `window  ready`; the installed copy, loaded in the harness, opened the graph and rendered in 4.5 ms with aligned lines.
+- [x] 9.5 Tag `v0.1.0` and push the tag.
 
   Verify: `gh api repos/JakobMusik/tern-objectives/tags` lists `v0.1.0`.
-- [ ] 9.6 **(live)** Install in the user's live Tern with `tern plugin install github.com/JakobMusik/tern-objectives`.
+- [x] 9.6 **(live)** Install in the user's live Tern with `tern plugin install github.com/JakobMusik/tern-objectives`.
 
   Verify: `tern plugin list` shows `objectives 0.1.0` ready.
 - [ ] 9.7 **(live)** Glimpse check in the user's window: open with ⌃⌘O, jump to a tab in another session, and reopen.
