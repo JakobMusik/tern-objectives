@@ -66,8 +66,8 @@ The test plugin, its kv and its shots are under `/tmp/tobj`; none of it enters t
 **Block side:** the block's `event` turns `{act, value}` into `cx:open("objectives://act/<act>/<value>")`, both parts percent-encoded (L1411).
 
 **Window side:** `window.luau` replaces `tern.on("canvas_action")` with `tern.route.link` (L2268–2274). The handler:
-- declines every URL that isn't `objectives://act/…`;
-- declines any link whose `link.pane` isn't the graph's current pane (LinkRequest L1219–1235; S5 showed `pane` is the block). So an `objectives://` hyperlink printed by a program can't drive the plugin;
+- declines (returns nil) every URL that doesn't start with `objectives://`, so other links keep their built-in handling;
+- swallows, with `{handled = true}` and no action, any `objectives://` link that isn't `objectives://act/…` or whose `link.pane` isn't the graph's current pane (LinkRequest L1219–1235; S5 showed `pane` is the block). So an `objectives://` hyperlink printed by a program can't drive the plugin. Declining it would hand the URL to the built-in handling, which would try to open it;
 - otherwise decodes the two parts, calls `App.action({act, value}, cx)` and returns `{handled = true}`.
 
 The verbs of archived D5 are kept, plus `lnk=<objective>:<tab>` from the tab menu (P6).
@@ -108,7 +108,7 @@ Canvases survive a plugin reload (SDK "Window API › `cx.canvas`": "reloading a
 
 - **R1. Render plus hand-off cost with every row open.** Untested at full size. → A task measures build + `tern.json.encode` + two writes at 30 objectives and 40 panes. If the total exceeds 20 ms, details for rows in collapsed sessions are skipped first.
 - **R2. Focus on open.** S2 needed `cx.layout:focus` after `new_block`. → Checked in task 1.1: `cx.layout:focus(pane)` in the same handler as `new_block`, with no wait, focused the block at once. The first Esc closed it, and the `cat -v` pane below printed nothing. No timer needed.
-- **R3. Sessions on other machines.** `cx:new_block` opens on the window's current host (L1881), where the plugin may be missing and whose data folder differs. Untested; the harness has no remote host. → When `cx.sessions:current().host` isn't the local host (0 in every local listing seen so far), "Open graph" shows an info toast and opens nothing; the README states the limit.
+- **R3. Sessions on other machines.** `cx:new_block` opens on the window's current host (L1881), where the plugin may be missing and whose data folder differs. A real remote host is untested; the harness has none. → When `cx.hosts:current().kind` (ManagedHost L735–736) isn't `"local"`, "Open graph" shows an info toast and opens nothing; the README states the limit. In task 2.7 the harness read `kind = "local"`, and with the check inverted the toast showed and no graph opened.
 - **R4. Right-click inside a child node.** → Checked in task 1.2: a right-click on a child that has only a click action opens the parent's `actions.menu`, and the choice arrives with the parent's id. The menu sits on the tab node root, and pane rows carry none.
 - **R5. Plugin reload with the graph shown.** → Checked in task 1.3: the block pane survives `ctl plugins fixtures` and keeps focus. `init` runs again with the state its `save` returned, so the block keeps its stem and goes on polling. No reopen fallback needed.
 - **R6. Esc while a menu or Tern popover is open** closes that first (Tern's own layer rule), so a second Esc closes the graph. Accepted.

@@ -15,7 +15,7 @@ export type Edge = {
 	selected: boolean, -- belongs to the selected objective
 }
 
-local SCOPE = "[data-surface='plugin.tern.canvas'] .ob-root"
+local SCOPE = Layout.SCOPE
 
 local function pctenc(s: string): string
 	return (string.gsub(s, '[%%#<>"]', function(c)

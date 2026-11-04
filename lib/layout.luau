@@ -28,7 +28,9 @@ M.px = {
 -- shared by the badges (CSS below) and the lines drawn inside the edge SVGs.
 M.palette = { "#e5484d", "#f76b15", "#3b82f6", "#8b8d98" }
 
-local SCOPE = "[data-surface='plugin.tern.canvas'] .ob-root"
+-- The graph block's surface (design P9); every plugin rule is scoped under it.
+M.SCOPE = "[data-surface='plugin.objectives.graph'] .ob-root"
+local SCOPE = M.SCOPE
 
 -- The layout sheet: heights and margins from M.px.
 function M.css(): string

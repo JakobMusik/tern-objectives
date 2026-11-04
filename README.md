@@ -10,13 +10,13 @@ A [Tern](https://docs.stencil.so/tern) plugin that keeps one global list of obje
 tern plugin install github.com/JakobMusik/tern-objectives
 ```
 
-The plugin is window-half only (`window.luau`, no host half) and needs nothing on `PATH` besides the `git` that `tern plugin install` uses to fetch it.
+The plugin has two halves. The window half (`window.luau` and `lib/`) keeps the objectives and builds the graph; the host half (`host.luau`) only shows the graph in its popup and passes your clicks back. It needs nothing on `PATH` besides the `git` that `tern plugin install` uses to fetch it.
 
 ## Commands
 
 | Command | Key | What it does |
 |---|---|---|
-| Objectives: Open graph | ⌃⌘O | Shows the graph over the current tab; pressed again while it is shown, closes it. |
+| Objectives: Open graph | ⌃⌘O | Shows the graph over the current tab; pressed again while it is shown, closes it. Esc closes it too. |
 | Objectives: Link this tab… | | Picks an open objective to link to, or unlink from, the focused pane's tab. Linked objectives show a check. |
 | Objectives: New objective for this tab… | | Asks for a title and creates a P2 objective already linked to the focused pane's tab. |
 
@@ -33,13 +33,13 @@ The key can be changed like any other: bind a chord to `plugin.objectives.open` 
 
 ## Data
 
-Everything the plugin stores lives in one file in Tern's plugin data folder:
+Everything the plugin keeps lives in one file in Tern's plugin data folder:
 
 ```
 <Tern config>/plugin-data/objectives/kv.json
 ```
 
-On macOS that is `~/Library/Application Support/Tern/plugin-data/objectives/kv.json`. The plugin writes nothing into your project folders, your home folder or its own package folder.
+On macOS that is `~/Library/Application Support/Tern/plugin-data/objectives/kv.json`. While the graph is shown, the same folder also holds `view-<window>.json` and `view-<window>.seq`, the drawn graph handed to its popup; they are removed when it closes. The plugin writes nothing into your project folders, your home folder or its own package folder.
 
 ## Remove
 
@@ -52,7 +52,7 @@ Removing the plugin leaves `plugin-data/objectives/kv.json` in place; delete tha
 ## Known limits
 
 - Side notes are one line of up to 200 characters. Tern's one-line field joins pasted lines without a space, so put a space or punctuation at the end of a line before pasting.
-- Esc closes the graph only while the popup's title bar has focus. The graph itself takes no keys (Tern plugin canvases don't), so after you click inside it, Esc does nothing and doesn't reach the pane underneath either. Press ⌃⌘O again, click outside the graph, or use its × instead. The popup's footer, "Click outside or press Esc to close · drag the header to keep it", is Tern's own hint for every popup; the plugin can't change it.
+- The graph opens only in sessions on this machine. In a session on a machine attached over SSH, ⌃⌘O shows a note instead.
 
 ## License
 
