@@ -11,7 +11,7 @@ The package root SHALL hold a `plugin.toml` with:
 - schema 1;
 - id `objectives`;
 - name "Objectives";
-- version `0.1.0`;
+- a version: `0.1.0` for the first release, its patch number raised for each fix released after it (the live check's fix shipped as `0.1.1`);
 - a description;
 - a window entry and its style sheet.
 
@@ -19,7 +19,7 @@ It SHALL have no host entry. Tern's install-time checks SHALL accept the package
 
 #### Scenario: Local install check
 - **WHEN** `tern plugin install <repo folder>` runs against an isolated Tern config
-- **THEN** it reports `installed objectives 0.1.0`, and `tern plugin list` shows the plugin ready with no problems
+- **THEN** it reports `installed objectives` with the manifest's version, and `tern plugin list` shows the plugin ready with no problems
 
 ### Requirement: Palette commands
 The plugin SHALL register three palette commands under the group "Objectives":

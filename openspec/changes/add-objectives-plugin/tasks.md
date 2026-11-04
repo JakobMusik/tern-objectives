@@ -232,6 +232,16 @@ All checks run in the headless harness from design.md D14 (`/tmp/tobj`) unless a
 
   Verify with the user: the glimpse behaves as checked in task 2.1, or the side-panel fallback recorded in design.md is used.
 
+  First run: mostly fine, but a mouse click on a picker or field opened from the graph, or on the graph while one is open, closed the glimpse. Fixed in 9.8 and released in 9.9; re-check pending with the user.
+- [x] 9.8 Show the graph again after a picker or field it opened (live finding in 9.7; design D2, objectives-graph "Graph returns after its pickers").
+
+  Verify: in the harness, click "＋ New objective", click into the field (the glimpse closes), type and press Enter; then open Side note, click into the field and click where the graph was.
+
+  Result: both reopened the graph as an undocked glimpse over the same tab, the first with the new objective selected, the second with the note unchanged; a keyboard-only flow kept the same canvas and only re-rendered. A float was spiked and rejected: unfocused, it shrinks to a small glance picture.
+- [x] 9.9 Release the fix as `0.1.1`: commit, push `main`, tag `v0.1.1`, and reinstall in the live Tern with `--force`.
+
+  Verify: `gh api repos/JakobMusik/tern-objectives/tags` lists `v0.1.1`, and the live `tern plugin list` shows `objectives 0.1.1` ready.
+
 ## Workflow follow-up
 
 - Run the verify workflow against the specs before archiving.

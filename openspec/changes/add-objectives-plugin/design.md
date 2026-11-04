@@ -62,6 +62,8 @@ Every API the specs need lives in the window half:
 **Rules that follow:**
 - **Jumps close the canvas first** (`cx.layout:close`), then focus the target, so nothing is left over or beside it.
 - **Reuse:** the VM keeps the canvas pane id, re-checked with `cx.canvas:get(id)` (L1572), else found in `cx.canvas:list()` (L1574) by `owner = "objectives"`. Only a canvas that is still a glimpse over the current tab (not a leaf or float of its tab's layout) is `set` and focused. Any other one, docked by a focus change or left in another tab, is closed and a new glimpse opens over the current tab. The window holds at most one canvas, as the spec requires.
+- **Pickers and fields:** `cx:pick` and `cx:prompt` open at window level, outside the glimpse, so a mouse click on the field, or on the graph while the field is open, closes the glimpse (found live in task 9.7; task 2.1 had answered by keyboard). Every flow the graph starts ends, answered or dismissed, by showing the graph again over the current tab if it is gone, else by rendering it. Palette commands don't reopen it.
+- **A float instead (spiked, rejected):** `cx.layout:float` keeps the canvas through outside clicks, but an unfocused float shrinks to a small glance picture, too cramped for the graph while a field holds focus.
 
 **Fallback (not needed):** `how = "beside", ratio = 0.4`, a lasting side panel (L1451–1461).
 
@@ -265,7 +267,7 @@ All timers stop when the canvas is gone.
 
 ## Risks / Trade-offs
 
-- **R1. Glimpse behaviour after a jump, under a picker and when shown again.** → Checked in task 2.1. A picker and a reopen work. A programmatic jump docks the glimpse as a split instead of closing it, so jumps close the canvas first (D2). A session switch made outside the graph still docks it; reopening from another tab replaces it.
+- **R1. Glimpse behaviour after a jump, under a picker and when shown again.** → Checked in task 2.1. A picker and a reopen work. A programmatic jump docks the glimpse as a split instead of closing it, so jumps close the canvas first (D2). A session switch made outside the graph still docks it; reopening from another tab replaces it. The live check (9.7) found that a mouse click on a picker or field, or on the graph while one is open, closes the glimpse; flows started from the graph now show it again when they end (D2).
 - **R2. `mask-image` on a data-URL SVG.** → Checked in task 2.2: it masks nothing (SDK: `mask-image` takes gradients only). Edges use `background-image` with a fixed palette in a fixed-width gap (D4); line ends measured within 0.6 px of node centres at 1400 and 460 px, light and dark.
 - **R3. Last write wins between windows.** Two windows changing objectives at the same moment can lose one change. → Read-before-write narrows the window to milliseconds. This is acceptable because the user runs one window.
 - **R4. Fixed one-line heights hide long text.** → Tooltips carry the full text, and titles are capped at 120 characters.

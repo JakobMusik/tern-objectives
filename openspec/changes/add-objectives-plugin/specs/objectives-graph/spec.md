@@ -13,6 +13,17 @@ Shows objectives and tabs as a clickable two-column graph, with lines for links.
 - **WHEN** the user runs "Objectives: Open graph" twice
 - **THEN** the graph is shown and the window holds exactly one canvas owned by `objectives`
 
+### Requirement: Graph returns after its pickers
+When a picker or field opened from the graph closes, answered or dismissed, the graph SHALL be shown over the current tab again if a click on the field, or on the graph while the field was open, had closed it.
+
+#### Scenario: Clicking into a field
+- **WHEN** the user clicks "＋ New objective", clicks into the title field, types "Write slides" and presses Enter
+- **THEN** the graph is shown again with "Write slides" selected
+
+#### Scenario: Dismissing by clicking the graph
+- **WHEN** the user opens Side note from an objective's menu, clicks into the field and then clicks where the graph was
+- **THEN** the field closes, the note is unchanged and the graph is shown again
+
 ### Requirement: Two-column layout
 The graph SHALL show objectives in a left column, tabs in a right column, and link lines between them. A header SHALL sit above both columns.
 

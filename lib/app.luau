@@ -85,24 +85,39 @@ local function no_tab(cx: WindowCx)
 	cx:toast("error", "The focused pane is not in a tab", "Focus a pane in a tab, then run the command again.")
 end
 
+-- ---- pickers and fields started from the graph ----
+
+-- Tern opens cx:pick and cx:prompt at window level, outside the glimpse, so a click on the field
+-- (or on the graph while it is open) counts as a click outside and closes the glimpse. Every flow the
+-- graph starts ends here, answered or dismissed: it shows the graph again if that happened.
+local function finish(cx: WindowCx?, from_graph: boolean)
+	if cx == nil then
+		return
+	end
+	if from_graph and Canvas.find(cx) == nil then
+		M.open(cx)
+	else
+		M.render(cx)
+	end
+end
+
 -- ---- creating ----
 
-local function new_objective(cx: WindowCx, tab: number?, facts: Model.Tab?, window: string)
+local function new_objective(cx: WindowCx, tab: number?, facts: Model.Tab?, window: string, from_graph: boolean)
 	cx:prompt({ placeholder = "New objective title", icon = "list-checks", action = "create" }):next(function(text, _err, cx2)
 		if text == nil or cx2 == nil then
+			finish(cx2, from_graph)
 			return
 		end
 		local id = Store.create(text, tab, facts :: any, window)
 		if id == nil then
 			cx2:toast("error", "An objective needs a title")
-			return
-		end
-		if tab == nil then
+		elseif tab == nil then
 			selected = id
 		else
 			cx2:toast("success", "Objective created for this tab")
 		end
-		M.render(cx2)
+		finish(cx2, from_graph)
 	end)
 end
 
@@ -112,7 +127,7 @@ function M.new_for_tab(cx: WindowCx)
 		no_tab(cx)
 		return
 	end
-	new_objective(cx, tab, facts, window)
+	new_objective(cx, tab, facts, window, false)
 end
 
 -- ---- linking from the palette ----
@@ -175,50 +190,41 @@ function M.link_tab(cx: WindowCx)
 	end)
 end
 
--- ---- the objective menu ----
+-- ---- the objective menu (always started from the graph) ----
 
 local function rename(cx: WindowCx, o: Store.Objective)
 	cx:prompt({ value = o.title, placeholder = "Objective title", action = "rename" }):next(function(text, _err, cx2)
-		if text == nil or cx2 == nil then
-			return
+		if text ~= nil and cx2 ~= nil then
+			if Store.clean_title(text) == nil then
+				cx2:toast("error", "An objective needs a title")
+			elseif not Store.rename(o.id, text) then
+				toast_gone(cx2)
+			end
 		end
-		if Store.clean_title(text) == nil then
-			cx2:toast("error", "An objective needs a title")
-			return
-		end
-		if not Store.rename(o.id, text) then
-			toast_gone(cx2)
-		end
-		M.render(cx2)
+		finish(cx2, true)
 	end)
 end
 
 local function side_note(cx: WindowCx, o: Store.Objective)
 	cx:prompt({ value = o.note or "", placeholder = "Side note (one line, empty removes it)", action = "save" }):next(function(text, _err, cx2)
-		if text == nil or cx2 == nil then
-			return
-		end
-		if not Store.set_note(o.id, text) then
+		if text ~= nil and cx2 ~= nil and not Store.set_note(o.id, text) then
 			toast_gone(cx2)
 		end
-		M.render(cx2)
+		finish(cx2, true)
 	end)
 end
 
 local function pick_date(cx: WindowCx, o: Store.Objective)
 	cx:prompt({ value = o.due or Dates.key(Dates.today()), placeholder = "Due date, YYYY-MM-DD", action = "set" }):next(function(text, _err, cx2)
-		if text == nil or cx2 == nil then
-			return
+		if text ~= nil and cx2 ~= nil then
+			local day = Dates.parse(text)
+			if day == nil then
+				cx2:toast("error", "Not a date: " .. text, "Use YYYY-MM-DD, for example 2026-11-20.")
+			elseif not Store.set_due(o.id, Dates.key(day)) then
+				toast_gone(cx2)
+			end
 		end
-		local day = Dates.parse(text)
-		if day == nil then
-			cx2:toast("error", "Not a date: " .. text, "Use YYYY-MM-DD, for example 2026-11-20.")
-			return
-		end
-		if not Store.set_due(o.id, Dates.key(day)) then
-			toast_gone(cx2)
-		end
-		M.render(cx2)
+		finish(cx2, true)
 	end)
 end
 
@@ -237,18 +243,30 @@ local function due_date(cx: WindowCx, o: Store.Objective)
 	table.insert(items, { label = "Pick date…", detail = "YYYY-MM-DD", op = "pick" })
 	table.insert(items, { label = "Clear", detail = if o.due ~= nil then o.due else "no due date", op = "clear" })
 	cx:pick({ items = items, placeholder = "Due date for " .. o.title, icon = "calendar" }):next(function(item, _err, cx2)
-		if item == nil or cx2 == nil then
-			return
+		if item ~= nil and cx2 ~= nil then
+			if item.op == "pick" then
+				pick_date(cx2, o)
+				return
+			end
+			if not Store.set_due(o.id, if item.op == "clear" then nil else item.due) then
+				toast_gone(cx2)
+			end
 		end
-		if item.op == "pick" then
-			pick_date(cx2, o)
-			return
+		finish(cx2, true)
+	end)
+end
+
+local function new_tag(cx: WindowCx, o: Store.Objective)
+	cx:prompt({ placeholder = "New tag", action = "add" }):next(function(text, _e, cx2)
+		if text ~= nil and cx2 ~= nil then
+			local tag = Store.clean_tag(text)
+			if tag == nil then
+				cx2:toast("error", "A tag needs a name")
+			elseif not Store.add_tag(o.id, tag) and Store.find(Store.read(), o.id) == nil then
+				toast_gone(cx2)
+			end
 		end
-		local ok = Store.set_due(o.id, if item.op == "clear" then nil else item.due)
-		if not ok then
-			toast_gone(cx2)
-		end
-		M.render(cx2)
+		finish(cx2, true)
 	end)
 end
 
@@ -259,30 +277,16 @@ local function tags(cx: WindowCx, o: Store.Objective)
 	end
 	table.insert(items, { label = "New tag…", op = "new" })
 	cx:pick({ items = items, placeholder = "Tags for " .. o.title, icon = "tag", action = "toggle" }):next(function(item, _err, cx2)
-		if item == nil or cx2 == nil then
-			return
+		if item ~= nil and cx2 ~= nil then
+			if item.op == "new" then
+				new_tag(cx2, o)
+				return
+			end
+			if not Store.toggle_tag(o.id, item.tag) then
+				toast_gone(cx2)
+			end
 		end
-		if item.op == "new" then
-			cx2:prompt({ placeholder = "New tag", action = "add" }):next(function(text, _e, cx3)
-				if text == nil or cx3 == nil then
-					return
-				end
-				local tag = Store.clean_tag(text)
-				if tag == nil then
-					cx3:toast("error", "A tag needs a name")
-					return
-				end
-				if not Store.add_tag(o.id, tag) and Store.find(Store.read(), o.id) == nil then
-					toast_gone(cx3)
-				end
-				M.render(cx3)
-			end)
-			return
-		end
-		if not Store.toggle_tag(o.id, item.tag) then
-			toast_gone(cx2)
-		end
-		M.render(cx2)
+		finish(cx2, true)
 	end)
 end
 
@@ -295,13 +299,10 @@ local function delete(cx: WindowCx, o: Store.Objective)
 		placeholder = "Delete this objective?",
 		icon = "trash",
 	}):next(function(item, _err, cx2)
-		if item == nil or cx2 == nil or item.op ~= "delete" then
-			return
-		end
-		if Store.delete(o.id) and selected == o.id then
+		if item ~= nil and item.op == "delete" and Store.delete(o.id) and selected == o.id then
 			selected = nil
 		end
-		M.render(cx2)
+		finish(cx2, true)
 	end)
 end
 
@@ -327,15 +328,15 @@ local function menu(cx: WindowCx, id: string)
 		icon = "list-checks",
 	}):next(function(item, _err, cx2)
 		if item == nil or cx2 == nil then
+			finish(cx2, true)
 			return
 		end
 		-- Re-read: the objective may have changed while the picker was open.
 		local fresh = Store.find(Store.read(), id)
 		if fresh == nil then
 			toast_gone(cx2)
-			return
-		end
-		if item.op == "rename" then
+			finish(cx2, true)
+		elseif item.op == "rename" then
 			rename(cx2, fresh)
 		elseif item.op == "note" then
 			side_note(cx2, fresh)
@@ -366,11 +367,10 @@ local function prune(cx: WindowCx)
 		placeholder = "Remove the links of " .. what .. "?",
 		icon = "trash",
 	}):next(function(item, _err, cx2)
-		if item == nil or cx2 == nil or item.op ~= "prune" then
-			return
+		if item ~= nil and item.op == "prune" then
+			Store.prune(closed)
 		end
-		Store.prune(closed)
-		M.render(cx2)
+		finish(cx2, true)
 	end)
 end
 
@@ -426,7 +426,7 @@ function M.action(ev: CanvasAction, cx: WindowCx): boolean?
 		menu(cx, value)
 		return true
 	elseif act == "new" then
-		new_objective(cx, nil, nil, "")
+		new_objective(cx, nil, nil, "", true)
 		return true
 	elseif act == "link" then
 		local tab = tonumber(value)
