@@ -79,12 +79,16 @@ Groups 1–2 shipped 0.3.0 with two surfaces (design "History"); groups 3–4 mo
 
 ## 4. Release and live check
 
-- [ ] 4.1 Version `0.4.0`: an isolated install prints `installed objectives 0.4.0` and lists 0 blocks; commit, push `main`, tag `v0.4.0`; `tern plugin install github.com/JakobMusik/tern-objectives --force` live.
+- [x] 4.1 Version `0.4.0`: an isolated install prints `installed objectives 0.4.0` and lists 0 blocks; commit, push `main`, tag `v0.4.0`; `tern plugin install github.com/JakobMusik/tern-objectives --force` live.
 
   Verify: the tags API lists `v0.4.0`, and live `tern plugin list` shows `objectives 0.4.0` ready.
+
+  Result: an isolated install printed `installed objectives 0.4.0` and listed `0 blocks, 0 lenses, window ready`; release commit `cb975b7`; the tags API lists `v0.4.0` first; live `tern plugin list` shows `objectives 0.4.0 … 0 blocks, 0 lenses, window ready`, with `tabnav 0.1.0` untouched. The installed folder has no `host.luau`, and the live data folder holds only `kv.json`.
 - [ ] 4.2 **(live)** With the user: ⌃⌘O opens the graph as a canvas in a session on this Mac and in "devbox"; devbox's tabs are listed; a click links and a pane row jumps; ⌃⌘O closes it.
 
   Record the findings here.
+
+  Smoke test (agent, live window, 0.4.0, devbox): ⌃⌘O focused a new pane labelled "Objectives", one `.ob-root` on the canvas surface. The tab column listed all six sessions with "devbox ● current", and devbox's tab "demo" carried the origin ring. A second ⌃⌘O closed it and returned focus to "demo"; the window then went back to "plugins".
 
 ## Workflow follow-up
 
