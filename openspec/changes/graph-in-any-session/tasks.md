@@ -4,21 +4,37 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**. "For
 
 ## 1. Graph in any session
 
-- [ ] 1.1 `lib/surface.luau` handles both surfaces (design G1, G2, G5): the block in local sessions, a canvas glimpse elsewhere, replacing a graph on the wrong surface; `App.open` drops its local-only toast; the load timer stops closing canvases.
+- [x] 1.1 `lib/surface.luau` handles both surfaces (design G1, G2, G5): the block in local sessions, a canvas glimpse elsewhere, replacing a graph on the wrong surface; `App.open` drops its local-only toast; the load timer stops closing canvases.
 
   Verify:
   - local: ⌃⌘O twice shows, then closes, the block (helper dump);
   - forced remote: ⌃⌘O twice shows a canvas owned by `objectives` with focus, then none;
   - a canvas left in a local session (forced remote, then the real check) is replaced by the block on the next fresh open.
-- [ ] 1.2 `canvas_action` handler next to the link route (design G3).
+
+  Result (helper dump):
+  - local: block pane 18 with focus and view files, then none;
+  - forced remote: canvas pane 19 owned by `objectives`, focused, with no view files written (shot `r11_canvas`), then none;
+  - leftover canvas: pane 22 survived the switch to the real check and was adopted; the first ⌃⌘O closed it, and the second opened block pane 23.
+
+  The canvas first drew in the terminal face, so `.ob-root` now sets `var(--sans)` (design G6).
+- [x] 1.2 `canvas_action` handler next to the link route (design G3).
 
   Verify, forced remote: a click on an objective's title gives it `ob-sel`; a "＋ Link" bar click and a tab menu row add links (kv dump); a pane-row click jumps and leaves no graph.
-- [ ] 1.3 Style scope `:is(…)` for both surfaces (design G4).
+
+  Result: o2 got `ob-sel`; its bar on tab 12 gave `[9, 12]` with o2 still selected; the "Benchmarks" menu's "Review pull requests" row gave o5 `[17, 14]`; a click on pane row 13 showed session api with pane 13 focused and no canvas left.
+- [x] 1.3 Style scope `:is(…)` for both surfaces (design G4).
 
   Verify: in forced-remote and local shots the graph looks the same; `edgecheck.py` passes on both; the canvas's hit areas measure as on the block.
-- [ ] 1.4 README: sessions on other machines open the graph with nothing installed there; Esc there closes it only after a click on the title bar; the old local-only limit goes.
+
+  Result:
+  - shots `s13_canvas` and `s13_block` match;
+  - hit areas are identical: done box and ⋯ 22 × 18, ▸/▾ 22 × 22, nodes 48, rows 22;
+  - edgecheck first failed on both, with the origin ring's outer shadow read as a line end in the gap. With the ring inset (design G6), both pass, with 7 objective ends and 5 tab ends.
+- [x] 1.4 README: sessions on other machines open the graph with nothing installed there; Esc there closes it only after a click on the title bar; the old local-only limit goes.
 
   Verify: the README holds both points and no "only in sessions on this machine".
+
+  Result: Install says nothing is needed on the machines sessions run on, and that a session on another machine gets Tern's canvas panel; Known limits gives the Esc behaviour there. The local-only line is gone.
 
 ## 2. Release and live check
 
