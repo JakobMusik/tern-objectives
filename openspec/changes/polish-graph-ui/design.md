@@ -73,7 +73,7 @@ The test plugin, its kv and its shots are under `/tmp/tobj`; none of it enters t
 The verbs of archived D5 are kept, plus `lnk=<objective>:<tab>` from the tab menu (P6).
 
 ### P5. Origin
-`App.open` reads `cx.session:focused()` before opening and keeps it as `origin`, unless that pane is the graph itself. `finish` (the reopen after a picker) passes `keep_origin`, so the origin survives the field flow. Closing the graph clears it: the toggle, a jump, or Esc seen as the graph pane disappearing.
+`App.open` reads `cx.session:focused()` before opening and keeps it as `origin`, unless that pane is the graph itself. `finish` (the reopen after a picker) passes `keep_origin`, so the origin survives the field flow. Nothing clears it: it shows only while the graph does, and each fresh open (⌃⌘O or the palette) replaces it. It lives in the window VM like the selection, so a plugin reload forgets it until the next fresh open (seen in task 4.1).
 
 `View.build` receives `origin`:
 - the tab node whose live rows include it gets `ob-origin`, an accent ring;

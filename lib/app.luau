@@ -13,6 +13,8 @@ local Refresh = require("./refresh")
 local M = {}
 
 local selected: string? = nil
+-- The pane that had focus when the graph was last opened fresh (design P5); never stored.
+local origin: number? = nil
 local edges_css = ""
 
 local function toast_gone(cx: WindowCx)
@@ -30,6 +32,7 @@ local function build(cx: WindowCx): View.Built
 	Details.begin(cx)
 	local built = View.build(state, win, {
 		selected = selected,
+		origin = origin,
 		today = Dates.today(),
 		details = function(row)
 			return Details.lines(cx, row)
@@ -77,10 +80,18 @@ local function local_session(cx: WindowCx): boolean
 	return not ok or host.kind == "local"
 end
 
-function M.open(cx: WindowCx)
+-- Shows the graph over the current tab. A fresh open takes the focused pane as the origin;
+-- `keep_origin` (the reopen after one of the graph's pickers) keeps the one it had.
+function M.open(cx: WindowCx, keep_origin: boolean?)
 	if not local_session(cx) then
 		cx:toast("info", "The objectives graph opens only in sessions on this machine")
 		return
+	end
+	if not keep_origin then
+		local focused = cx.session:focused()
+		if focused ~= nil and focused ~= Surface.find(cx) then
+			origin = focused
+		end
 	end
 	local started = tern.now()
 	local view = build(cx).view
@@ -131,7 +142,7 @@ local function finish(cx: WindowCx?, from_graph: boolean)
 		return
 	end
 	if from_graph and Surface.find(cx) == nil then
-		M.open(cx)
+		M.open(cx, true)
 	else
 		M.render(cx)
 	end

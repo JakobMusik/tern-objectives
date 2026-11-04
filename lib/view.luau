@@ -12,6 +12,8 @@ local M = {}
 
 export type Ui = {
 	selected: string?,
+	-- The pane the graph was opened from (design P5).
+	origin: number?,
 	today: Dates.Day,
 	-- Detail lines for an open live pane row: { {text, class} }.
 	details: (row: Model.Row) -> { { text: string, class: string? } },
@@ -155,6 +157,7 @@ local function tab_node(t: Model.Tab, status: string, first: string, linked_open
 		el("div", { class = "ob-thead", key = "head", title = t.label, actions = { click = "tab=" .. t.id } }, head_kids),
 	}
 	local detail_lines = 0
+	local holds_origin = false
 	for _, r in t.rows do
 		local open = status == "live" and collapsed[tostring(r.pane)] ~= true
 		local row_kids: { Node } = {}
@@ -170,13 +173,21 @@ local function tab_node(t: Model.Tab, status: string, first: string, linked_open
 			title = r.title,
 			actions = { click = if status == "live" then "pane=" .. r.pane else "tab=" .. t.id },
 		}))
-		table.insert(kids, el("div", { class = "ob-row ob-r-" .. r.pane, key = "r:" .. r.pane }, row_kids))
+		local row_cls = "ob-row ob-r-" .. r.pane
+		if status == "live" and r.pane == ui_state.origin then
+			row_cls ..= " ob-row-origin"
+			holds_origin = true
+		end
+		table.insert(kids, el("div", { class = row_cls, key = "r:" .. r.pane }, row_kids))
 		if open then
 			for i, d in ui_state.details(r) do
 				detail_lines += 1
 				table.insert(kids, span("ob-detail" .. (if d.class ~= nil then " " .. d.class else ""), d.text, { key = "d:" .. r.pane .. ":" .. i, title = d.text }))
 			end
 		end
+	end
+	if holds_origin then
+		cls ..= " ob-origin"
 	end
 	return el("div", { class = cls, key = "t:" .. t.id }, kids), detail_lines
 end
