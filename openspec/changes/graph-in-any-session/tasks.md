@@ -45,6 +45,7 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**. "For
   Result: an isolated install printed `installed objectives 0.3.0`; release commit `d7053fc`; the tags API lists `v0.3.0` first; live `tern plugin list` shows `objectives 0.3.0 … 1 blocks, 0 lenses, window ready`, with `tabnav 0.1.0` untouched.
 - [ ] 2.2 **(live)** In the user's "devbox" session: ⌃⌘O opens the graph, devbox's tabs are listed, a click links and a pane row jumps, and ⌃⌘O closes it.
 
+  Verify with the user; record the findings here.
 
   Smoke test (agent, live window, 0.3.0): `tern ctl session switch devbox` then ⌃⌘O focused a new pane labelled "Objectives".
   - Its element tree held one `.ob-root` on the `plugin.tern.canvas` surface and none on the block.
@@ -52,7 +53,6 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**. "For
   - A second ⌃⌘O closed it and returned focus to "demo"; the window then went back to "plugins".
 
   Clicks, jumps and the redraw after a reload (design R5) are left for the user.
-  Verify with the user; record the findings here.
 
 ## Workflow follow-up
 
