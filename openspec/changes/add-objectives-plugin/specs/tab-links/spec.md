@@ -1,0 +1,78 @@
+# Spec Delta
+
+## Purpose
+
+Connects objectives to the Tern tabs where their work happens. The links are many-to-many and are made only by the user. Each tab keeps its own meaning, rather than links pointing at individual panes.
+
+## ADDED Requirements
+
+### Requirement: Many-to-many tab links
+An objective SHALL be linkable to any number of tabs, and a tab to any number of objectives. A link SHALL name a tab, never an individual pane.
+
+#### Scenario: One tab, two objectives
+- **WHEN** the user links tab "API Learning" to objectives "API notes" and "Review pull requests"
+- **THEN** both objectives list that tab, and the graph draws two lines into its node
+
+### Requirement: Linking from the graph
+While an objective is selected, every tab node SHALL show a link button: ＋ when the tab is not linked to the selected objective, × when it is. Clicking the button SHALL add or remove that one link.
+
+#### Scenario: Add then remove a link
+- **WHEN** the user selects an objective, clicks ＋ on a tab node, then clicks × on the same node
+- **THEN** `kv.json` shows the link after the first click and not after the second
+
+### Requirement: Link this tab command
+"Objectives: Link this tab…" SHALL open a picker of open objectives in graph order, with a check on those already linked to the focused pane's tab. Choosing an objective SHALL toggle its link to that tab. With no open objectives it SHALL show an info toast and change nothing.
+
+#### Scenario: Toggle from the palette
+- **WHEN** the focused pane is in tab "App status check" and the user picks an unchecked objective in "Objectives: Link this tab…"
+- **THEN** that objective is linked to the tab
+
+#### Scenario: No objectives
+- **WHEN** there are no open objectives and the user runs "Objectives: Link this tab…"
+- **THEN** a toast says there are no objectives yet and nothing changes
+
+### Requirement: New objective for this tab command
+"Objectives: New objective for this tab…" SHALL ask for a title, then create an objective at P2 already linked to the focused pane's tab.
+
+#### Scenario: Create linked
+- **WHEN** the user runs the command in tab "API Learning" and enters "Add caching layer"
+- **THEN** a new P2 objective "Add caching layer" exists, linked to that tab
+
+### Requirement: Focused pane without a tab
+When the focused pane belongs to no tab, both tab commands SHALL show an error toast and change nothing.
+
+#### Scenario: Parked focus
+- **WHEN** a tab command runs while the focused pane is parked
+- **THEN** an error toast explains that the focused pane is not in a tab, and `kv.json` is unchanged
+
+### Requirement: No automatic linking
+The plugin SHALL NOT create or remove links on its own. Opening, closing or moving tabs and panes, and running commands or agents, SHALL leave links unchanged.
+
+#### Scenario: New tab stays unlinked
+- **WHEN** the user opens a new tab and runs an omp agent in it
+- **THEN** no objective links the new tab
+
+### Requirement: Link status
+Each linked tab SHALL be shown in one of three states, worked out from the current window every time the graph draws and never stored:
+- **live:** the window holds the tab;
+- **closed:** the window does not hold it, and its snapshot came from this window;
+- **elsewhere:** its snapshot came from another window.
+
+#### Scenario: Reload is not a close
+- **WHEN** the plugin is reloaded, as happens on every Tern restart, and the graph is reopened
+- **THEN** every linked tab the window still holds is shown live, with its links intact
+
+#### Scenario: Closing a tab
+- **WHEN** the user closes a linked tab
+- **THEN** it is shown as closed, and its links are kept
+
+#### Scenario: Tab from another window
+- **WHEN** a linked tab's snapshot names a window key other than this window's
+- **THEN** it is shown as elsewhere
+
+### Requirement: Links follow tabs, not panes
+When a pane moves to another tab, its row SHALL move to that tab's node, and every link SHALL stay with the tab it names.
+
+#### Scenario: Pane moved between tabs
+- **WHEN** the user moves a pane from linked tab A to unlinked tab B
+- **THEN** the pane's row is shown under B, A keeps its links, and B stays unlinked
