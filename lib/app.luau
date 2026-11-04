@@ -21,7 +21,6 @@ end
 
 -- Builds the view for the current state, refreshing tab snapshots and the edge sheet on the way.
 local function build(cx: WindowCx): View.Built
-	local started = tern.now()
 	local state = Store.read()
 	local win = Model.read(cx, Surface.find(cx))
 	Store.refresh_snapshots(state, win.tabs :: any, win.key)
@@ -40,13 +39,19 @@ local function build(cx: WindowCx): View.Built
 		tern.css("edges", built.css)
 		edges_css = built.css
 	end
-	local took = tern.now() - started
-	if took > 20 then
-		tern.log.warn(string.format("objectives: render took %.1f ms (budget is 50 ms)", took))
-	else
-		tern.log.debug(string.format("objectives: render %.1f ms", took))
-	end
 	return built
+end
+
+-- Logs a render's cost: building the view, then handing it to the block (encode and two writes).
+local function report(started: number, built: number)
+	local done = tern.now()
+	local total = done - started
+	local msg = string.format("objectives: render %.1f ms (build %.1f, hand-over %.1f)", total, built - started, done - built)
+	if total > 20 then
+		tern.log.warn(msg .. ", over the 20 ms target (the budget is 50 ms)")
+	else
+		tern.log.debug(msg)
+	end
 end
 
 -- Draws the graph again when it is shown; does nothing otherwise.
@@ -54,7 +59,11 @@ function M.render(cx: WindowCx)
 	if Surface.find(cx) == nil then
 		return
 	end
-	Surface.update(cx, build(cx).view)
+	local started = tern.now()
+	local view = build(cx).view
+	local built = tern.now()
+	Surface.update(cx, view)
+	report(started, built)
 	Refresh.rendered(cx)
 	Refresh.start()
 end
@@ -73,7 +82,11 @@ function M.open(cx: WindowCx)
 		cx:toast("info", "The objectives graph opens only in sessions on this machine")
 		return
 	end
-	local pane, err = Surface.show(cx, build(cx).view)
+	local started = tern.now()
+	local view = build(cx).view
+	local built = tern.now()
+	local pane, err = Surface.show(cx, view)
+	report(started, built)
 	if pane == nil then
 		cx:toast("error", "Objectives: could not open the graph", err)
 		return
@@ -476,7 +489,7 @@ function M.action(ev: Action, cx: WindowCx)
 		return
 	elseif act == "exp" then
 		Store.set_view(function(v)
-			v.expanded[value] = if v.expanded[value] then nil else true
+			v.collapsed[value] = if v.collapsed[value] then nil else true
 			return true
 		end)
 	elseif act == "scope" then

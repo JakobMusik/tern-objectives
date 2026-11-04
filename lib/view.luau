@@ -1,6 +1,6 @@
 --!strict
 -- Builds the graph's view tree and its edge sheet from the store, the window model and the VM's
--- UI state. Pure: no Tern calls besides the tern.ui builders.
+-- UI state. Pure: no Tern calls.
 
 local Store = require("./store")
 local Model = require("./model")
@@ -8,19 +8,21 @@ local Layout = require("./layout")
 local Edges = require("./edges")
 local Dates = require("./dates")
 
-local ui = tern.ui
-
 local M = {}
 
 export type Ui = {
 	selected: string?,
 	today: Dates.Day,
-	-- Detail lines for an expanded live pane row: { {text, class} }.
+	-- Detail lines for an open live pane row: { {text, class} }.
 	details: (row: Model.Row) -> { { text: string, class: string? } },
 }
 
+-- An element as a plain TSP wire node {k, p, c} (tern.d.luau Node). The tree only travels to the
+-- block as JSON, and tern.ui.el would convert every subtree again at each level of nesting: with
+-- every row open that doubled the build time (task 3.3). `props` must be a fresh table.
 local function el(tag: string, props: { [string]: any }, kids: { Node }?): Node
-	return ui.el(tag, props, kids)
+	props.tag = tag
+	return { k = "el", p = props, c = kids } :: any
 end
 
 local function span(class: string, text: string, extra: { [string]: any }?): Node
@@ -121,7 +123,7 @@ end
 
 type Shown = { tab: Model.Tab, status: string }
 
-local function tab_node(t: Model.Tab, status: string, first: string, linked_open: boolean, link_btn: string?, ui_state: Ui, expanded: { [string]: boolean }): (Node, number)
+local function tab_node(t: Model.Tab, status: string, first: string, linked_open: boolean, link_btn: string?, ui_state: Ui, collapsed: { [string]: boolean }): (Node, number)
 	local cls = "ob-tab ob-t-" .. t.id .. first
 	if status ~= "live" then
 		cls ..= " ob-tab-ghost ob-tab-" .. status
@@ -154,7 +156,7 @@ local function tab_node(t: Model.Tab, status: string, first: string, linked_open
 	}
 	local detail_lines = 0
 	for _, r in t.rows do
-		local open = status == "live" and expanded[tostring(r.pane)] == true
+		local open = status == "live" and collapsed[tostring(r.pane)] ~= true
 		local row_kids: { Node } = {}
 		if status == "live" then
 			table.insert(row_kids, span("ob-exp", if open then "▾" else "▸", {
@@ -326,7 +328,7 @@ function M.build(state: Store.State, win: Model.Window, ui_state: Ui): Built
 	end
 	local function add_tab(t: Model.Tab, status: string)
 		local first = Layout.first(right)
-		local node, details = tab_node(t, status, first, linked_open[t.id] == true, link_btn(t.id), ui_state, view_state.expanded)
+		local node, details = tab_node(t, status, first, linked_open[t.id] == true, link_btn(t.id), ui_state, view_state.collapsed)
 		tab_cy[t.id] = Layout.add_tab(right, #t.rows, details)
 		table.insert(right_kids, node)
 	end

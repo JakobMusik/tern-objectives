@@ -106,7 +106,10 @@ Canvases survive a plugin reload (SDK "Window API › `cx.canvas`": "reloading a
 
 ## Risks / Trade-offs
 
-- **R1. Render plus hand-off cost with every row open.** Untested at full size. → A task measures build + `tern.json.encode` + two writes at 30 objectives and 40 panes. If the total exceeds 20 ms, details for rows in collapsed sessions are skipped first.
+- **R1. Render plus hand-off cost with every row open.** → Checked in task 3.3 at 30 objectives, 40 panes, 45 links and every row open:
+  - with `tern.ui.el`, renders took 11–25 ms. `View.build` alone took about 10 ms, half of it after the columns were built, because every container's `tern.ui.el` converts its whole subtree again; 500 flat calls cost only about 2 ms;
+  - with plain `{k, p, c}` wire tables (`Node`, L134–135), which the block receives as decoded JSON anyway, renders took 5.0–9.1 ms (build 3.2–6.5, hand-over 1.7–2.6, a 64 KB view file);
+  - lines still met node centres (edgecheck at full height). No fallback needed.
 - **R2. Focus on open.** S2 needed `cx.layout:focus` after `new_block`. → Checked in task 1.1: `cx.layout:focus(pane)` in the same handler as `new_block`, with no wait, focused the block at once. The first Esc closed it, and the `cat -v` pane below printed nothing. No timer needed.
 - **R3. Sessions on other machines.** `cx:new_block` opens on the window's current host (L1881), where the plugin may be missing and whose data folder differs. A real remote host is untested; the harness has none. → When `cx.hosts:current().kind` (ManagedHost L735–736) isn't `"local"`, "Open graph" shows an info toast and opens nothing; the README states the limit. In task 2.7 the harness read `kind = "local"`, and with the check inverted the toast showed and no graph opened.
 - **R4. Right-click inside a child node.** → Checked in task 1.2: a right-click on a child that has only a click action opens the parent's `actions.menu`, and the choice arrives with the parent's id. The menu sits on the tab node root, and pane rows carry none.
