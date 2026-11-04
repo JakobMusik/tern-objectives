@@ -43,7 +43,11 @@ The origin's session is in practice the current one (the graph opens from the fo
 **Alternative:** a pinned node above all groups (rejected by the user: it splits a session's tabs).
 
 ### R2. Unlinked fill
-`.ob-tab-unlinked` loses its opacity and gets `background: rgb(from var(--t1) r g b / 5%)` with the dashed border at 30 %. In light mode that is a grey fill against the white `--card`. In dark mode it is a faint light fill over the page instead of the card colour; task 2.2 checks that both appearances tell them apart. Ghost tabs (closed or elsewhere) keep their 0.5 opacity: they are history, not unlinked tabs.
+`.ob-tab-unlinked` loses its opacity. It gets `background: linear-gradient(ink 8%, ink 8%), var(--card)`, the card colour under an 8 % layer of `--t1`, with the dashed border at 30 %. The gradient form is from SDK "Supported CSS" (`background-image` accepts `linear-gradient()`).
+
+The first try, a 5 % ink layer over the page, failed in the dark appearance. The dark page `(21,24,32)` is darker than the dark card `(29,32,40)`, so the fill landed on `(32,35,43)`, 3 levels from the card (task 2.2). Over the card, the fill is 16 levels from it in both appearances: light `239` vs `255`, dark `(45,48,56)` vs `(29,32,40)`.
+
+Ghost tabs (closed or elsewhere) keep their 0.5 opacity: they are history, not unlinked tabs.
 
 ### R3. Toggle and fold state
 - `.ob-exp` becomes 28 px wide, full row height, with a 15 px glyph and `user-select: none`. Rows stay 22 px (`Layout.px.row_h`), so line ends don't move.

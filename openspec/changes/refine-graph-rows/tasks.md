@@ -25,12 +25,20 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
 
 ## 2. Tab node look
 
-- [ ] 2.1 Unlinked tabs: full-strength text, grey fill, dashed border; ghosts unchanged (design R2).
+- [x] 2.1 Unlinked tabs: full-strength text, grey fill, dashed border; ghosts unchanged (design R2).
 
   Verify, in shots before and after linking an unlinked tab from the graph (kv dump shows the link): the node's fill changes from grey to the card colour, and its label's text colour is the same in both.
-- [ ] 2.2 Light and dark appearances.
+
+  Result: with o6 selected, the "＋ Link" bar on docs's `omp` tab (20) gave o6 `[9, 20]`. In shots `u21_before` and `u21_after`, the fill went from `(239,239,239)` to `(255,255,255)`, and the label's darkest pixel stayed `(59,59,59)`.
+- [x] 2.2 Light and dark appearances.
 
   Verify: in shots of both appearances, the unlinked fill differs from linked cards, all badge colours show, and `edgecheck.py` passes.
+
+  Result, shots `u22_light` and `u22_dark` with the unlinked tab "misc":
+  - the first fill, 5 % ink over the page, sat 3 levels from the dark card. Moved to an ink layer over the card (design R2);
+  - now unlinked `239` vs linked `255` in light, `(45,48,56)` vs `(29,32,40)` in dark;
+  - all four badge colours and every line show in both;
+  - `edgecheck.py` passes both (7 objective ends, 6 tab ends).
 
 ## 3. Pane rows
 
