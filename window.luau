@@ -26,7 +26,7 @@ tern.command({
 	icon = "list-checks",
 	group = "Objectives",
 	keys = { "ctrl+cmd+o" },
-	run = App.open,
+	run = App.toggle,
 })
 
 tern.command({

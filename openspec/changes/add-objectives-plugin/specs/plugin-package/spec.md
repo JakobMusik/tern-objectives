@@ -11,7 +11,7 @@ The package root SHALL hold a `plugin.toml` with:
 - schema 1;
 - id `objectives`;
 - name "Objectives";
-- a version: `0.1.0` for the first release, its patch number raised for each fix released after it (the live check's fix shipped as `0.1.1`);
+- a version: `0.1.0` for the first release, its patch number raised for each fix released after it (the live check's fixes shipped as `0.1.1` and `0.1.2`);
 - a description;
 - a window entry and its style sheet.
 

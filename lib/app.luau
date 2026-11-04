@@ -69,6 +69,16 @@ function M.open(cx: WindowCx)
 	Refresh.start()
 end
 
+-- ⌃⌘O: closes the graph shown over this tab, else opens it here. Tern keeps keys away from a
+-- canvas, so Esc only closes the glimpse once its title bar has focus; the shortcut always works.
+function M.toggle(cx: WindowCx)
+	if Canvas.here(cx) ~= nil then
+		Canvas.close(cx)
+		return
+	end
+	M.open(cx)
+end
+
 -- ---- the tab a command acts on ----
 
 local function focused_tab(cx: WindowCx): (number?, Model.Tab?, string)

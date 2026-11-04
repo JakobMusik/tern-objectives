@@ -232,7 +232,7 @@ All checks run in the headless harness from design.md D14 (`/tmp/tobj`) unless a
 
   Verify with the user: the glimpse behaves as checked in task 2.1, or the side-panel fallback recorded in design.md is used.
 
-  First run: mostly fine, but a mouse click on a picker or field opened from the graph, or on the graph while one is open, closed the glimpse. Fixed in 9.8 and released in 9.9; re-check pending with the user.
+  First run: mostly fine, but a mouse click on a picker or field opened from the graph, or on the graph while one is open, closed the glimpse. Fixed in 9.8 and released in 9.9. Second run: Esc never closed the graph unless its title bar had been clicked; handled in 9.10 and released in 9.11. Re-check pending with the user.
 - [x] 9.8 Show the graph again after a picker or field it opened (live finding in 9.7; design D2, objectives-graph "Graph returns after its pickers").
 
   Verify: in the harness, click "＋ New objective", click into the field (the glimpse closes), type and press Enter; then open Side note, click into the field and click where the graph was.
@@ -241,6 +241,14 @@ All checks run in the headless harness from design.md D14 (`/tmp/tobj`) unless a
 - [x] 9.9 Release the fix as `0.1.1`: commit, push `main`, tag `v0.1.1`, and reinstall in the live Tern with `--force`.
 
   Verify: `gh api repos/JakobMusik/tern-objectives/tags` lists `v0.1.1`, and the live `tern plugin list` shows `objectives 0.1.1` ready.
+- [x] 9.10 ⌃⌘O toggles the graph (live finding in 9.7: Esc is swallowed by the canvas; design D2, objectives-graph "Opening the graph").
+
+  Verify: in the harness press ⌃⌘O three times; press it with focus inside the graph; press it after a field flow reopened the graph; press it in a tab where the graph was docked by a session switch.
+
+  Result: open, closed, open; closed with focus in the graph; closed after the field flow; the docked graph was replaced by a glimpse. A command bound to `escape` was probed first and never fired (terminal and glimpse take the key), so Esc is documented in the README instead.
+- [x] 9.11 Release `0.1.2`: commit, push `main`, tag `v0.1.2`, and reinstall in the live Tern with `--force`.
+
+  Verify: `gh api repos/JakobMusik/tern-objectives/tags` lists `v0.1.2`, and the live `tern plugin list` shows `objectives 0.1.2` ready.
 
 ## Workflow follow-up
 

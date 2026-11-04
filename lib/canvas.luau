@@ -63,18 +63,31 @@ local function docked(cx: WindowCx, pane: number, tab: number): boolean
 	return walk(layout.root)
 end
 
+-- The canvas when it is a glimpse over the current tab (not docked, not in another tab), else nil.
+function M.here(cx: WindowCx): number?
+	local existing = M.find(cx)
+	if existing == nil then
+		return nil
+	end
+	local info = cx.session:pane(existing)
+	local tab = if info ~= nil then info.tab else nil
+	if tab ~= nil and tab == current_tab(cx) and not docked(cx, existing, tab) then
+		return existing
+	end
+	return nil
+end
+
 -- Shows `view` as a glimpse over the current tab: updates and focuses the glimpse already there,
 -- else closes any canvas (docked, or in another tab) and opens a new glimpse.
 function M.show(cx: WindowCx, view: Node): (number?, string?)
+	local here = M.here(cx)
+	if here ~= nil then
+		cx.canvas:set(here, { view = view })
+		cx.layout:focus(here)
+		return here, nil
+	end
 	local existing = M.find(cx)
 	if existing ~= nil then
-		local info = cx.session:pane(existing)
-		local tab = if info ~= nil then info.tab else nil
-		if tab ~= nil and tab == current_tab(cx) and not docked(cx, existing, tab) then
-			cx.canvas:set(existing, { view = view })
-			cx.layout:focus(existing)
-			return existing, nil
-		end
 		cx.layout:close(existing)
 		pane_id = nil
 	end
