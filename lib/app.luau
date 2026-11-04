@@ -8,6 +8,7 @@ local View = require("./view")
 local Canvas = require("./canvas")
 local Dates = require("./dates")
 local Details = require("./details")
+local Refresh = require("./refresh")
 
 local M = {}
 
@@ -27,6 +28,7 @@ local function build(cx: WindowCx): View.Built
 	if selected ~= nil and Store.find(state, selected) == nil then
 		selected = nil
 	end
+	Details.begin(cx)
 	local built = View.build(state, win, {
 		selected = selected,
 		today = Dates.today(),
@@ -40,7 +42,9 @@ local function build(cx: WindowCx): View.Built
 	end
 	local took = tern.now() - started
 	if took > 20 then
-		print(string.format("objectives: render took %.1f ms", took))
+		tern.log.warn(string.format("objectives: render took %.1f ms (budget is 50 ms)", took))
+	else
+		tern.log.debug(string.format("objectives: render %.1f ms", took))
 	end
 	return built
 end
@@ -51,13 +55,18 @@ function M.render(cx: WindowCx)
 		return
 	end
 	Canvas.update(cx, build(cx).view)
+	Refresh.rendered(cx)
+	Refresh.start()
 end
 
 function M.open(cx: WindowCx)
 	local pane, err = Canvas.show(cx, build(cx).view)
 	if pane == nil then
 		cx:toast("error", "Objectives: could not open the graph", err)
+		return
 	end
+	Refresh.rendered(cx)
+	Refresh.start()
 end
 
 -- Re-installs the edge sheet, which a plugin reload drops.

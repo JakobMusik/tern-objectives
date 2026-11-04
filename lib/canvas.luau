@@ -11,6 +11,11 @@ local M = {}
 
 local pane_id: number? = nil
 
+-- Whether this VM has seen its canvas; events skip the canvas lookup while it hasn't.
+function M.known(): boolean
+	return pane_id ~= nil
+end
+
 -- The pane of this window's objectives canvas, or nil when none exists.
 function M.find(cx: WindowCx): number?
 	if pane_id ~= nil then
