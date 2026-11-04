@@ -28,6 +28,10 @@ tern plugin remove objectives
 
 Removing the plugin leaves `plugin-data/objectives/kv.json` in place; delete that folder by hand to drop your objectives too.
 
+## Known limits
+
+- Side notes are one line of up to 200 characters. Tern's one-line field joins pasted lines without a space, so put a space or punctuation at the end of a line before pasting.
+
 ## License
 
 MIT © 2026 nyclanker

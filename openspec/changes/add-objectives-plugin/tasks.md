@@ -45,7 +45,7 @@ All checks run in the headless harness from design.md D14 (`/tmp/tobj`) unless a
 
 ## 3. Store and objective editing
 
-- [ ] 3.1 Implement the store (D6, D7) and wire a basic open-objective list into the graph:
+- [x] 3.1 Implement the store (D6, D7) and wire a basic open-objective list into the graph:
   - schema v1 with a default state;
   - `mutate` with read-before-write, id allocation and time helpers;
   - the canvas shell with the header's "＋ New objective".
@@ -54,10 +54,10 @@ All checks run in the headless harness from design.md D14 (`/tmp/tobj`) unless a
   - "  Fix login bug  " is stored trimmed, at P2, not done, with a created time;
   - a blank title stores nothing;
   - a 130-character title is cut to 120.
-- [ ] 3.2 Read-before-write.
+- [x] 3.2 Read-before-write.
 
   Verify: add an objective to `kv.json` from outside the graph, rename another objective in the graph, and confirm with a kv dump that both are present.
-- [ ] 3.3 Objective nodes:
+- [x] 3.3 Objective nodes:
   - fixed-height layout with the done box, priority badge, title, ⋯, dimmed note, due chip, tag chips and the hover tooltip;
   - ordering: priority, then due date, then created;
   - the priority cycle P0→P1→P2→P3→P0 with red, orange, blue and grey badges;
@@ -68,7 +68,7 @@ All checks run in the headless harness from design.md D14 (`/tmp/tobj`) unless a
   - a P3 click turns the objective P0 and red, by kv and shot;
   - done then reopen sets and then clears `done_at` and keeps the links (kv);
   - a 200-character note keeps the node height (`ctl dump`).
-- [ ] 3.4 The ⋯ menu, through `cx:pick` and `cx:prompt`:
+- [x] 3.4 The ⋯ menu, through `cx:pick` and `cx:prompt`:
   - **Rename**, pre-filled.
   - **Side note**: one line, cut to 200 characters, empty clears.
   - **Due date**: Today, Tomorrow, Friday, Next Monday, In 1 week, "Pick date…" with validation, Clear; plus the chip texts and colours.
@@ -76,7 +76,9 @@ All checks run in the headless harness from design.md D14 (`/tmp/tobj`) unless a
   - **Delete**, with confirm and cancel.
 
   Verify each spec scenario by click, type and kv dump: "2026-02-30" is rejected with a toast, "  Web Work " becomes `web-work`, a cancelled delete leaves `kv.json` unchanged, and a dismissed field changes nothing. Check the chip colours for overdue and tomorrow by shot.
-- [ ] 3.5 Empty state hint.
+
+  Result: all passed. Tern's one-line field drops a pasted line break before the plugin sees it, so the Multi-line paste scenario was reworded (approved) to "stored as one line", and the README notes it.
+- [x] 3.5 Empty state hint.
 
   Verify: a shot with an empty store shows the hint, with tabs still listed on the right.
 
