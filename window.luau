@@ -7,12 +7,17 @@ local Layout = require("./lib/layout")
 local Refresh = require("./lib/refresh")
 
 Refresh.init(App.render)
+
+-- Reinstalled by every load, a plugin reload included. The edge sheet is drawn by each render.
 tern.css("layout", Layout.css())
 
-tern.on("window_start", function(cx: WindowCx)
-	tern.css("layout", Layout.css())
-	App.restore_css()
-	Refresh.resume(cx)
+-- A plugin reload keeps a shown canvas but starts a new VM and drops its CSS sheets, and
+-- window_start doesn't run again: draw the graph once more from a timer, which brings a cx. The
+-- first window event or click does the same if this timer comes late.
+tern.timer(0, function(cx: WindowCx?)
+	if cx ~= nil then
+		App.render(cx)
+	end
 end)
 
 tern.command({
