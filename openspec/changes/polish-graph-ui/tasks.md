@@ -194,12 +194,16 @@ All checks run in the headless harness at `/tmp/tobj` (archived design D14) unle
   - `docs/graph.png` (1600 × 1452) was opened from the right-hand pane of "App build", with "Write release notes" selected;
   - an isolated `tern plugin install .` printed `installed objectives 0.2.0`, and `tern plugin list` showed `objectives 0.2.0 … 1 blocks, 0 lenses, window ready`;
   - the README holds the install command, ⌃⌘O, "Esc closes it too", the local-sessions limit, `plugin-data/objectives/`, the screenshot and the host half.
-- [ ] 6.2 Commit, push `main` and tag `v0.2.0`.
+- [x] 6.2 Commit, push `main` and tag `v0.2.0`.
 
   Verify: `gh api repos/JakobMusik/tern-objectives/tags` lists `v0.2.0`.
-- [ ] 6.3 **(live)** Run `tern plugin install github.com/JakobMusik/tern-objectives --force` in the user's live Tern.
+
+  Result: release commit `2756044`; the tags API lists `v0.2.0`, `v0.1.2`, `v0.1.1` and `v0.1.0`.
+- [x] 6.3 **(live)** Run `tern plugin install github.com/JakobMusik/tern-objectives --force` in the user's live Tern.
 
   Verify: `tern plugin list` shows `objectives 0.2.0` ready.
+
+  Result: `installed objectives 0.2.0`; `tern plugin list` shows `objectives 0.2.0 … 1 blocks, 0 lenses, window ready`, with the user's `tabnav 0.1.0` untouched.
 - [ ] 6.4 **(live)** The user checks in their window:
   - ⌃⌘O, then Esc after clicking inside;
   - rows open by default;
