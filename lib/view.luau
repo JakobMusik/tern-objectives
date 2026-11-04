@@ -128,11 +128,13 @@ local function tab_node(t: Model.Tab, status: string, first: string, linked_open
 	elseif not linked_open then
 		cls ..= " ob-tab-unlinked"
 	end
-	local where = t.session_name .. " · tab " .. t.position
+	-- position 0: a ghost with no saved snapshot, so there is no place to name.
+	local place = if t.position > 0 then t.session_name .. " · tab " .. t.position else nil
+	local where = place or ""
 	if status == "closed" then
-		where = "closed · " .. where
+		where = if place ~= nil then "closed · " .. place else "closed"
 	elseif status == "elsewhere" then
-		where = "other window · " .. where
+		where = if place ~= nil then "other window · " .. place else "other window"
 	end
 	local head_kids: { Node } = {
 		el("div", { class = "ob-th1", key = "th1" }, {
@@ -177,9 +179,13 @@ local function tab_node(t: Model.Tab, status: string, first: string, linked_open
 	return el("div", { class = cls, key = "t:" .. t.id }, kids), detail_lines
 end
 
--- A closed or elsewhere tab drawn from its snapshot.
-local function ghost(id: number, snap: Store.TabSnap, status: string): Model.Tab
+-- A closed or elsewhere tab drawn from its snapshot; a link without one (written by hand or lost to
+-- a race) still shows, so it can be seen and pruned.
+local function ghost(id: number, snap: Store.TabSnap?, status: string): Model.Tab
 	local rows: { Model.Row } = {}
+	if snap == nil then
+		return { id = id, session = 0, session_name = "", position = 0, label = "Tab " .. id, focus = 0, rows = rows, status = status }
+	end
 	for _, p in snap.panes do
 		table.insert(rows, { pane = p.pane, title = p.title, kind = p.kind, info = nil })
 	end
@@ -367,10 +373,7 @@ function M.build(state: Store.State, win: Model.Window, ui_state: Ui): Built
 			span("ob-gtext", title, { key = "text" }),
 		}))
 		for _, tab in list do
-			local snap = state.tabs[tostring(tab)]
-			if snap ~= nil then
-				add_tab(ghost(tab, snap, status), status)
-			end
+			add_tab(ghost(tab, state.tabs[tostring(tab)], status), status)
 		end
 	end
 	ghost_group("Closed tabs", "closedgrp", closed, "closed")

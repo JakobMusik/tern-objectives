@@ -1,7 +1,7 @@
 --!strict
 -- The window's single objectives canvas (design D2): a glimpse over the current tab.
--- A glimpse that loses focus to a programmatic jump docks into its tab as a split, so jumps close
--- the canvas first, and a canvas left in another tab is replaced rather than focused there.
+-- A glimpse that loses focus to a programmatic focus change docks into its tab as a split, so jumps
+-- close the canvas first, and only an undocked glimpse in the current tab is reused.
 
 local OWNER = "objectives"
 local TITLE = "Objectives"
@@ -34,13 +34,34 @@ local function current_tab(cx: WindowCx): number?
 	return if focused ~= nil then cx.session:tab_of(focused) else nil
 end
 
--- Shows `view` over the current tab: updates and focuses the canvas already there, else closes any
--- canvas elsewhere and opens a new glimpse.
+-- Whether `pane` sits in its tab's split tree or floats: docked, no longer a glimpse.
+local function docked(cx: WindowCx, pane: number, tab: number): boolean
+	local layout = cx.session:layout(tab)
+	if layout == nil then
+		return false
+	end
+	for _, f in layout.floats do
+		if f.pane == pane then
+			return true
+		end
+	end
+	local function walk(t: TabTree): boolean
+		if t.pane ~= nil then
+			return t.pane == pane
+		end
+		return (t[1] ~= nil and walk(t[1])) or (t[2] ~= nil and walk(t[2]))
+	end
+	return walk(layout.root)
+end
+
+-- Shows `view` as a glimpse over the current tab: updates and focuses the glimpse already there,
+-- else closes any canvas (docked, or in another tab) and opens a new glimpse.
 function M.show(cx: WindowCx, view: Node): (number?, string?)
 	local existing = M.find(cx)
 	if existing ~= nil then
 		local info = cx.session:pane(existing)
-		if info ~= nil and info.tab ~= nil and info.tab == current_tab(cx) then
+		local tab = if info ~= nil then info.tab else nil
+		if tab ~= nil and tab == current_tab(cx) and not docked(cx, existing, tab) then
 			cx.canvas:set(existing, { view = view })
 			cx.layout:focus(existing)
 			return existing, nil

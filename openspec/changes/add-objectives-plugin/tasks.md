@@ -129,16 +129,18 @@ All checks run in the headless harness from design.md D14 (`/tmp/tobj`) unless a
 
 ## 5. Edges, selection emphasis and filters
 
-- [ ] 5.1 Edge layers (D3, D4), built from the layout constants:
+- [x] 5.1 Edge layers (D3, D4), built from the layout constants:
   - one line per link of an open objective, coloured by priority;
   - dashed for closed and elsewhere tabs;
   - none for done objectives.
 
   Verify: shots at 1400 px and 460 px, and `ctl dump`, show every line end within 2 px of its node's centre.
-- [ ] 5.2 Selection emphasis: a thicker selected layer with the others at 0.25, and deselection by clicking empty graph space or the selected title again.
+
+  Result: measured with `/tmp/tobj/bin/edgecheck.py` (shot pixels against layout rects) at 1400 and 460 px, light and dark: 5 left ends for the 5 linked open objectives, 6 right ends for the 6 linked tabs including closed and elsewhere, none for the done objective, all within 2 px. Dashed lines got 4 px solid end stubs so they always reach their nodes (design D4).
+- [x] 5.2 Selection emphasis: a thicker selected layer with the others at 0.25, and deselection by clicking empty graph space or the selected title again.
 
   Verify by shots after `ctl click` on a title and on empty space.
-- [ ] 5.3 Filters:
+- [x] 5.3 Filters:
   - the scope filter, All or This session, where This session keeps the selected objective;
   - the tag filter chips, one at a time;
   - the scope, tag, Done-group and expanded settings remembered in `view`.
@@ -147,7 +149,7 @@ All checks run in the headless harness from design.md D14 (`/tmp/tobj`) unless a
   - the "This session" scenario (X shown, Y hidden, only the "web" tabs), by shot;
   - "#api" filtering, by shot;
   - after a plugin reload, the view settings are restored (kv dump and shot).
-- [ ] 5.4 Light and dark appearances.
+- [x] 5.4 Light and dark appearances.
 
   Verify: shots under `ctl appearance light` and `ctl appearance dark` show every line, badge colour and the faded-tab style.
 

@@ -61,7 +61,7 @@ Every API the specs need lives in the window half:
 
 **Rules that follow:**
 - **Jumps close the canvas first** (`cx.layout:close`), then focus the target, so nothing is left over or beside it.
-- **Reuse:** the VM keeps the canvas pane id, re-checked with `cx.canvas:get(id)` (L1572), else found in `cx.canvas:list()` (L1574) by `owner = "objectives"`. If that canvas is in the current tab, the plugin `set`s and focuses it. If it is in another tab (for example docked there by a session switch), it is closed and a new glimpse opens over the current tab. The window holds at most one canvas, as the spec requires.
+- **Reuse:** the VM keeps the canvas pane id, re-checked with `cx.canvas:get(id)` (L1572), else found in `cx.canvas:list()` (L1574) by `owner = "objectives"`. Only a canvas that is still a glimpse over the current tab (not a leaf or float of its tab's layout) is `set` and focused. Any other one, docked by a focus change or left in another tab, is closed and a new glimpse opens over the current tab. The window holds at most one canvas, as the spec requires.
 
 **Fallback (not needed):** `how = "beside", ratio = 0.4`, a lasting side panel (L1451–1461).
 
@@ -100,7 +100,7 @@ The spike showed that alignment holds exactly when the CSS and the edge geometry
 **SVG geometry:**
 - `viewBox = "0 0 W H"`, W = `gap_w`, H = the graph height in px, drawn 1:1 with `background-size: W H`. Nothing scales, so stroke widths and dashes stay true.
 - Curves are cubic Béziers from x = 0 at the objective's centre y to x = W at the tab header's centre y.
-- Closed and elsewhere tabs use `stroke-dasharray`.
+- Closed and elsewhere tabs use `stroke-dasharray`, plus a 4 px solid stub at each end, so a line whose dash pattern ends in a gap still touches both nodes.
 
 **Reinstalling:** the edge sheet (`tern.css("edges", …)`) is installed again on every render, on `window_start`, and at load, so a reload can't leave it missing. Install is skipped when the string is unchanged.
 
