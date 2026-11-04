@@ -1,12 +1,12 @@
 --!strict
--- Live refresh (design D12). While the canvas exists one 250 ms heartbeat runs:
+-- Live refresh (design D12). While the graph exists one 250 ms heartbeat runs:
 -- - every beat: read one stale agent transcript (design D11);
 -- - every 3rd beat (750 ms): compare a cheap window signature, since pane_created and tab_created
 --   miss panes made by the CLI or restored;
 -- - every 4th beat (1 s): redraw while a shown row is running a command, so its elapsed time moves.
--- Window events ask for one render 150 ms later, coalesced. Everything stops once the canvas is gone.
+-- Window events ask for one render 150 ms later, coalesced. Everything stops once the graph is gone.
 
-local Canvas = require("./canvas")
+local Surface = require("./surface")
 local Details = require("./details")
 
 local M = {}
@@ -53,7 +53,7 @@ function M.rendered(cx: WindowCx)
 end
 
 local function beat(cx: WindowCx?)
-	if cx == nil or Canvas.find(cx) == nil then
+	if cx == nil or Surface.find(cx) == nil then
 		beating = false
 		return
 	end
@@ -85,13 +85,13 @@ end
 
 -- A window event: render once, 150 ms from now, if the graph is shown.
 function M.request(cx: WindowCx)
-	if pending or not Canvas.known() or Canvas.find(cx) == nil then
+	if pending or not Surface.known() or Surface.find(cx) == nil then
 		return
 	end
 	pending = true
 	tern.timer(150, function(cx2: WindowCx?)
 		pending = false
-		if cx2 ~= nil and Canvas.find(cx2) ~= nil then
+		if cx2 ~= nil and Surface.find(cx2) ~= nil then
 			render(cx2)
 		end
 	end)

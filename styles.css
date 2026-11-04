@@ -1,40 +1,40 @@
-/* Objectives graph. Canvas content carries [data-surface='plugin.tern.canvas'];
-   every rule is scoped under .ob-root so nothing leaks into other canvases.
+/* Objectives graph. The graph block's surface carries [data-surface='plugin.objectives.graph'];
+   every rule is scoped under .ob-root so nothing leaks into other surfaces.
    Heights and margins come from the generated "layout" sheet (lib/layout.luau). */
 
-[data-surface='plugin.tern.canvas'] .ob-root {
+[data-surface='plugin.objectives.graph'] .ob-root {
 	font-size: 12.5px;
 	color: var(--t1);
 	max-width: 1200px;
 }
 
 /* ---- graph frame: left column, gap with edge layers, right column ---- */
-[data-surface='plugin.tern.canvas'] .ob-root .ob-graph {
+[data-surface='plugin.objectives.graph'] .ob-root .ob-graph {
 	display: flex;
 	flex-direction: row;
 	align-items: flex-start;
 	position: relative;
 }
-[data-surface='plugin.tern.canvas'] .ob-root .ob-col {
+[data-surface='plugin.objectives.graph'] .ob-root .ob-col {
 	display: flex;
 	flex-direction: column;
 	min-width: 0;
 }
-[data-surface='plugin.tern.canvas'] .ob-root .ob-col-l {
+[data-surface='plugin.objectives.graph'] .ob-root .ob-col-l {
 	flex: 45 1 0;
 }
-[data-surface='plugin.tern.canvas'] .ob-root .ob-col-r {
+[data-surface='plugin.objectives.graph'] .ob-root .ob-col-r {
 	flex: 55 1 0;
 }
 /* width from the layout sheet (gap_w): edges are drawn 1:1 in it */
-[data-surface='plugin.tern.canvas'] .ob-root .ob-gap {
+[data-surface='plugin.objectives.graph'] .ob-root .ob-gap {
 	flex: none;
 	align-self: stretch;
 	position: relative;
 }
 
 /* ---- edge layers: SVG backgrounds from the edges sheet, one px per px ---- */
-[data-surface='plugin.tern.canvas'] .ob-root .ob-e {
+[data-surface='plugin.objectives.graph'] .ob-root .ob-e {
 	position: absolute;
 	left: 0;
 	right: 0;
@@ -43,12 +43,12 @@
 	background-position: 0 0;
 	pointer-events: none;
 }
-[data-surface='plugin.tern.canvas'] .ob-root .ob-e-dim {
+[data-surface='plugin.objectives.graph'] .ob-root .ob-e-dim {
 	opacity: 0.25;
 }
 
 /* ---- header ---- */
-[data-surface='plugin.tern.canvas'] .ob-root .ob-head {
+[data-surface='plugin.objectives.graph'] .ob-root .ob-head {
 	display: flex;
 	flex-direction: row;
 	align-items: center;
@@ -56,47 +56,47 @@
 	gap: 8px;
 	margin-bottom: 6px;
 }
-[data-surface='plugin.tern.canvas'] .ob-root .ob-seg {
+[data-surface='plugin.objectives.graph'] .ob-root .ob-seg {
 	display: flex;
 	flex-direction: row;
 	border-radius: 7px;
 	box-shadow: inset 0 0 0 1px var(--l2);
 	overflow: hidden;
 }
-[data-surface='plugin.tern.canvas'] .ob-root .ob-segb {
+[data-surface='plugin.objectives.graph'] .ob-root .ob-segb {
 	padding: 3px 10px;
 	color: var(--t2);
 	white-space: nowrap;
 }
-[data-surface='plugin.tern.canvas'] .ob-root .ob-segb.ob-on {
+[data-surface='plugin.objectives.graph'] .ob-root .ob-segb.ob-on {
 	color: var(--t1);
 	background: rgb(from var(--t1) r g b / 10%);
 }
-[data-surface='plugin.tern.canvas'] .ob-root .ob-ftags {
+[data-surface='plugin.objectives.graph'] .ob-root .ob-ftags {
 	display: flex;
 	flex-direction: row;
 	flex-wrap: wrap;
 	gap: 4px;
 }
-[data-surface='plugin.tern.canvas'] .ob-root .ob-spacer {
+[data-surface='plugin.objectives.graph'] .ob-root .ob-spacer {
 	flex: 1 1 auto;
 }
-[data-surface='plugin.tern.canvas'] .ob-root .ob-btn {
+[data-surface='plugin.objectives.graph'] .ob-root .ob-btn {
 	padding: 3px 10px;
 	border-radius: 7px;
 	white-space: nowrap;
 }
-[data-surface='plugin.tern.canvas'] .ob-root .ob-btn-primary {
+[data-surface='plugin.objectives.graph'] .ob-root .ob-btn-primary {
 	color: white;
 	background: var(--accent-fill);
 }
-[data-surface='plugin.tern.canvas'] .ob-root .ob-btn-quiet {
+[data-surface='plugin.objectives.graph'] .ob-root .ob-btn-quiet {
 	color: var(--t2);
 	box-shadow: inset 0 0 0 1px var(--l2);
 }
 
 /* ---- chips ---- */
-[data-surface='plugin.tern.canvas'] .ob-root .ob-chip {
+[data-surface='plugin.objectives.graph'] .ob-root .ob-chip {
 	flex: none;
 	padding: 0 6px;
 	border-radius: 9px;
@@ -106,21 +106,21 @@
 	color: var(--t2);
 	background: rgb(from var(--t1) r g b / 7%);
 }
-[data-surface='plugin.tern.canvas'] .ob-root .ob-ftag.ob-on {
+[data-surface='plugin.objectives.graph'] .ob-root .ob-ftag.ob-on {
 	color: white;
 	background: var(--accent-fill);
 }
-[data-surface='plugin.tern.canvas'] .ob-root .ob-due-bad {
+[data-surface='plugin.objectives.graph'] .ob-root .ob-due-bad {
 	color: var(--bad);
 	background: rgb(from var(--bad) r g b / 12%);
 }
-[data-surface='plugin.tern.canvas'] .ob-root .ob-due-warn {
+[data-surface='plugin.objectives.graph'] .ob-root .ob-due-warn {
 	color: var(--warn);
 	background: rgb(from var(--warn) r g b / 14%);
 }
 
 /* ---- objective nodes ---- */
-[data-surface='plugin.tern.canvas'] .ob-root .ob-obj {
+[data-surface='plugin.objectives.graph'] .ob-root .ob-obj {
 	box-sizing: border-box;
 	flex: none;
 	overflow: hidden;
@@ -129,18 +129,18 @@
 	border-radius: 8px;
 	background: var(--card);
 }
-[data-surface='plugin.tern.canvas'] .ob-root .ob-obj.ob-sel {
+[data-surface='plugin.objectives.graph'] .ob-root .ob-obj.ob-sel {
 	border-color: var(--accent);
 	box-shadow: 0 0 0 1px var(--accent);
 }
-[data-surface='plugin.tern.canvas'] .ob-root .ob-obj-done {
+[data-surface='plugin.objectives.graph'] .ob-root .ob-obj-done {
 	opacity: 0.6;
 }
-[data-surface='plugin.tern.canvas'] .ob-root .ob-obj-done .ob-title {
+[data-surface='plugin.objectives.graph'] .ob-root .ob-obj-done .ob-title {
 	text-decoration: line-through;
 }
-[data-surface='plugin.tern.canvas'] .ob-root .ob-l1,
-[data-surface='plugin.tern.canvas'] .ob-root .ob-l2 {
+[data-surface='plugin.objectives.graph'] .ob-root .ob-l1,
+[data-surface='plugin.objectives.graph'] .ob-root .ob-l2 {
 	display: flex;
 	flex-direction: row;
 	align-items: center;
@@ -149,7 +149,7 @@
 	overflow: hidden;
 	white-space: nowrap;
 }
-[data-surface='plugin.tern.canvas'] .ob-root .ob-check {
+[data-surface='plugin.objectives.graph'] .ob-root .ob-check {
 	flex: none;
 	box-sizing: border-box;
 	width: 14px;
@@ -160,12 +160,12 @@
 	line-height: 14px;
 	text-align: center;
 }
-[data-surface='plugin.tern.canvas'] .ob-root .ob-check-on {
+[data-surface='plugin.objectives.graph'] .ob-root .ob-check-on {
 	color: white;
 	background: var(--ok);
 	box-shadow: none;
 }
-[data-surface='plugin.tern.canvas'] .ob-root .ob-badge {
+[data-surface='plugin.objectives.graph'] .ob-root .ob-badge {
 	flex: none;
 	padding: 0 5px;
 	border-radius: 5px;
@@ -173,20 +173,20 @@
 	font-weight: 700;
 	line-height: 16px;
 }
-[data-surface='plugin.tern.canvas'] .ob-root .ob-title {
+[data-surface='plugin.objectives.graph'] .ob-root .ob-title {
 	flex: 1 1 auto;
 	min-width: 0;
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
 }
-[data-surface='plugin.tern.canvas'] .ob-root .ob-more {
+[data-surface='plugin.objectives.graph'] .ob-root .ob-more {
 	flex: none;
 	padding: 0 4px;
 	border-radius: 4px;
 	color: var(--t3);
 }
-[data-surface='plugin.tern.canvas'] .ob-root .ob-note {
+[data-surface='plugin.objectives.graph'] .ob-root .ob-note {
 	flex: 0 1 auto;
 	min-width: 0;
 	overflow: hidden;
@@ -197,7 +197,7 @@
 }
 
 /* ---- groups, hint, sessions ---- */
-[data-surface='plugin.tern.canvas'] .ob-root .ob-group {
+[data-surface='plugin.objectives.graph'] .ob-root .ob-group {
 	flex: none;
 	display: flex;
 	flex-direction: row;
@@ -209,7 +209,7 @@
 	font-size: 11px;
 	font-weight: 600;
 }
-[data-surface='plugin.tern.canvas'] .ob-root .ob-hint {
+[data-surface='plugin.objectives.graph'] .ob-root .ob-hint {
 	box-sizing: border-box;
 	flex: none;
 	overflow: hidden;
@@ -217,7 +217,7 @@
 	border-radius: 8px;
 	box-shadow: inset 0 0 0 1px var(--l2);
 }
-[data-surface='plugin.tern.canvas'] .ob-root .ob-session {
+[data-surface='plugin.objectives.graph'] .ob-root .ob-session {
 	flex: none;
 	display: flex;
 	flex-direction: row;
@@ -229,19 +229,19 @@
 	font-weight: 600;
 	letter-spacing: 0.04em;
 }
-[data-surface='plugin.tern.canvas'] .ob-root .ob-sname {
+[data-surface='plugin.objectives.graph'] .ob-root .ob-sname {
 	text-transform: uppercase;
 	overflow: hidden;
 	text-overflow: ellipsis;
 }
-[data-surface='plugin.tern.canvas'] .ob-root .ob-scur {
+[data-surface='plugin.objectives.graph'] .ob-root .ob-scur {
 	flex: none;
 	color: var(--accent);
 	font-weight: 500;
 }
 
 /* ---- tab nodes ---- */
-[data-surface='plugin.tern.canvas'] .ob-root .ob-tab {
+[data-surface='plugin.objectives.graph'] .ob-root .ob-tab {
 	box-sizing: content-box;
 	flex: none;
 	overflow: hidden;
@@ -250,33 +250,33 @@
 	border-radius: 8px;
 	background: var(--card);
 }
-[data-surface='plugin.tern.canvas'] .ob-root .ob-tab-unlinked {
+[data-surface='plugin.objectives.graph'] .ob-root .ob-tab-unlinked {
 	border-style: dashed;
 	border-color: rgb(from var(--t1) r g b / 30%);
 	background: transparent;
 	opacity: 0.55;
 }
-[data-surface='plugin.tern.canvas'] .ob-root .ob-tab-ghost {
+[data-surface='plugin.objectives.graph'] .ob-root .ob-tab-ghost {
 	border-style: dashed;
 	background: transparent;
 	opacity: 0.5;
 }
-[data-surface='plugin.tern.canvas'] .ob-root .ob-tab-closed .ob-tlabel {
+[data-surface='plugin.objectives.graph'] .ob-root .ob-tab-closed .ob-tlabel {
 	text-decoration: line-through;
 }
-[data-surface='plugin.tern.canvas'] .ob-root .ob-thead {
+[data-surface='plugin.objectives.graph'] .ob-root .ob-thead {
 	box-sizing: border-box;
 	overflow: hidden;
 	padding: 2px 8px 0 8px;
 }
-[data-surface='plugin.tern.canvas'] .ob-root .ob-th1 {
+[data-surface='plugin.objectives.graph'] .ob-root .ob-th1 {
 	display: flex;
 	flex-direction: row;
 	align-items: center;
 	gap: 6px;
 	height: 18px;
 }
-[data-surface='plugin.tern.canvas'] .ob-root .ob-tlabel {
+[data-surface='plugin.objectives.graph'] .ob-root .ob-tlabel {
 	flex: 1 1 auto;
 	min-width: 0;
 	overflow: hidden;
@@ -284,7 +284,7 @@
 	white-space: nowrap;
 	font-weight: 600;
 }
-[data-surface='plugin.tern.canvas'] .ob-root .ob-link {
+[data-surface='plugin.objectives.graph'] .ob-root .ob-link {
 	flex: none;
 	padding: 0 6px;
 	border-radius: 5px;
@@ -292,7 +292,7 @@
 	color: var(--accent);
 	box-shadow: inset 0 0 0 1px var(--accent);
 }
-[data-surface='plugin.tern.canvas'] .ob-root .ob-row {
+[data-surface='plugin.objectives.graph'] .ob-root .ob-row {
 	box-sizing: border-box;
 	display: flex;
 	flex-direction: row;
@@ -303,20 +303,20 @@
 	white-space: nowrap;
 	color: var(--t2);
 }
-[data-surface='plugin.tern.canvas'] .ob-root .ob-exp {
+[data-surface='plugin.objectives.graph'] .ob-root .ob-exp {
 	flex: none;
 	width: 14px;
 	text-align: center;
 	color: var(--t3);
 }
-[data-surface='plugin.tern.canvas'] .ob-root .ob-rlabel {
+[data-surface='plugin.objectives.graph'] .ob-root .ob-rlabel {
 	flex: 1 1 auto;
 	min-width: 0;
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
 }
-[data-surface='plugin.tern.canvas'] .ob-root .ob-detail {
+[data-surface='plugin.objectives.graph'] .ob-root .ob-detail {
 	box-sizing: border-box;
 	display: block;
 	overflow: hidden;
@@ -326,33 +326,33 @@
 	color: var(--t3);
 	font-size: 11px;
 }
-[data-surface='plugin.tern.canvas'] .ob-root .ob-d-ok {
+[data-surface='plugin.objectives.graph'] .ob-root .ob-d-ok {
 	color: var(--ok);
 }
-[data-surface='plugin.tern.canvas'] .ob-root .ob-d-bad {
+[data-surface='plugin.objectives.graph'] .ob-root .ob-d-bad {
 	color: var(--bad);
 }
-[data-surface='plugin.tern.canvas'] .ob-root .ob-d-run,
-[data-surface='plugin.tern.canvas'] .ob-root .ob-d-working {
+[data-surface='plugin.objectives.graph'] .ob-root .ob-d-run,
+[data-surface='plugin.objectives.graph'] .ob-root .ob-d-working {
 	color: var(--accent);
 }
-[data-surface='plugin.tern.canvas'] .ob-root .ob-d-waiting_input {
+[data-surface='plugin.objectives.graph'] .ob-root .ob-d-waiting_input {
 	color: var(--warn);
 }
-[data-surface='plugin.tern.canvas'] .ob-root .ob-d-state {
+[data-surface='plugin.objectives.graph'] .ob-root .ob-d-state {
 	font-weight: 600;
 }
-[data-surface='plugin.tern.canvas'] .ob-root .ob-d-wait {
+[data-surface='plugin.objectives.graph'] .ob-root .ob-d-wait {
 	font-style: italic;
 }
-[data-surface='plugin.tern.canvas'] .ob-root .ob-line {
+[data-surface='plugin.objectives.graph'] .ob-root .ob-line {
 	display: block;
 	overflow: hidden;
 	white-space: nowrap;
 	text-overflow: ellipsis;
 	line-height: 18px;
 }
-[data-surface='plugin.tern.canvas'] .ob-root .ob-dim {
+[data-surface='plugin.objectives.graph'] .ob-root .ob-dim {
 	color: var(--t3);
 	font-size: 11px;
 }

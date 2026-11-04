@@ -26,7 +26,7 @@ All checks run in the headless harness at `/tmp/tobj` (archived design D14) unle
 
 ## 2. Block surface
 
-- [ ] 2.1 Add the host half: `plugin.toml` gains `host = "host.luau"` and `[[blocks]] id = "graph"` (`palette = false`). `host.luau` defines the thin `graph` block (design P1–P3):
+- [x] 2.1 Add the host half: `plugin.toml` gains `host = "host.luau"` and `[[blocks]] id = "graph"` (`palette = false`). `host.luau` defines the thin `graph` block (design P1–P3):
   - it polls the `.seq` file every 25 ms and reads and decodes the tree when it changes;
   - it renders `{main = tree}`;
   - it forwards events as `objectives://act/<act>/<value>`;
@@ -34,7 +34,9 @@ All checks run in the headless harness at `/tmp/tobj` (archived design D14) unle
   - `save` keeps the stem.
 
   Verify: `ctl plugins fixtures` loads `objectives` with no plugin errors in `/tmp/tobj/logs`, and the palette offers no "Objectives Graph" block.
-- [ ] 2.2 Rework `lib/canvas.luau` into the block surface (design P1, P3):
+
+  Result: loaded with no errors; `palette objectives` lists only the three commands (shot `p21_palette`). The block also sets `font = "sans"`, so the graph keeps the 0.1.2 face.
+- [x] 2.2 Rework `lib/canvas.luau` into the block surface, renamed `lib/surface.luau` (design P1, P3):
   - find the graph pane by `block == "objectives.graph"`;
   - `show` opens with `cx:new_block(…, {stem}, "glimpse")`, then `cx.layout:focus`;
   - `update` writes the view files;
@@ -45,38 +47,56 @@ All checks run in the headless harness at `/tmp/tobj` (archived design D14) unle
   - ⌃⌘O twice: `ctl state` shows the graph pane focused after the first press, and no graph pane after the second;
   - the view files exist only while the graph is shown;
   - after a session switch docks the graph, ⌃⌘O in that tab leaves exactly one graph pane.
-- [ ] 2.3 Replace the `canvas_action` handler with the `tern.route.link` handler (design P4). It declines non-`objectives://act/` URLs and links from any pane other than the graph's.
+
+  Result (helper dump): the first ⌃⌘O showed graph pane 48 with focus and wrote `view-window.json`/`.seq`; the second left no graph pane and no files. A switch to "alpha" and back docked pane 49 into tab 42's layout; ⌃⌘O then left exactly one graph, pane 51, focused and in no layout. The headless window key is `""`, so the stem falls back to `window`.
+- [x] 2.3 Replace the `canvas_action` handler with the `tern.route.link` handler (design P4). It declines URLs that aren't `objectives://`, and swallows unacted any `objectives://` link that isn't an action or comes from a pane other than the graph's.
 
   Verify:
   - clicking an objective's title in a shot selects it;
   - a `tspike` block that runs `cx:open("objectives://act/new/")` opens no title field, and the kv dump is unchanged.
-- [ ] 2.4 Move the style scope to `[data-surface='plugin.objectives.graph']` in `styles.css` and `Layout.SCOPE` (design P9). Close canvases left by 0.1.x on load (design P10).
+
+  Result: a click on the first title gave its node `ob-sel`, with focus kept on the graph. The `tspike` link from pane 52 was logged as ignored; no field opened (shot `g23_foreign`), and the kv dump was unchanged.
+- [x] 2.4 Move the style scope to `[data-surface='plugin.objectives.graph']` in `styles.css` and `Layout.SCOPE` (design P9). Close canvases left by 0.1.x on load (design P10).
 
   Verify:
   - shots at 1400 and 460 px wide, light and dark, look like the 0.1.2 graph;
   - `edgecheck.py` puts the line ends within 2 px of node centres (objectives-graph "Link lines");
   - a canvas opened by a 0.1.2 fixture copy is gone after syncing this version and reloading (`ctl state`).
-- [ ] 2.5 Esc and ⌃⌘O with focus inside the graph (objectives-graph "Closing with Esc", "Opening the graph": Toggle after clicking inside).
+
+  Result: shots `e24_{1400,460}_{light,dark}` show the 0.1.2 look. `edgecheck.py` passed all four (7 objective ends and 5 tab ends, all within 0.3 px) once the viewport was tall enough to show the whole graph; at 900 px the lines leaving the visible area read as false ends. The 0.1.2 canvas (pane 53) was gone after the sync and reload (helper dump). The 0.1.x scope string is now `Layout.SCOPE`, shared by `edges.luau`.
+- [x] 2.5 Esc and ⌃⌘O with focus inside the graph (objectives-graph "Closing with Esc", "Opening the graph": Toggle after clicking inside).
 
   Verify with `ctl key`, `ctl state` and shots over a fresh `cat -v` pane:
   - Esc right after ⌃⌘O closes the graph, and `cat -v` shows no `^[`;
   - after clicking an objective's title, one Esc closes it;
   - after the same click, ⌃⌘O closes it.
-- [ ] 2.6 Pickers, navigation and refresh on the new surface. Verify by re-running the scenarios with shots and `ctl state`:
+
+  Result over `cat -v` pane 55: each case closed the graph and returned focus to pane 55, whose screen stayed empty.
+- [x] 2.6 Pickers, navigation and refresh on the new surface. Verify by re-running the scenarios with shots and `ctl state`:
   - objectives-graph "Graph returns after its pickers": Clicking into a field, Dismissing by clicking the graph;
   - tab-navigation "Jump to a tab" (cross-session) and "Jumped-to pane is uncovered";
   - objectives-graph "Live refresh": New tab appears.
-- [ ] 2.7 Sessions on other machines (design R3): "Open graph" shows an info toast and opens nothing when the current session's host isn't the local one.
+
+  Result:
+  - "＋ New objective", a click into the field (which closed the glimpse), "Write slides" + Enter: the graph came back with it selected.
+  - Side note, a click into the field, a click where the graph was: the field closed, the note was unchanged, and the graph came back.
+  - A click on "Components" from session beta showed session alpha with pane 18 focused, and a click on the right-hand row of "App build" focused pane 16, uncovered (shot `g26_pane`).
+  - A tab opened programmatically appeared in the graph. It also docked the glimpse into its tab, as it does with 0.1.2's canvas (checked side by side; archived design R1).
+- [x] 2.7 Sessions on other machines (design R3): "Open graph" shows an info toast and opens nothing when the current session's host isn't the local one.
 
   Verify:
-  - the harness's `cx.sessions:current().host` reads 0 (tobjh `topo` kv dump), and the graph opens;
+  - the harness's `cx.hosts:current().kind` reads `"local"`, and the graph opens;
   - with the local-host check temporarily inverted, the command shows the toast, and `ctl state` holds no graph pane.
-- [ ] 2.8 README for the new surface (plugin-package "README"):
+
+  Result: the harness reads `{id = 0, kind = "local"}`, and the graph opened. With the check inverted in the fixtures copy, ⌃⌘O showed the toast (shot `g27_toast`) and opened no graph. The check uses `ManagedHost.kind` rather than a host id of 0.
+- [x] 2.8 README for the new surface (plugin-package "README"):
   - the plugin has a window half and a host half that only shows the graph;
   - Esc closes the graph; the old Esc limit goes;
   - the graph opens only in sessions on the local machine.
 
   Verify: the README holds those three points and no longer says "window-half only".
+
+  Result: Install describes both halves; the Open graph row says Esc closes it; Known limits lists the local-sessions limit, with the Esc limit and the footer note gone (the footer's hint is now true); Data names the transient view files. No "window-half only" or "canvas" is left.
 
 ## 3. Pane rows open by default
 

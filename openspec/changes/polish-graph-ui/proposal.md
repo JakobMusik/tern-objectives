@@ -47,7 +47,7 @@ None. Every change modifies an existing capability.
 - **Code:**
   - new `host.luau` (the display block);
   - `plugin.toml` gains `host` and one `[[blocks]]` entry;
-  - `lib/canvas.luau` becomes the block surface (open, find, close and view hand-off);
+  - `lib/canvas.luau` becomes the block surface, `lib/surface.luau` (open, find, close and view hand-off);
   - `window.luau` replaces the `canvas_action` handler with a `tern.route.link` handler for the block's `objectives://` links;
   - `lib/view.luau` (link bar, origin classes, open-by-default rows, right-click menus);
   - `lib/app.luau` (origin, link actions);

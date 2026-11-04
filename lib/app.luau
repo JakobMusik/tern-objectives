@@ -1,11 +1,11 @@
 --!strict
--- The graph's behaviour: rendering, the click verbs (design D5), the objective menu and the palette
--- commands. Selection lives in this VM only (design D6).
+-- The graph's behaviour: rendering, the click verbs (design D5, P4), the objective menu and the
+-- palette commands. Selection lives in this VM only (design D6).
 
 local Store = require("./store")
 local Model = require("./model")
 local View = require("./view")
-local Canvas = require("./canvas")
+local Surface = require("./surface")
 local Dates = require("./dates")
 local Details = require("./details")
 local Refresh = require("./refresh")
@@ -23,7 +23,7 @@ end
 local function build(cx: WindowCx): View.Built
 	local started = tern.now()
 	local state = Store.read()
-	local win = Model.read(cx, Canvas.find(cx))
+	local win = Model.read(cx, Surface.find(cx))
 	Store.refresh_snapshots(state, win.tabs :: any, win.key)
 	if selected ~= nil and Store.find(state, selected) == nil then
 		selected = nil
@@ -51,16 +51,29 @@ end
 
 -- Draws the graph again when it is shown; does nothing otherwise.
 function M.render(cx: WindowCx)
-	if Canvas.find(cx) == nil then
+	if Surface.find(cx) == nil then
 		return
 	end
-	Canvas.update(cx, build(cx).view)
+	Surface.update(cx, build(cx).view)
 	Refresh.rendered(cx)
 	Refresh.start()
 end
 
+-- Whether the current session runs on this machine. The graph block opens on the session's host,
+-- whose plugins and data folder may differ (design R3).
+local function local_session(cx: WindowCx): boolean
+	local ok, host = pcall(function()
+		return cx.hosts:current()
+	end)
+	return not ok or host.kind == "local"
+end
+
 function M.open(cx: WindowCx)
-	local pane, err = Canvas.show(cx, build(cx).view)
+	if not local_session(cx) then
+		cx:toast("info", "The objectives graph opens only in sessions on this machine")
+		return
+	end
+	local pane, err = Surface.show(cx, build(cx).view)
 	if pane == nil then
 		cx:toast("error", "Objectives: could not open the graph", err)
 		return
@@ -69,11 +82,11 @@ function M.open(cx: WindowCx)
 	Refresh.start()
 end
 
--- ⌃⌘O: closes the graph shown over this tab, else opens it here. Tern keeps keys away from a
--- canvas, so Esc only closes the glimpse once its title bar has focus; the shortcut always works.
+-- ⌃⌘O: closes the graph shown over this tab, else opens it here. Esc closes it too, through the
+-- block's own key handler.
 function M.toggle(cx: WindowCx)
-	if Canvas.here(cx) ~= nil then
-		Canvas.close(cx)
+	if Surface.here(cx) ~= nil then
+		Surface.close(cx)
 		return
 	end
 	M.open(cx)
@@ -87,7 +100,7 @@ local function focused_tab(cx: WindowCx): (number?, Model.Tab?, string)
 	if tab == nil then
 		return nil, nil, ""
 	end
-	local win = Model.read(cx, Canvas.find(cx))
+	local win = Model.read(cx, Surface.find(cx))
 	return tab, win.tabs[tab], win.key
 end
 
@@ -104,7 +117,7 @@ local function finish(cx: WindowCx?, from_graph: boolean)
 	if cx == nil then
 		return
 	end
-	if from_graph and Canvas.find(cx) == nil then
+	if from_graph and Surface.find(cx) == nil then
 		M.open(cx)
 	else
 		M.render(cx)
@@ -388,7 +401,7 @@ end
 
 local function jump_tab(cx: WindowCx, tab: number)
 	local state = Store.read()
-	local win = Model.read(cx, Canvas.find(cx))
+	local win = Model.read(cx, Surface.find(cx))
 	local t = win.tabs[tab]
 	if t == nil then
 		local snap = state.tabs[tostring(tab)]
@@ -399,7 +412,7 @@ local function jump_tab(cx: WindowCx, tab: number)
 		end
 		return
 	end
-	Canvas.close(cx)
+	Surface.close(cx)
 	cx.layout:focus(t.focus)
 end
 
@@ -409,19 +422,21 @@ local function jump_pane(cx: WindowCx, pane: number)
 		cx:toast("info", "That pane is no longer open")
 		return
 	end
-	Canvas.close(cx)
+	Surface.close(cx)
 	cx.layout:focus(pane)
 end
 
 -- ---- clicks ----
 
-function M.action(ev: CanvasAction, cx: WindowCx): boolean?
+export type Action = { act: string, value: string? }
+
+function M.action(ev: Action, cx: WindowCx)
 	local act, value = ev.act, ev.value or ""
 	if act == "sel" then
 		selected = if selected == value then nil else value
 	elseif act == "bg" then
 		if selected == nil then
-			return true
+			return
 		end
 		selected = nil
 	elseif act == "done" then
@@ -434,16 +449,16 @@ function M.action(ev: CanvasAction, cx: WindowCx): boolean?
 		end
 	elseif act == "menu" then
 		menu(cx, value)
-		return true
+		return
 	elseif act == "new" then
 		new_objective(cx, nil, nil, "", true)
-		return true
+		return
 	elseif act == "link" then
 		local tab = tonumber(value)
 		if selected == nil or tab == nil then
-			return true
+			return
 		end
-		local win = Model.read(cx, Canvas.find(cx))
+		local win = Model.read(cx, Surface.find(cx))
 		if Store.toggle_link(selected, tab, win.tabs[tab] :: any, win.key) == nil then
 			toast_gone(cx)
 		end
@@ -452,13 +467,13 @@ function M.action(ev: CanvasAction, cx: WindowCx): boolean?
 		if tab ~= nil then
 			jump_tab(cx, tab)
 		end
-		return true
+		return
 	elseif act == "pane" then
 		local pane = tonumber(value)
 		if pane ~= nil then
 			jump_pane(cx, pane)
 		end
-		return true
+		return
 	elseif act == "exp" then
 		Store.set_view(function(v)
 			v.expanded[value] = if v.expanded[value] then nil else true
@@ -484,12 +499,32 @@ function M.action(ev: CanvasAction, cx: WindowCx): boolean?
 		end)
 	elseif act == "prune" then
 		prune(cx)
-		return true
+		return
 	else
-		return nil
+		return
 	end
 	M.render(cx)
-	return true
+end
+
+local function unpct(s: string): string
+	return (string.gsub(s, "%%(%x%x)", function(h)
+		return string.char(tonumber(h, 16) :: number)
+	end))
+end
+
+-- A click in the graph block arrives as objectives://act/<act>/<value> (design P4). The same link
+-- from any other pane is swallowed unread: a program could print one.
+function M.link(link: LinkRequest, cx: WindowCx): RouteDecision?
+	if string.sub(link.url, 1, 13) ~= "objectives://" then
+		return nil
+	end
+	local act, value = string.match(link.url, "^objectives://act/([^/]*)/(.*)$")
+	if act == nil or link.pane ~= Surface.find(cx) then
+		tern.log.debug("objectives: ignored " .. link.url .. " from pane " .. tostring(link.pane))
+		return { handled = true }
+	end
+	M.action({ act = unpct(act), value = unpct(value :: string) }, cx)
+	return { handled = true }
 end
 
 return M

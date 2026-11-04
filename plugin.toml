@@ -5,4 +5,11 @@ version = "0.1.2"
 description = "A global list of objectives linked to tabs, shown as a clickable graph that jumps to tabs and panes."
 icon = "list-checks"
 window = "window.luau"
+host = "host.luau"
 styles = ["styles.css"]
+
+# The graph popup. Only "Objectives: Open graph" opens it; the palette doesn't offer it.
+[[blocks]]
+id = "graph"
+title = "Objectives"
+palette = false

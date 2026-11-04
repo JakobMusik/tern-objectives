@@ -1,21 +1,24 @@
 --!strict
--- Objectives: window half. Registers the palette commands, the canvas click handler and the window
--- events that keep a shown graph current; everything else lives in lib/.
+-- Objectives: window half. Registers the palette commands, the link route that carries clicks from
+-- the graph block (host.luau), and the window events that keep a shown graph current; everything
+-- else lives in lib/.
 
 local App = require("./lib/app")
 local Layout = require("./lib/layout")
 local Refresh = require("./lib/refresh")
+local Surface = require("./lib/surface")
 
 Refresh.init(App.render)
 
 -- Reinstalled by every load, a plugin reload included. The edge sheet is drawn by each render.
 tern.css("layout", Layout.css())
 
--- A plugin reload keeps a shown canvas but starts a new VM and drops its CSS sheets, and
+-- A plugin reload starts a new VM and drops its CSS sheets, while a shown graph survives and
 -- window_start doesn't run again: draw the graph once more from a timer, which brings a cx. The
--- first window event or click does the same if this timer comes late.
+-- same timer closes canvases a 0.1.x graph left behind (design P10).
 tern.timer(0, function(cx: WindowCx?)
 	if cx ~= nil then
+		Surface.close_old_canvases(cx)
 		App.render(cx)
 	end
 end)
@@ -45,8 +48,8 @@ tern.command({
 	run = App.new_for_tab,
 })
 
-tern.on("canvas_action", function(ev: CanvasAction, cx: WindowCx): boolean?
-	return App.action(ev, cx)
+tern.route.link(function(link: LinkRequest, cx: WindowCx): RouteDecision?
+	return App.link(link, cx)
 end)
 
 -- Window events that change what the graph shows (design D12).
