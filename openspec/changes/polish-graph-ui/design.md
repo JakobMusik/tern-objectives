@@ -86,6 +86,7 @@ The pane-to-tab mapping is read live on every render, so the mark follows a move
 - While an objective is selected, each tab node ends in a bar 26 px tall: "＋ Link" (accent outline) or "× Unlink" (muted), `actions = {click = "link=<tab>"}`, with a tooltip naming the objective.
 - The bar sits outside the header, whose click jumps, so a near miss no longer jumps.
 - `Layout.px.link_h = 26` is added to a tab's height only while a selection exists. Edge ends stay at header centres (archived D3), so lines don't move.
+- The bar's text has `user-select: none` (SDK "Supported CSS", `user-select`). In 0.2.0, a press that drifted across "＋ Link" selected the text instead of clicking (live check, task 6.4).
 
 **Tab menu:**
 - The tab node root carries `actions.menu` (SDK "Building Views › Actions and events"; S5, S6): a `{header = "Link to"}` row, then one check row per open objective in graph order, `{id = "lnk=<objective>:<tab>", label = title, checked = linked}`.

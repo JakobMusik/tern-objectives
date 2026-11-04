@@ -204,13 +204,23 @@ All checks run in the headless harness at `/tmp/tobj` (archived design D14) unle
   Verify: `tern plugin list` shows `objectives 0.2.0` ready.
 
   Result: `installed objectives 0.2.0`; `tern plugin list` shows `objectives 0.2.0 … 1 blocks, 0 lenses, window ready`, with the user's `tabnav 0.1.0` untouched.
-- [ ] 6.4 **(live)** The user checks in their window:
+- [x] 6.4 **(live)** The user checks in their window:
   - ⌃⌘O, then Esc after clicking inside;
   - rows open by default;
   - the origin marks;
   - linking by the bar and by the tab menu.
 
   Verify with the user; record the findings here.
+
+  Result (user, 0.2.0): Esc works and the origin highlight works. One issue: the "＋ Link" / "× Unlink" text could be selected, so a press that drifted only selected and copied the text instead of clicking the bar. Fixed in 6.5.
+- [x] 6.5 Make the link bar's text unselectable (`user-select: none`, Supported CSS), so a drifting press still counts as a click (tab-links "Linking from the graph": Press that drifts across the bar).
+
+  Verify: in the harness, `ctl down`/`move`/`up` 40 px along a "＋ Link" bar, before and after the change; check the shot for a text highlight and the kv dump for the link.
+
+  Result: before, the drag highlighted "+ Li" and linked nothing (shot `g65_drag_before`). After, the same drag selected nothing and linked o2 to tab 22 (`g65_drag_after`), and the same drag on "× Unlink" removed it again.
+- [ ] 6.6 Release `0.2.1`: set the version, commit, push `main`, tag `v0.2.1`, and run `tern plugin install github.com/JakobMusik/tern-objectives --force` in the user's live Tern.
+
+  Verify: `gh api repos/JakobMusik/tern-objectives/tags` lists `v0.2.1`, and the live `tern plugin list` shows `objectives 0.2.1` ready.
 
 ## Workflow follow-up
 

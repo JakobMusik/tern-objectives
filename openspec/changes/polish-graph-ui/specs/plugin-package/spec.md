@@ -16,7 +16,7 @@ Tern's install-time checks SHALL accept the package.
 
 #### Scenario: Local install check
 - **WHEN** `tern plugin install <repo folder>` runs against an isolated Tern config
-- **THEN** it reports `installed objectives` with version `0.2.0`, and `tern plugin list` shows the plugin ready with no problems
+- **THEN** it reports `installed objectives` with the manifest's version, and `tern plugin list` shows the plugin ready with no problems
 
 ### Requirement: README
 The README SHALL give:
