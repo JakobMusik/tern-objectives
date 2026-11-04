@@ -84,7 +84,7 @@ All checks run in the headless harness from design.md D14 (`/tmp/tobj`) unless a
 
 ## 4. Tab column and links
 
-- [ ] 4.1 Right column (D9):
+- [x] 4.1 Right column (D9):
   - sessions in Tern's order, with the current one marked;
   - tabs in order;
   - labels: the tab's name, else the first leaf pane's title;
@@ -92,13 +92,13 @@ All checks run in the headless harness from design.md D14 (`/tmp/tobj`) unless a
   - pane rows including floats, excluding parked panes and the graph's own pane.
 
   Verify by shot of a harness with three sessions, a split tab, one floating pane and one parked pane.
-- [ ] 4.2 Selection with ＋/× link buttons, snapshot writing (D8), and faded dashed unlinked tabs.
+- [x] 4.2 Selection with ＋/× link buttons, snapshot writing (D8), and faded dashed unlinked tabs.
 
   Verify:
   - click ＋ then × on one tab: the kv dump shows the link and then no link;
   - the snapshot holds label, session id and name, position, panes and window key;
   - a shot shows a faded tab turning solid when linked.
-- [ ] 4.3 Link status:
+- [x] 4.3 Link status:
   - derived live, closed and elsewhere states;
   - "Closed tabs" and "Other windows" groups;
   - the "Prune closed tabs" button, shown only when a closed tab exists, with a confirmation that names the count.
@@ -108,10 +108,10 @@ All checks run in the headless harness from design.md D14 (`/tmp/tobj`) unless a
   - setting a snapshot's window key to "9" in `kv.json` gives an elsewhere tab (shot);
   - a confirmed prune removes only the closed tab's links and snapshot (kv dump);
   - after a plugin reload (`ctl plugins fixtures`), live tabs are still live (shot).
-- [ ] 4.4 Links follow tabs.
+- [x] 4.4 Links follow tabs.
 
   Verify: move a pane from a linked tab to an unlinked one in the harness. The shot shows its row under the new tab, and the kv dump shows the links unchanged.
-- [ ] 4.5 Palette commands:
+- [x] 4.5 Palette commands:
   - "Objectives: Link this tab…": check marks for linked objectives, choosing toggles, an info toast when there are no objectives;
   - "Objectives: New objective for this tab…";
   - an error toast when the focused pane is parked.
@@ -121,7 +121,9 @@ All checks run in the headless harness from design.md D14 (`/tmp/tobj`) unless a
   Verify:
   - `ctl plugins run plugin.objectives.link_tab` and `new_for_tab` with `type` and `key Enter` give the expected kv dumps;
   - `ctl palette objectives` shows all three commands, with ⌃⌘O on "Open graph" (shot).
-- [ ] 4.6 No automatic linking.
+
+  Result: all passed. Tern never reports a parked pane as the focused one (`cx.layout:focus` on a parked pane unparks it), so the parked case was checked in a session whose only pane is parked, where `focused()` is nil: both commands show "The focused pane is not in a tab" and `kv.json` is unchanged.
+- [x] 4.6 No automatic linking.
 
   Verify: diff the kv dump before and after opening a tab, closing a pane, and running a command. The links are unchanged.
 

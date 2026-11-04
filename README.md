@@ -10,6 +10,16 @@ tern plugin install github.com/JakobMusik/tern-objectives
 
 The plugin is window-half only (`window.luau`, no host half) and needs nothing on `PATH` besides the `git` that `tern plugin install` uses to fetch it.
 
+## Commands
+
+| Command | Key | What it does |
+|---|---|---|
+| Objectives: Open graph | ⌃⌘O | Shows the graph over the current tab. |
+| Objectives: Link this tab… | | Picks an open objective to link to, or unlink from, the focused pane's tab. Linked objectives show a check. |
+| Objectives: New objective for this tab… | | Asks for a title and creates a P2 objective already linked to the focused pane's tab. |
+
+The key can be changed like any other: bind a chord to `plugin.objectives.open` in Tern's keybind settings.
+
 ## Data
 
 Everything the plugin stores lives in one file in Tern's plugin data folder:

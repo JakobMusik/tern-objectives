@@ -261,7 +261,7 @@
 	background: transparent;
 	opacity: 0.5;
 }
-[data-surface='plugin.tern.canvas'] .ob-root .ob-tab-ghost .ob-tlabel {
+[data-surface='plugin.tern.canvas'] .ob-root .ob-tab-closed .ob-tlabel {
 	text-decoration: line-through;
 }
 [data-surface='plugin.tern.canvas'] .ob-root .ob-thead {
