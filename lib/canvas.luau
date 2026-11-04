@@ -10,14 +10,18 @@ local ABOUT = "Objectives graph: objectives on the left, tabs on the right. Clic
 local M = {}
 
 local pane_id: number? = nil
+-- False until a lookup has run in this VM. A plugin reload starts a new VM while a shown canvas
+-- survives, so the first event after it must look.
+local looked = false
 
--- Whether this VM has seen its canvas; events skip the canvas lookup while it hasn't.
+-- Whether a canvas may exist: events skip the lookup only once one has found none.
 function M.known(): boolean
-	return pane_id ~= nil
+	return pane_id ~= nil or not looked
 end
 
 -- The pane of this window's objectives canvas, or nil when none exists.
 function M.find(cx: WindowCx): number?
+	looked = true
 	if pane_id ~= nil then
 		local info = cx.canvas:get(pane_id)
 		if info ~= nil and info.owner == OWNER then

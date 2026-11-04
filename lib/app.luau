@@ -69,13 +69,6 @@ function M.open(cx: WindowCx)
 	Refresh.start()
 end
 
--- Re-installs the edge sheet, which a plugin reload drops.
-function M.restore_css()
-	if edges_css ~= "" then
-		tern.css("edges", edges_css)
-	end
-end
-
 -- ---- the tab a command acts on ----
 
 local function focused_tab(cx: WindowCx): (number?, Model.Tab?, string)

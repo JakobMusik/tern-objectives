@@ -183,22 +183,28 @@ All checks run in the headless harness from design.md D14 (`/tmp/tobj`) unless a
 
   Verify: start `omp --no-session` with a cheap model in a harness pane and send one short prompt. Shots show "working", then idle with "you" and "omp" lines, and the log shows render times under 20 ms.
 
-  Result: all passed with omp (Haiku) in a harness pane: "working" with the new "you" line, then "idle" with "you" and "omp" lines; a 364-character, 5-line reply showed as its first 160 characters on one line plus "…"; renders logged 2.5–7.8 ms, transcript ticks 0.1 ms. Findings: omp's turn footer is now dropped from the reply line, and the 750 ms poll also watches agent state (design D11, D12). Headless `serve` stalls plugin timers when idle, so timer-driven checks keep a ticker running (design D14).
+  Result: all passed with omp (Haiku) in a harness pane: "working" with the new "you" line, then "idle" with "you" and "omp" lines; a 364-character, 5-line reply showed as its first 160 characters on one line plus "…"; renders logged 2.5–7.8 ms, transcript ticks 0.1 ms. Findings: omp's turn footer is now dropped from the reply line, and the 750 ms poll also watches agent state (design D11, D12). Headless `serve` delivers plugin timer callbacks only when its loop wakes, so timer-driven checks sleep in real time and then send a cheap `ctl` command (design D14).
 
 ## 8. Live refresh and durability
 
-- [ ] 8.1 Live refresh (D12):
+- [x] 8.1 Live refresh (D12):
   - event-driven renders, coalesced at 150 ms;
   - the 750 ms signature poll;
   - all timers stop once the canvas is gone.
 
   Verify: with the graph shown, open a tab, close a pane and rename a tab. After `ctl wait 1000`, shots show each change without reopening the graph, and once the canvas is closed the log shows no further renders.
-- [ ] 8.2 Durability across reload.
+
+  Result: passed. The new tab appeared, the closed pane's row and the closed tab went away, and the renamed header showed, each one real second after the change (`ctl wait` doesn't wake `serve`'s timers, design D14). After the canvas closed, renaming and opening tabs logged no renders.
+- [x] 8.2 Durability across reload.
 
   Verify: after a plugin reload, the objectives, links, view settings and edge sheet are all present (kv dump and shot), and the fixtures package folder still matches the repo's package files (`diff -r`).
-- [ ] 8.3 Budget.
+
+  Result: objectives, links and view settings were byte-identical after the reload, and the package folder matched the repo. Tern drops `tern.css` sheets on a reload and doesn't run `window_start` again, so the entry now redraws a shown canvas from a zero-delay timer set at load: after a reload with no further events, every line was back and aligned (render 11.4 ms). Fixed on the way: events skipped the canvas lookup in a fresh VM, so nothing redrew the graph after a reload (design D4).
+- [x] 8.3 Budget.
 
   Verify: with 30 objectives and 40 panes seeded in the harness, the logged render time stays under 20 ms and no `budget` pause appears in the log.
+
+  Result: 30 objectives with 59 links, 40 panes in 21 tabs, 5,359 canvas nodes: 22 renders during expand, select, filter and priority clicks took 8.5–13.8 ms (median 12.8), and no over-20 ms warning or budget pause appeared for `objectives`.
 
 ## 9. Package, publish and install
 

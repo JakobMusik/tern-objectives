@@ -97,11 +97,4 @@ function M.request(cx: WindowCx)
 	end)
 end
 
--- After a plugin reload the VM is new but a shown canvas survives: pick it up again.
-function M.resume(cx: WindowCx)
-	if Canvas.find(cx) ~= nil then
-		render(cx)
-	end
-end
-
 return M

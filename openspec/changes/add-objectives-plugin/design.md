@@ -102,7 +102,7 @@ The spike showed that alignment holds exactly when the CSS and the edge geometry
 - Curves are cubic Béziers from x = 0 at the objective's centre y to x = W at the tab header's centre y.
 - Closed and elsewhere tabs use `stroke-dasharray`, plus a 4 px solid stub at each end, so a line whose dash pattern ends in a gap still touches both nodes.
 
-**Reinstalling:** the edge sheet (`tern.css("edges", …)`) is installed again on every render, on `window_start`, and at load, so a reload can't leave it missing. Install is skipped when the string is unchanged.
+**Reinstalling:** a plugin reload removes every `tern.css` sheet; the layout sheet comes back because the entry installs it at load, and the edge sheet is installed by every render (skipped when unchanged). After a reload `window_start` doesn't run again (SDK "What survives a reload"), so the entry sets a zero-delay timer that renders a still-shown canvas: task 8.2 saw the lines back with no event. As a backstop, the canvas lookup isn't skipped until one has run in the new VM, so the first window event or click also redraws.
 
 **Alternatives considered:**
 - Masked layers coloured by theme variables: what this design first chose; ruled out by task 2.2.
@@ -254,7 +254,7 @@ All timers stop when the canvas is gone.
 
 **Agent rows:** run `omp --no-session` with a cheap model and one short prompt in a headless pane.
 
-**Timers in `serve`:** the headless app services plugin timers only while it has other activity; `ctl wait` alone doesn't fire them once it is idle (task 7.3 saw an armed render never fire). Tests that depend on `tern.timer` keep a harmless ticker running in a harness pane (`while true; do date +%T; sleep 0.25; done`). In the live app timers run on their own.
+**Timers in `serve`:** plugin timers run on real time, and the headless app delivers their callbacks only when its loop wakes for something else, such as the next `ctl` command or terminal output; `ctl wait` alone doesn't wake it (task 7.3 saw an armed render wait until the next command). Timer-driven checks therefore sleep in real time and then send a cheap command (`ctl stats`) before looking. In the live app the loop wakes for timers on its own.
 
 **Daemon-restart cases** are not re-run in the harness, because `serve` renumbers ids from 1 (R11).
 
