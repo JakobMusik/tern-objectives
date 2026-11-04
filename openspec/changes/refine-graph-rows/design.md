@@ -50,7 +50,8 @@ The first try, a 5 % ink layer over the page, failed in the dark appearance. The
 Ghost tabs (closed or elsewhere) keep their 0.5 opacity: they are history, not unlinked tabs.
 
 ### R3. Toggle and fold state
-- `.ob-exp` becomes 28 px wide, full row height, with a 15 px glyph and `user-select: none`. Rows stay 22 px (`Layout.px.row_h`), so line ends don't move.
+- `.ob-exp` becomes 28 px wide and full row height, with `user-select: none`. Rows stay 22 px (`Layout.px.row_h`), so line ends don't move.
+- The arrow is drawn, not typed. Geist's ▸ stays a small triangle even at 20 px (shot `exp20`), so the ▸/▾ text stays for meaning and the tree checks but is hidden (`font-size: 0; color: transparent`). A `::before` border triangle draws the arrow: 8 × 10 px pointing right, or 10 × 8 px pointing down when the toggle has `ob-exp-open` (SDK "Supported CSS": `::before` with `content`, per-side `border-width` and `border-color`). `font-size: 0` alone left a speck of the glyph, hence the transparent colour.
 - `view.expanded` (`{[pane] = true}`) replaces `view.collapsed`: a live row is open only when its pane is in `expanded`, and the `exp` action toggles that.
 - `Store.read` no longer reads `collapsed`, so the next write drops it. Rows folded under 0.4.0 start folded, which is what the user folded them for.
 

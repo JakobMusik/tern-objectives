@@ -42,7 +42,7 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
 
 ## 3. Pane rows
 
-- [x] 3.1 Rows start folded, `view.expanded` replaces `view.collapsed`, and the toggle is 28 px wide with a 15 px glyph (design R3).
+- [x] 3.1 Rows start folded, `view.expanded` replaces `view.collapsed`, and the toggle is 28 px wide with an 8 × 10 px drawn arrow (design R3).
 
   Verify:
   - a fresh open shows no `.ob-detail`, only ▸;
@@ -56,6 +56,7 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
   - ▸ on row 15 opened it, and the kv dump read `expanded: {"15": true}` with `collapsed` gone; ▾ folded it, giving `expanded: {}`. Focus stayed on the canvas (pane 39);
   - rows 15 and 8, opened, then the graph closed and reopened: both still open (2 `▾`, 7 `▸`);
   - layout (shot `s31`): toggles 28 × 22, done box and ⋯ 22 × 18, nodes 48, rows 22; `edgecheck.py` passes.
+  - **Arrow.** While preparing the README shot, the 15 px glyph, and the same glyph at 20 px, still drew a small triangle (shots `readme_graph`, `exp20`). It is now drawn as an 8 × 10 px border triangle, 10 × 8 px when open (design R3). Shot `exp_tri` shows both; toggle boxes are still 28 × 22 (8 of them), and the text reads `▸` / `▾` for the tree checks.
 - [x] 3.2 Pane type at each row's start, with the agent's state (design R4).
 
   Verify with `ctl tree`:
@@ -93,9 +94,14 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
 
 ## 5. Docs and release
 
-- [ ] 5.1 README: rows start folded, each with its type; agent rows give "you:" and "<agent>:" lines cut in the middle; the origin's tab comes first; unlinked tabs are grey with a dashed border. Refresh `docs/graph.png` from a harness shot, and drop the known limit about selectable badges, chips and header buttons.
+- [x] 5.1 README: rows start folded, each with its type; agent rows give "you:" and "<agent>:" lines cut in the middle; the origin's tab comes first; unlinked tabs are grey with a dashed border. Refresh `docs/graph.png` from a harness shot, and drop the known limit about selectable badges, chips and header buttons.
 
   Verify: `grep` finds the new points and no "selectable"; the screenshot shows folded rows with type labels.
+
+  Result:
+  - "Using the graph" now says the origin's session and tab come first; describes pane types, folded rows, and the `you:` / `omp:` lines cut in the middle; and gives unlinked tabs as a grey fill with a dashed border. `grep` finds no "faded" and no "selectable".
+  - The README never listed the selectable-text limit, so there was nothing to drop.
+  - `docs/graph.png` is now shot `readme_graph` cropped to the glimpse (1573 × 1493). It shows docs first with the outlined omp tab, its open `omp · idle` row with both message lines, the other rows folded with `shell` / `file` labels, and the unlinked tab's grey fill; `edgecheck.py` passes on it. The image's alt text matches.
 - [ ] 5.2 Version `0.5.0`: an isolated install prints `installed objectives 0.5.0`; commit, push `main`, tag `v0.5.0`; `tern plugin install github.com/JakobMusik/tern-objectives --force` live.
 
   Verify: the tags API lists `v0.5.0`, and live `tern plugin list` shows `objectives 0.5.0` ready.

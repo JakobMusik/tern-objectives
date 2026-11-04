@@ -32,7 +32,7 @@ Lines, badges, chips and the unlinked-tab fill SHALL stay distinguishable in bot
 - **THEN** both captures show every line, every badge colour, and unlinked tabs filled differently from linked ones
 
 ### Requirement: Larger hit areas
-The done box and the ⋯ button SHALL each take clicks over at least 22 px of width and the full 18 px height of their line in objective nodes. The ▸/▾ toggle SHALL take clicks over at least 28 px of width and the full 22 px height of its pane row, with its arrow drawn larger than the row's text. Objective nodes SHALL stay 48 px tall and pane rows 22 px.
+The done box and the ⋯ button SHALL each take clicks over at least 22 px of width and the full 18 px height of their line in objective nodes. The ▸/▾ toggle SHALL take clicks over at least 28 px of width and the full 22 px height of its pane row, with an arrow at least 8 px across. Objective nodes SHALL stay 48 px tall and pane rows 22 px.
 
 #### Scenario: Measured hit areas
 - **WHEN** a screenshot's layout data is read
