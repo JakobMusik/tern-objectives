@@ -57,11 +57,11 @@ Marking an objective done SHALL record the done time. Reopening it SHALL clear t
 - **THEN** the record's done time is set after the first step and cleared after the second, and its tab links are identical throughout
 
 ### Requirement: Side note
-A side note SHALL be a single line of at most 200 characters. Line breaks SHALL become spaces and longer input SHALL be cut to 200 characters. Saving an empty note SHALL remove it.
+A side note SHALL be a single line of at most 200 characters. Line breaks that reach the plugin SHALL become spaces, and longer input SHALL be cut to 200 characters. Saving an empty note SHALL remove it. (Tern's one-line field itself joins pasted lines, without a space, before the plugin sees them.)
 
 #### Scenario: Multi-line paste
-- **WHEN** the user saves a side note containing a line break
-- **THEN** the stored note is one line with the break replaced by a space
+- **WHEN** the user pastes text with a line break into the Side note field and saves it
+- **THEN** the stored note is one line
 
 #### Scenario: Clearing the note
 - **WHEN** the user saves an empty side note
