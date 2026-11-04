@@ -100,21 +100,27 @@ All checks run in the headless harness at `/tmp/tobj` (archived design D14) unle
 
 ## 3. Pane rows open by default
 
-- [ ] 3.1 Store `view.collapsed` instead of `view.expanded`, with `normalize` dropping `expanded` (design P7).
+- [x] 3.1 Store `view.collapsed` instead of `view.expanded`, with `normalize` dropping `expanded` (design P7).
 
   Verify by kv dump (objective-store "Remembered view settings": Rows opened under 0.1.x, Settings survive reload):
   - plant a 0.1.x `view.expanded`, open the graph: every live row is open (shot);
   - fold one row: the dump holds `collapsed` with that pane and no `expanded`;
   - after a plugin reload, the row is still folded and the others open.
-- [ ] 3.2 Rows open unless folded; ▾ folds and ▸ opens (pane-details "Expandable pane rows").
+
+  Result: with `expanded = {"14": true}` planted, every live row opened (shot `g31_open`). A ▾ on row 14 left `view = {collapsed = {"14": true}, done_open = false, scope = "all"}`, with no `expanded`. After `ctl plugins fixtures`, the handed-over view showed row 14 as ▸ and all 15 other rows as ▾. `edgecheck` passed with every row open (shot `g31_tall`).
+- [x] 3.2 Rows open unless folded; ▾ folds and ▸ opens (pane-details "Expandable pane rows").
 
   Verify with shots and `ctl state`:
   - a two-pane tab never folded shows both detail areas;
   - ▾ then ▸ removes and restores them;
   - focus stays on the graph pane.
-- [ ] 3.3 Render cost with every row open (design R1): 30 objectives, 40 panes, all rows open.
+
+  Result: "App build" showed both panes' details. Pane 16's detail lines went 1 → 0 → 1 across ▾ and ▸, and focus stayed on the graph pane after each click. The README's pane-row paragraph now says details show by default.
+- [x] 3.3 Render cost with every row open (design R1): 30 objectives, 40 panes, all rows open.
 
   Verify: the debug log's `render` lines, extended to include encoding and the two file writes, stay at or under 20 ms. If they don't, apply the fallback in R1 and record it.
+
+  Result: the first build ran 11–25 ms. Profiling showed `tern.ui.el` converting every nested subtree again, so `View.build` now builds plain `{k, p, c}` wire nodes, and renders run 5.0–9.1 ms (build 3.2–6.5, hand-over 1.7–2.6). Lines still meet node centres at full height (shot `g33_tall`). R1's fallback wasn't needed.
 
 ## 4. Origin highlight
 

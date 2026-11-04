@@ -1,5 +1,5 @@
 --!strict
--- Pane details (design D11): the lines an expanded pane row shows. Agents come from one
+-- Pane details (design D11): the lines an open pane row shows. Agents come from one
 -- cx.agents:list() per render; the user's last message comes from a transcript cache that reads at
 -- most one transcript per tick.
 
