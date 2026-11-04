@@ -155,12 +155,12 @@ All checks run in the headless harness from design.md D14 (`/tmp/tobj`) unless a
 
 ## 6. Navigation
 
-- [ ] 6.1 Jumps (D10): a tab header jumps to the tab, a pane row label jumps to that exact pane, both across sessions.
+- [x] 6.1 Jumps (D10): a tab header jumps to the tab, a pane row label jumps to that exact pane, both across sessions.
 
   Verify:
   - after each `ctl click`, `ctl state` shows the expected session, tab and focused pane;
   - a shot shows the target pane uncovered.
-- [ ] 6.2 Closed and elsewhere tabs don't jump; they show info toasts instead.
+- [x] 6.2 Closed and elsewhere tabs don't jump; they show info toasts instead.
 
   Verify: `ctl state` is unchanged after clicking, and a shot shows the toast.
 
