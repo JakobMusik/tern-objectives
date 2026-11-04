@@ -1,15 +1,24 @@
 --!strict
--- The window's single objectives graph (design P1, P3): the plugin block `objectives.graph` shown as
--- a glimpse over the current tab. The window half builds its view and hands it over through two files
--- in the data folder; the block (host.luau) only shows them. A glimpse that loses focus to a
--- programmatic focus change docks into its tab as a split, so jumps close the graph first, and only
--- an undocked glimpse in the current tab is reused.
+-- The window's single objectives graph, a glimpse over the current tab on one of two surfaces
+-- (design G1, G2):
+-- - in a session on this machine, the plugin block `objectives.graph`: the window half hands its view
+--   over through two files in the data folder, and the block takes keys, so Esc closes it;
+-- - in a session on another machine, a canvas filled from this window. A block would open on that
+--   machine, which has neither the plugin nor this Mac's data folder.
+-- A glimpse that loses focus to a programmatic focus change docks into its tab as a split, so jumps
+-- close the graph first, and only an undocked glimpse in the current tab is reused.
 
 local KIND = "objectives.graph"
+local OWNER = "objectives"
+local TITLE = "Objectives"
+local ABOUT = "Objectives graph: objectives on the left, tabs on the right. Clicks select, edit, link and jump."
+
+export type Kind = "block" | "canvas"
 
 local M = {}
 
 local pane_id: number? = nil
+local pane_kind: Kind = "block"
 -- False until a lookup has run in this VM. A plugin reload starts a new VM while a shown graph
 -- survives, so the first event after it must look.
 local looked = false
@@ -49,8 +58,25 @@ local function hand_over(cx: WindowCx, view: Node)
 	tern.fs.write(b .. ".seq", n)
 end
 
-local function is_graph(info: PaneInfo?): boolean
+local function is_block(info: PaneInfo?): boolean
 	return info ~= nil and info.kind == "plugin" and info.block == KIND
+end
+
+-- Whether `pane` is still this window's graph, as the kind it was found as.
+local function alive(cx: WindowCx, pane: number, kind: Kind): boolean
+	if kind == "block" then
+		return is_block(cx.session:pane(pane))
+	end
+	local info = cx.canvas:get(pane)
+	return info ~= nil and info.owner == OWNER
+end
+
+-- The surface the current session needs: the block on this machine, a canvas elsewhere.
+local function wanted(cx: WindowCx): Kind
+	local ok, host = pcall(function()
+		return cx.hosts:current()
+	end)
+	return if not ok or host.kind == "local" then "block" else "canvas"
 end
 
 -- Whether a graph may exist: events skip the lookup only once one has found none.
@@ -58,21 +84,30 @@ function M.known(): boolean
 	return pane_id ~= nil or not looked
 end
 
--- The pane of this window's graph, or nil when none exists. Noticing it gone (Esc, a click
--- outside, a close) removes its view files.
+-- The pane of this window's graph, block or canvas, or nil when none exists. A canvas a 0.1.x graph
+-- left behind is adopted like any other (design G5). Noticing the block gone (Esc, a click outside,
+-- a close) removes its view files.
 function M.find(cx: WindowCx): number?
 	looked = true
 	if pane_id ~= nil then
-		if is_graph(cx.session:pane(pane_id)) then
+		if alive(cx, pane_id, pane_kind) then
 			return pane_id
 		end
+		if pane_kind == "block" then
+			remove_files(cx)
+		end
 		pane_id = nil
-		remove_files(cx)
 	end
 	for _, p in cx.session:panes() do
-		if is_graph(p) then
-			pane_id = p.pane
+		if is_block(p) then
+			pane_id, pane_kind = p.pane, "block"
 			return p.pane
+		end
+	end
+	for _, info in cx.canvas:list() do
+		if info.owner == OWNER then
+			pane_id, pane_kind = info.pane, "canvas"
+			return info.pane
 		end
 	end
 	return nil
@@ -117,12 +152,28 @@ function M.here(cx: WindowCx): number?
 	return nil
 end
 
--- Shows `view` as a glimpse over the current tab and gives it focus, so Esc reaches it: updates the
--- glimpse already there, else closes any graph (docked, or in another tab) and opens a new one.
-function M.show(cx: WindowCx, view: Node): (number?, string?)
-	local here = M.here(cx)
-	if here ~= nil then
+-- Hands a new view to the shown graph without focusing it; false when there is none.
+function M.update(cx: WindowCx, view: Node): boolean
+	local pane = M.find(cx)
+	if pane == nil then
+		return false
+	end
+	if pane_kind == "canvas" then
+		cx.canvas:set(pane, { view = view })
+	else
 		hand_over(cx, view)
+	end
+	return true
+end
+
+-- Shows `view` as a glimpse over the current tab and gives it focus: updates the glimpse already
+-- there when it is on the surface this session needs, else closes any graph (docked, in another
+-- tab, or on the other surface) and opens a new one.
+function M.show(cx: WindowCx, view: Node): (number?, string?)
+	local want = wanted(cx)
+	local here = M.here(cx)
+	if here ~= nil and pane_kind == want then
+		M.update(cx, view)
 		cx.layout:focus(here)
 		return here, nil
 	end
@@ -131,6 +182,16 @@ function M.show(cx: WindowCx, view: Node): (number?, string?)
 		cx.layout:close(existing)
 		pane_id = nil
 	end
+	remove_files(cx)
+	if want == "canvas" then
+		local pane, err = cx.canvas:open({ title = TITLE, view = view, about = ABOUT, how = "glimpse" })
+		if pane == nil then
+			return nil, err or "This session's machine can't show the graph."
+		end
+		pane_id, pane_kind = pane, "canvas"
+		cx.layout:focus(pane)
+		return pane, nil
+	end
 	-- The files go first: the block reads them in its init.
 	hand_over(cx, view)
 	local pane = cx:new_block(KIND, { stem(cx) }, "glimpse")
@@ -138,18 +199,9 @@ function M.show(cx: WindowCx, view: Node): (number?, string?)
 		remove_files(cx)
 		return nil, "No ready `objectives` plugin defines the graph block here."
 	end
-	pane_id = pane
+	pane_id, pane_kind = pane, "block"
 	cx.layout:focus(pane)
 	return pane, nil
-end
-
--- Hands a new view to the shown graph without focusing it; false when there is none.
-function M.update(cx: WindowCx, view: Node): boolean
-	if M.find(cx) == nil then
-		return false
-	end
-	hand_over(cx, view)
-	return true
 end
 
 -- Closes the graph, so a jump leaves nothing over or beside its target.
@@ -160,15 +212,6 @@ function M.close(cx: WindowCx)
 	end
 	pane_id = nil
 	remove_files(cx)
-end
-
--- Closes canvases a 0.1.x graph left behind: canvases survive a plugin reload (design P10).
-function M.close_old_canvases(cx: WindowCx)
-	for _, info in cx.canvas:list() do
-		if info.owner == "objectives" then
-			cx.layout:close(info.pane)
-		end
-	end
 end
 
 return M

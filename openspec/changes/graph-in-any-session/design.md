@@ -61,12 +61,17 @@ A graph shown on the wrong surface for the current session (a canvas in a local 
 ### G5. Leftover canvases are adopted
 Archived P10 closed every `objectives` canvas on load. Canvases are now a valid surface, so the load-time timer only redraws. `Surface.find` adopts a 0.1.x canvas like any other, and ⌃⌘O in a local session replaces it with the block (G1).
 
+### G6. Same face and ring on both surfaces
+- **Face.** A canvas draws in the terminal face, and only a block can ask for `font = "sans"`. `.ob-root` sets `font-family: var(--sans)`, Tern's UI stack (SDK "Theme tokens": `--sans`), so both surfaces read alike (task 1.1).
+- **Ring.** The origin ring is an inset box-shadow. As an outer shadow it reached 1.5 px into the gap column, where the edge check read it as a line end (task 1.3).
+
 ## Risks / Trade-offs
 
 - **R1. Esc in remote sessions.** Tern's glimpse closes on Esc only while its title bar has focus, as in 0.1.x. → ⌃⌘O, a click outside and × close it; the README says so.
 - **R2. No remote machine in the harness.** → The canvas path is exercised with the local check inverted in the fixtures copy (as in archived task 2.7). The live check on devbox confirms it.
 - **R3. Remote tabs in the graph.** The window half lists the window's sessions with `cx.session:*`; whether devbox's tabs appear and jump correctly is only visible live. → Live check.
 - **R4. Docking.** A canvas glimpse docks on programmatic focus changes exactly as the block does, and the same "close before jumping" rule applies (archived design D2).
+- **R5. Redraw after a plugin reload.** The load-time timer redraws a shown graph and its line sheet, as in 0.1.x. In the headless harness, plugin timers set at load fire only when the plugin next runs a hook, so a redraw after reload with a canvas shown couldn't be observed there; a click redraws it. → Seen live after the 0.3.0 install. A speculative retry was tried and dropped.
 
 ## Migration Plan
 

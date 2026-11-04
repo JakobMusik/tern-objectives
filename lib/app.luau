@@ -71,22 +71,10 @@ function M.render(cx: WindowCx)
 	Refresh.start()
 end
 
--- Whether the current session runs on this machine. The graph block opens on the session's host,
--- whose plugins and data folder may differ (design R3).
-local function local_session(cx: WindowCx): boolean
-	local ok, host = pcall(function()
-		return cx.hosts:current()
-	end)
-	return not ok or host.kind == "local"
-end
-
--- Shows the graph over the current tab. A fresh open takes the focused pane as the origin;
--- `keep_origin` (the reopen after one of the graph's pickers) keeps the one it had.
+-- Shows the graph over the current tab, on whichever surface the session needs (design G1). A fresh
+-- open takes the focused pane as the origin; `keep_origin` (the reopen after one of the graph's
+-- pickers) keeps the one it had.
 function M.open(cx: WindowCx, keep_origin: boolean?)
-	if not local_session(cx) then
-		cx:toast("info", "The objectives graph opens only in sessions on this machine")
-		return
-	end
 	if not keep_origin then
 		local focused = cx.session:focused()
 		if focused ~= nil and focused ~= Surface.find(cx) then

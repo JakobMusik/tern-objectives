@@ -10,7 +10,7 @@ A [Tern](https://docs.stencil.so/tern) plugin that keeps one global list of obje
 tern plugin install github.com/JakobMusik/tern-objectives
 ```
 
-The plugin has two halves. The window half (`window.luau` and `lib/`) keeps the objectives and builds the graph; the host half (`host.luau`) only shows the graph in its popup and passes your clicks back. It needs nothing on `PATH` besides the `git` that `tern plugin install` uses to fetch it.
+The plugin has two halves. The window half (`window.luau` and `lib/`) keeps the objectives and builds the graph; the host half (`host.luau`) only shows the graph in its popup and passes your clicks back. It needs nothing on `PATH` besides the `git` that `tern plugin install` uses to fetch it, and nothing on the machines your sessions run on: in a session on another machine (attached over SSH), the graph opens in Tern's built-in canvas panel instead, filled from this machine.
 
 ## Commands
 
@@ -54,7 +54,7 @@ Removing the plugin leaves `plugin-data/objectives/kv.json` in place; delete tha
 ## Known limits
 
 - Side notes are one line of up to 200 characters. Tern's one-line field joins pasted lines without a space, so put a space or punctuation at the end of a line before pasting.
-- The graph opens only in sessions on this machine. In a session on a machine attached over SSH, ⌃⌘O shows a note instead.
+- In a session on another machine, the graph is a canvas, which takes no keys: Esc closes it only after you click its title bar. ⌃⌘O, a click outside and its × close it anywhere.
 
 ## License
 
