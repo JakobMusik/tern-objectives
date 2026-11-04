@@ -1,8 +1,8 @@
-/* Objectives graph. It shows on the graph block (sessions on this machine) or on a canvas (sessions
-   on other machines); every rule is scoped under .ob-root on either surface, so nothing leaks out.
-   Heights and margins come from the generated "layout" sheet (lib/layout.luau). */
+/* Objectives graph, drawn in a canvas in every session; every rule is scoped under .ob-root on the
+   canvas, so nothing leaks out. The canvas draws in the terminal face, so .ob-root asks for Tern's UI
+   face. Heights and margins come from the generated "layout" sheet (lib/layout.luau). */
 
-:is([data-surface='plugin.objectives.graph'], [data-surface='plugin.tern.canvas']) .ob-root {
+[data-surface='plugin.tern.canvas'] .ob-root {
 	font-family: var(--sans);
 	font-size: 12.5px;
 	color: var(--t1);
@@ -10,32 +10,32 @@
 }
 
 /* ---- graph frame: left column, gap with edge layers, right column ---- */
-:is([data-surface='plugin.objectives.graph'], [data-surface='plugin.tern.canvas']) .ob-root .ob-graph {
+[data-surface='plugin.tern.canvas'] .ob-root .ob-graph {
 	display: flex;
 	flex-direction: row;
 	align-items: flex-start;
 	position: relative;
 }
-:is([data-surface='plugin.objectives.graph'], [data-surface='plugin.tern.canvas']) .ob-root .ob-col {
+[data-surface='plugin.tern.canvas'] .ob-root .ob-col {
 	display: flex;
 	flex-direction: column;
 	min-width: 0;
 }
-:is([data-surface='plugin.objectives.graph'], [data-surface='plugin.tern.canvas']) .ob-root .ob-col-l {
+[data-surface='plugin.tern.canvas'] .ob-root .ob-col-l {
 	flex: 45 1 0;
 }
-:is([data-surface='plugin.objectives.graph'], [data-surface='plugin.tern.canvas']) .ob-root .ob-col-r {
+[data-surface='plugin.tern.canvas'] .ob-root .ob-col-r {
 	flex: 55 1 0;
 }
 /* width from the layout sheet (gap_w): edges are drawn 1:1 in it */
-:is([data-surface='plugin.objectives.graph'], [data-surface='plugin.tern.canvas']) .ob-root .ob-gap {
+[data-surface='plugin.tern.canvas'] .ob-root .ob-gap {
 	flex: none;
 	align-self: stretch;
 	position: relative;
 }
 
 /* ---- edge layers: SVG backgrounds from the edges sheet, one px per px ---- */
-:is([data-surface='plugin.objectives.graph'], [data-surface='plugin.tern.canvas']) .ob-root .ob-e {
+[data-surface='plugin.tern.canvas'] .ob-root .ob-e {
 	position: absolute;
 	left: 0;
 	right: 0;
@@ -44,12 +44,12 @@
 	background-position: 0 0;
 	pointer-events: none;
 }
-:is([data-surface='plugin.objectives.graph'], [data-surface='plugin.tern.canvas']) .ob-root .ob-e-dim {
+[data-surface='plugin.tern.canvas'] .ob-root .ob-e-dim {
 	opacity: 0.25;
 }
 
 /* ---- header ---- */
-:is([data-surface='plugin.objectives.graph'], [data-surface='plugin.tern.canvas']) .ob-root .ob-head {
+[data-surface='plugin.tern.canvas'] .ob-root .ob-head {
 	display: flex;
 	flex-direction: row;
 	align-items: center;
@@ -57,47 +57,47 @@
 	gap: 8px;
 	margin-bottom: 6px;
 }
-:is([data-surface='plugin.objectives.graph'], [data-surface='plugin.tern.canvas']) .ob-root .ob-seg {
+[data-surface='plugin.tern.canvas'] .ob-root .ob-seg {
 	display: flex;
 	flex-direction: row;
 	border-radius: 7px;
 	box-shadow: inset 0 0 0 1px var(--l2);
 	overflow: hidden;
 }
-:is([data-surface='plugin.objectives.graph'], [data-surface='plugin.tern.canvas']) .ob-root .ob-segb {
+[data-surface='plugin.tern.canvas'] .ob-root .ob-segb {
 	padding: 3px 10px;
 	color: var(--t2);
 	white-space: nowrap;
 }
-:is([data-surface='plugin.objectives.graph'], [data-surface='plugin.tern.canvas']) .ob-root .ob-segb.ob-on {
+[data-surface='plugin.tern.canvas'] .ob-root .ob-segb.ob-on {
 	color: var(--t1);
 	background: rgb(from var(--t1) r g b / 10%);
 }
-:is([data-surface='plugin.objectives.graph'], [data-surface='plugin.tern.canvas']) .ob-root .ob-ftags {
+[data-surface='plugin.tern.canvas'] .ob-root .ob-ftags {
 	display: flex;
 	flex-direction: row;
 	flex-wrap: wrap;
 	gap: 4px;
 }
-:is([data-surface='plugin.objectives.graph'], [data-surface='plugin.tern.canvas']) .ob-root .ob-spacer {
+[data-surface='plugin.tern.canvas'] .ob-root .ob-spacer {
 	flex: 1 1 auto;
 }
-:is([data-surface='plugin.objectives.graph'], [data-surface='plugin.tern.canvas']) .ob-root .ob-btn {
+[data-surface='plugin.tern.canvas'] .ob-root .ob-btn {
 	padding: 3px 10px;
 	border-radius: 7px;
 	white-space: nowrap;
 }
-:is([data-surface='plugin.objectives.graph'], [data-surface='plugin.tern.canvas']) .ob-root .ob-btn-primary {
+[data-surface='plugin.tern.canvas'] .ob-root .ob-btn-primary {
 	color: white;
 	background: var(--accent-fill);
 }
-:is([data-surface='plugin.objectives.graph'], [data-surface='plugin.tern.canvas']) .ob-root .ob-btn-quiet {
+[data-surface='plugin.tern.canvas'] .ob-root .ob-btn-quiet {
 	color: var(--t2);
 	box-shadow: inset 0 0 0 1px var(--l2);
 }
 
 /* ---- chips ---- */
-:is([data-surface='plugin.objectives.graph'], [data-surface='plugin.tern.canvas']) .ob-root .ob-chip {
+[data-surface='plugin.tern.canvas'] .ob-root .ob-chip {
 	flex: none;
 	padding: 0 6px;
 	border-radius: 9px;
@@ -107,21 +107,21 @@
 	color: var(--t2);
 	background: rgb(from var(--t1) r g b / 7%);
 }
-:is([data-surface='plugin.objectives.graph'], [data-surface='plugin.tern.canvas']) .ob-root .ob-ftag.ob-on {
+[data-surface='plugin.tern.canvas'] .ob-root .ob-ftag.ob-on {
 	color: white;
 	background: var(--accent-fill);
 }
-:is([data-surface='plugin.objectives.graph'], [data-surface='plugin.tern.canvas']) .ob-root .ob-due-bad {
+[data-surface='plugin.tern.canvas'] .ob-root .ob-due-bad {
 	color: var(--bad);
 	background: rgb(from var(--bad) r g b / 12%);
 }
-:is([data-surface='plugin.objectives.graph'], [data-surface='plugin.tern.canvas']) .ob-root .ob-due-warn {
+[data-surface='plugin.tern.canvas'] .ob-root .ob-due-warn {
 	color: var(--warn);
 	background: rgb(from var(--warn) r g b / 14%);
 }
 
 /* ---- objective nodes ---- */
-:is([data-surface='plugin.objectives.graph'], [data-surface='plugin.tern.canvas']) .ob-root .ob-obj {
+[data-surface='plugin.tern.canvas'] .ob-root .ob-obj {
 	box-sizing: border-box;
 	flex: none;
 	overflow: hidden;
@@ -130,18 +130,18 @@
 	border-radius: 8px;
 	background: var(--card);
 }
-:is([data-surface='plugin.objectives.graph'], [data-surface='plugin.tern.canvas']) .ob-root .ob-obj.ob-sel {
+[data-surface='plugin.tern.canvas'] .ob-root .ob-obj.ob-sel {
 	border-color: var(--accent);
 	box-shadow: 0 0 0 1px var(--accent);
 }
-:is([data-surface='plugin.objectives.graph'], [data-surface='plugin.tern.canvas']) .ob-root .ob-obj-done {
+[data-surface='plugin.tern.canvas'] .ob-root .ob-obj-done {
 	opacity: 0.6;
 }
-:is([data-surface='plugin.objectives.graph'], [data-surface='plugin.tern.canvas']) .ob-root .ob-obj-done .ob-title {
+[data-surface='plugin.tern.canvas'] .ob-root .ob-obj-done .ob-title {
 	text-decoration: line-through;
 }
-:is([data-surface='plugin.objectives.graph'], [data-surface='plugin.tern.canvas']) .ob-root .ob-l1,
-:is([data-surface='plugin.objectives.graph'], [data-surface='plugin.tern.canvas']) .ob-root .ob-l2 {
+[data-surface='plugin.tern.canvas'] .ob-root .ob-l1,
+[data-surface='plugin.tern.canvas'] .ob-root .ob-l2 {
 	display: flex;
 	flex-direction: row;
 	align-items: center;
@@ -151,7 +151,7 @@
 	white-space: nowrap;
 }
 /* Done box: a 22 x 18 px hit area with the 14 px box drawn centred in it (design P8). */
-:is([data-surface='plugin.objectives.graph'], [data-surface='plugin.tern.canvas']) .ob-root .ob-check {
+[data-surface='plugin.tern.canvas'] .ob-root .ob-check {
 	flex: none;
 	position: relative;
 	z-index: 0;
@@ -161,7 +161,7 @@
 	line-height: 18px;
 	text-align: center;
 }
-:is([data-surface='plugin.objectives.graph'], [data-surface='plugin.tern.canvas']) .ob-root .ob-check::before {
+[data-surface='plugin.tern.canvas'] .ob-root .ob-check::before {
 	content: "";
 	position: absolute;
 	z-index: -1;
@@ -173,14 +173,14 @@
 	border-radius: 4px;
 	box-shadow: inset 0 0 0 1.5px var(--t3);
 }
-:is([data-surface='plugin.objectives.graph'], [data-surface='plugin.tern.canvas']) .ob-root .ob-check-on {
+[data-surface='plugin.tern.canvas'] .ob-root .ob-check-on {
 	color: white;
 }
-:is([data-surface='plugin.objectives.graph'], [data-surface='plugin.tern.canvas']) .ob-root .ob-check-on::before {
+[data-surface='plugin.tern.canvas'] .ob-root .ob-check-on::before {
 	background: var(--ok);
 	box-shadow: none;
 }
-:is([data-surface='plugin.objectives.graph'], [data-surface='plugin.tern.canvas']) .ob-root .ob-badge {
+[data-surface='plugin.tern.canvas'] .ob-root .ob-badge {
 	flex: none;
 	padding: 0 5px;
 	border-radius: 5px;
@@ -188,14 +188,14 @@
 	font-weight: 700;
 	line-height: 16px;
 }
-:is([data-surface='plugin.objectives.graph'], [data-surface='plugin.tern.canvas']) .ob-root .ob-title {
+[data-surface='plugin.tern.canvas'] .ob-root .ob-title {
 	flex: 1 1 auto;
 	min-width: 0;
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
 }
-:is([data-surface='plugin.objectives.graph'], [data-surface='plugin.tern.canvas']) .ob-root .ob-more {
+[data-surface='plugin.tern.canvas'] .ob-root .ob-more {
 	flex: none;
 	width: 22px;
 	height: 18px;
@@ -204,7 +204,7 @@
 	text-align: center;
 	color: var(--t3);
 }
-:is([data-surface='plugin.objectives.graph'], [data-surface='plugin.tern.canvas']) .ob-root .ob-note {
+[data-surface='plugin.tern.canvas'] .ob-root .ob-note {
 	flex: 0 1 auto;
 	min-width: 0;
 	overflow: hidden;
@@ -215,7 +215,7 @@
 }
 
 /* ---- groups, hint, sessions ---- */
-:is([data-surface='plugin.objectives.graph'], [data-surface='plugin.tern.canvas']) .ob-root .ob-group {
+[data-surface='plugin.tern.canvas'] .ob-root .ob-group {
 	flex: none;
 	display: flex;
 	flex-direction: row;
@@ -227,7 +227,7 @@
 	font-size: 11px;
 	font-weight: 600;
 }
-:is([data-surface='plugin.objectives.graph'], [data-surface='plugin.tern.canvas']) .ob-root .ob-hint {
+[data-surface='plugin.tern.canvas'] .ob-root .ob-hint {
 	box-sizing: border-box;
 	flex: none;
 	overflow: hidden;
@@ -235,7 +235,7 @@
 	border-radius: 8px;
 	box-shadow: inset 0 0 0 1px var(--l2);
 }
-:is([data-surface='plugin.objectives.graph'], [data-surface='plugin.tern.canvas']) .ob-root .ob-session {
+[data-surface='plugin.tern.canvas'] .ob-root .ob-session {
 	flex: none;
 	display: flex;
 	flex-direction: row;
@@ -247,19 +247,19 @@
 	font-weight: 600;
 	letter-spacing: 0.04em;
 }
-:is([data-surface='plugin.objectives.graph'], [data-surface='plugin.tern.canvas']) .ob-root .ob-sname {
+[data-surface='plugin.tern.canvas'] .ob-root .ob-sname {
 	text-transform: uppercase;
 	overflow: hidden;
 	text-overflow: ellipsis;
 }
-:is([data-surface='plugin.objectives.graph'], [data-surface='plugin.tern.canvas']) .ob-root .ob-scur {
+[data-surface='plugin.tern.canvas'] .ob-root .ob-scur {
 	flex: none;
 	color: var(--accent);
 	font-weight: 500;
 }
 
 /* ---- tab nodes ---- */
-:is([data-surface='plugin.objectives.graph'], [data-surface='plugin.tern.canvas']) .ob-root .ob-tab {
+[data-surface='plugin.tern.canvas'] .ob-root .ob-tab {
 	box-sizing: content-box;
 	flex: none;
 	overflow: hidden;
@@ -268,45 +268,45 @@
 	border-radius: 8px;
 	background: var(--card);
 }
-:is([data-surface='plugin.objectives.graph'], [data-surface='plugin.tern.canvas']) .ob-root .ob-tab-unlinked {
+[data-surface='plugin.tern.canvas'] .ob-root .ob-tab-unlinked {
 	border-style: dashed;
 	border-color: rgb(from var(--t1) r g b / 30%);
 	background: transparent;
 	opacity: 0.55;
 }
-:is([data-surface='plugin.objectives.graph'], [data-surface='plugin.tern.canvas']) .ob-root .ob-tab-ghost {
+[data-surface='plugin.tern.canvas'] .ob-root .ob-tab-ghost {
 	border-style: dashed;
 	background: transparent;
 	opacity: 0.5;
 }
-:is([data-surface='plugin.objectives.graph'], [data-surface='plugin.tern.canvas']) .ob-root .ob-tab-closed .ob-tlabel {
+[data-surface='plugin.tern.canvas'] .ob-root .ob-tab-closed .ob-tlabel {
 	text-decoration: line-through;
 }
 /* The tab and pane the graph was opened from (design P5). Shadows only: node and row heights,
    which the lines are drawn from, stay as they are. The ring is inset, so it stays out of the gap
    where the lines end. */
-:is([data-surface='plugin.objectives.graph'], [data-surface='plugin.tern.canvas']) .ob-root .ob-tab.ob-origin {
+[data-surface='plugin.tern.canvas'] .ob-root .ob-tab.ob-origin {
 	border-color: var(--accent);
 	box-shadow: inset 0 0 0 1.5px var(--accent);
 }
-:is([data-surface='plugin.objectives.graph'], [data-surface='plugin.tern.canvas']) .ob-root .ob-row.ob-row-origin {
+[data-surface='plugin.tern.canvas'] .ob-root .ob-row.ob-row-origin {
 	color: var(--t1);
 	box-shadow: inset 3px 0 0 var(--accent);
 	background: rgb(from var(--accent) r g b / 10%);
 }
-:is([data-surface='plugin.objectives.graph'], [data-surface='plugin.tern.canvas']) .ob-root .ob-thead {
+[data-surface='plugin.tern.canvas'] .ob-root .ob-thead {
 	box-sizing: border-box;
 	overflow: hidden;
 	padding: 2px 8px 0 8px;
 }
-:is([data-surface='plugin.objectives.graph'], [data-surface='plugin.tern.canvas']) .ob-root .ob-th1 {
+[data-surface='plugin.tern.canvas'] .ob-root .ob-th1 {
 	display: flex;
 	flex-direction: row;
 	align-items: center;
 	gap: 6px;
 	height: 18px;
 }
-:is([data-surface='plugin.objectives.graph'], [data-surface='plugin.tern.canvas']) .ob-root .ob-tlabel {
+[data-surface='plugin.tern.canvas'] .ob-root .ob-tlabel {
 	flex: 1 1 auto;
 	min-width: 0;
 	overflow: hidden;
@@ -317,7 +317,7 @@
 /* The link bar at a tab node's foot while an objective is selected (design P6). Its height comes
    from the layout sheet (link_h), so the lines below it stay on their nodes. Its text can't be
    selected: a press that drifts across "＋ Link" would select it instead of clicking (task 6.5). */
-:is([data-surface='plugin.objectives.graph'], [data-surface='plugin.tern.canvas']) .ob-root .ob-linkbar {
+[data-surface='plugin.tern.canvas'] .ob-root .ob-linkbar {
 	display: block;
 	box-sizing: border-box;
 	margin: 0 6px;
@@ -329,12 +329,12 @@
 	background: rgb(from var(--accent) r g b / 8%);
 	user-select: none;
 }
-:is([data-surface='plugin.objectives.graph'], [data-surface='plugin.tern.canvas']) .ob-root .ob-linkbar-on {
+[data-surface='plugin.tern.canvas'] .ob-root .ob-linkbar-on {
 	color: var(--t2);
 	box-shadow: inset 0 0 0 1px var(--l2);
 	background: transparent;
 }
-:is([data-surface='plugin.objectives.graph'], [data-surface='plugin.tern.canvas']) .ob-root .ob-row {
+[data-surface='plugin.tern.canvas'] .ob-root .ob-row {
 	box-sizing: border-box;
 	display: flex;
 	flex-direction: row;
@@ -346,21 +346,21 @@
 	color: var(--t2);
 }
 /* ▸/▾: 22 px wide and the row's full height (design P8). */
-:is([data-surface='plugin.objectives.graph'], [data-surface='plugin.tern.canvas']) .ob-root .ob-exp {
+[data-surface='plugin.tern.canvas'] .ob-root .ob-exp {
 	flex: none;
 	align-self: stretch;
 	width: 22px;
 	text-align: center;
 	color: var(--t3);
 }
-:is([data-surface='plugin.objectives.graph'], [data-surface='plugin.tern.canvas']) .ob-root .ob-rlabel {
+[data-surface='plugin.tern.canvas'] .ob-root .ob-rlabel {
 	flex: 1 1 auto;
 	min-width: 0;
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
 }
-:is([data-surface='plugin.objectives.graph'], [data-surface='plugin.tern.canvas']) .ob-root .ob-detail {
+[data-surface='plugin.tern.canvas'] .ob-root .ob-detail {
 	box-sizing: border-box;
 	display: block;
 	overflow: hidden;
@@ -370,33 +370,33 @@
 	color: var(--t3);
 	font-size: 11px;
 }
-:is([data-surface='plugin.objectives.graph'], [data-surface='plugin.tern.canvas']) .ob-root .ob-d-ok {
+[data-surface='plugin.tern.canvas'] .ob-root .ob-d-ok {
 	color: var(--ok);
 }
-:is([data-surface='plugin.objectives.graph'], [data-surface='plugin.tern.canvas']) .ob-root .ob-d-bad {
+[data-surface='plugin.tern.canvas'] .ob-root .ob-d-bad {
 	color: var(--bad);
 }
-:is([data-surface='plugin.objectives.graph'], [data-surface='plugin.tern.canvas']) .ob-root .ob-d-run,
-:is([data-surface='plugin.objectives.graph'], [data-surface='plugin.tern.canvas']) .ob-root .ob-d-working {
+[data-surface='plugin.tern.canvas'] .ob-root .ob-d-run,
+[data-surface='plugin.tern.canvas'] .ob-root .ob-d-working {
 	color: var(--accent);
 }
-:is([data-surface='plugin.objectives.graph'], [data-surface='plugin.tern.canvas']) .ob-root .ob-d-waiting_input {
+[data-surface='plugin.tern.canvas'] .ob-root .ob-d-waiting_input {
 	color: var(--warn);
 }
-:is([data-surface='plugin.objectives.graph'], [data-surface='plugin.tern.canvas']) .ob-root .ob-d-state {
+[data-surface='plugin.tern.canvas'] .ob-root .ob-d-state {
 	font-weight: 600;
 }
-:is([data-surface='plugin.objectives.graph'], [data-surface='plugin.tern.canvas']) .ob-root .ob-d-wait {
+[data-surface='plugin.tern.canvas'] .ob-root .ob-d-wait {
 	font-style: italic;
 }
-:is([data-surface='plugin.objectives.graph'], [data-surface='plugin.tern.canvas']) .ob-root .ob-line {
+[data-surface='plugin.tern.canvas'] .ob-root .ob-line {
 	display: block;
 	overflow: hidden;
 	white-space: nowrap;
 	text-overflow: ellipsis;
 	line-height: 18px;
 }
-:is([data-surface='plugin.objectives.graph'], [data-surface='plugin.tern.canvas']) .ob-root .ob-dim {
+[data-surface='plugin.tern.canvas'] .ob-root .ob-dim {
 	color: var(--t3);
 	font-size: 11px;
 }

@@ -29,9 +29,8 @@ M.px = {
 -- shared by the badges (CSS below) and the lines drawn inside the edge SVGs.
 M.palette = { "#e5484d", "#f76b15", "#3b82f6", "#8b8d98" }
 
--- The graph's two surfaces, the block and the canvas (design G4); every plugin rule is scoped under
--- them. :is() takes the specificity of one attribute, as the single surface selector did.
-M.SCOPE = ":is([data-surface='plugin.objectives.graph'], [data-surface='plugin.tern.canvas']) .ob-root"
+-- The graph's canvas (design G4); every plugin rule is scoped under it.
+M.SCOPE = "[data-surface='plugin.tern.canvas'] .ob-root"
 local SCOPE = M.SCOPE
 
 -- The layout sheet: heights and margins from M.px.

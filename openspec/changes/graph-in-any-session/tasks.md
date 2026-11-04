@@ -1,6 +1,8 @@
 # Tasks
 
-Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**. "Forced remote" means the fixtures copy with the local check in `lib/surface.luau` inverted, never the repo. "kv dump" reads `/tmp/tobj/config/plugin-data/objectives/kv.json`.
+Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**. "Forced remote" (groups 1–2 only) means the fixtures copy with the local check in `lib/surface.luau` inverted, never the repo. "kv dump" reads `/tmp/tobj/config/plugin-data/objectives/kv.json`.
+
+Groups 1–2 shipped 0.3.0 with two surfaces (design "History"); groups 3–4 move every session to the canvas.
 
 ## 1. Graph in any session
 
@@ -43,16 +45,46 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**. "For
   Verify: the tags API lists `v0.3.0`, and live `tern plugin list` shows `objectives 0.3.0` ready.
 
   Result: an isolated install printed `installed objectives 0.3.0`; release commit `d7053fc`; the tags API lists `v0.3.0` first; live `tern plugin list` shows `objectives 0.3.0 … 1 blocks, 0 lenses, window ready`, with `tabnav 0.1.0` untouched.
-- [ ] 2.2 **(live)** In the user's "devbox" session: ⌃⌘O opens the graph, devbox's tabs are listed, a click links and a pane row jumps, and ⌃⌘O closes it.
-
-  Verify with the user; record the findings here.
 
   Smoke test (agent, live window, 0.3.0): `tern ctl session switch devbox` then ⌃⌘O focused a new pane labelled "Objectives".
   - Its element tree held one `.ob-root` on the `plugin.tern.canvas` surface and none on the block.
   - The tab column listed all six sessions with "devbox ● current", and devbox's tab "demo" carried the origin ring.
   - A second ⌃⌘O closed it and returned focus to "demo"; the window then went back to "plugins".
 
-  Clicks, jumps and the redraw after a reload (design R5) are left for the user.
+  The user's check moved to 4.2 when every session moved to the canvas.
+
+## 3. Canvas in every session
+
+- [x] 3.1 `lib/surface.luau` handles only the canvas and closes a 0.3.0 block on its first lookup (design G1, G2, G5); `canvas_action` is the only click path, and the link route, `App.link`, `host.luau` and the manifest's host entry and block go (G3).
+
+  Verify:
+  - ⌃⌘O twice: a canvas owned by `objectives` with focus and only `kv.json` in the data folder, then none (helper dump);
+  - a click on an objective's title gives it `ob-sel`; a "＋ Link" bar click and a tab menu row add links (kv dump); a pane-row click jumps and leaves no graph;
+  - a 0.3.0 block open while the fixtures reload as the new code is gone after the next ⌃⌘O, which shows the canvas, and its view files are removed.
+
+  Result:
+  - leftover block: 0.3.0 opened block pane 31 with its view files. After the reload as the new code, both survived until ⌃⌘O, which closed the block, removed the files and opened canvas 32 with focus. The second ⌃⌘O closed it, and focus went back to pane 13. With the sweep disabled in the fixtures copy, pane 31 and the files outlived the reload, so the sweep is what removes them;
+  - the data folder held only `kv.json` while canvases 32 and 33 were shown;
+  - clicks on canvas 33: o3 got `ob-sel`; its bar on tab 14 gave `[12, 14]` with o3 still selected; the "Components" menu's "Review pull requests" row gave o5 `[17, 14, 9]`; a click on pane row 8 showed session web with pane 8 focused and no canvas left.
+- [x] 3.2 Style scope `[data-surface='plugin.tern.canvas'] .ob-root` (design G4).
+
+  Verify: the shot matches `s13_canvas`; `edgecheck.py` passes; hit areas measure 22 px as before.
+
+  Result: shot `s32_canvas` matches `s13_canvas` (UI face, ring inset on "Components", the "ui" row bar); `edgecheck.py` passes with 7 objective ends and 5 tab ends; hit areas are unchanged (done box and ⋯ 22 × 18, ▸/▾ 22 × 22, nodes 48, rows 22). All 64 selectors use the canvas scope.
+- [x] 3.3 README: one surface, nothing installed on other machines, the ways to close the graph; no host half, view files or "Esc closes it too".
+
+  Verify: `grep` finds no "host half", "view-" or "Esc closes it too" in the README.
+
+  Result: no matches. Install describes one window script drawing in Tern's canvas popup, with nothing needed on other machines; the commands table and Known limits give the ways to close the graph.
+
+## 4. Release and live check
+
+- [ ] 4.1 Version `0.4.0`: an isolated install prints `installed objectives 0.4.0` and lists 0 blocks; commit, push `main`, tag `v0.4.0`; `tern plugin install github.com/JakobMusik/tern-objectives --force` live.
+
+  Verify: the tags API lists `v0.4.0`, and live `tern plugin list` shows `objectives 0.4.0` ready.
+- [ ] 4.2 **(live)** With the user: ⌃⌘O opens the graph as a canvas in a session on this Mac and in "devbox"; devbox's tabs are listed; a click links and a pane row jumps; ⌃⌘O closes it.
+
+  Record the findings here.
 
 ## Workflow follow-up
 

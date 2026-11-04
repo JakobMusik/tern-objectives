@@ -1,7 +1,7 @@
 --!strict
--- Objectives: window half. Registers the palette commands, the two click paths (the link route
--- from the graph block in host.luau, and canvas_action from the canvas used in sessions on other
--- machines), and the window events that keep a shown graph current; everything else lives in lib/.
+-- Objectives: the window script, the whole plugin. Registers the palette commands, the graph's
+-- clicks (canvas_action) and the window events that keep a shown graph current; everything else
+-- lives in lib/.
 
 local App = require("./lib/app")
 local Layout = require("./lib/layout")
@@ -46,12 +46,7 @@ tern.command({
 	run = App.new_for_tab,
 })
 
--- Clicks in the graph block arrive as objectives:// links (archived design P4).
-tern.route.link(function(link: LinkRequest, cx: WindowCx): RouteDecision?
-	return App.link(link, cx)
-end)
-
--- Clicks in the canvas, the graph's surface in sessions on other machines (design G3).
+-- Clicks in the graph's canvas (design G3).
 tern.on("canvas_action", function(ev: CanvasAction, cx: WindowCx): boolean?
 	if ev.owner ~= "objectives" then
 		return nil

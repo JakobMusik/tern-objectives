@@ -10,13 +10,13 @@ A [Tern](https://docs.stencil.so/tern) plugin that keeps one global list of obje
 tern plugin install github.com/JakobMusik/tern-objectives
 ```
 
-The plugin has two halves. The window half (`window.luau` and `lib/`) keeps the objectives and builds the graph; the host half (`host.luau`) only shows the graph in its popup and passes your clicks back. It needs nothing on `PATH` besides the `git` that `tern plugin install` uses to fetch it, and nothing on the machines your sessions run on: in a session on another machine (attached over SSH), the graph opens in Tern's built-in canvas panel instead, filled from this machine.
+The plugin is one window script (`window.luau` and `lib/`): it keeps the objectives and draws the graph in Tern's built-in canvas popup. It needs nothing on `PATH` besides the `git` that `tern plugin install` uses to fetch it, and nothing on the machines your sessions run on: in a session on another machine (attached over SSH), the graph opens and works the same, filled from this machine.
 
 ## Commands
 
 | Command | Key | What it does |
 |---|---|---|
-| Objectives: Open graph | ⌃⌘O | Shows the graph over the current tab; pressed again while it is shown, closes it. Esc closes it too. |
+| Objectives: Open graph | ⌃⌘O | Shows the graph over the current tab; pressed again while it is shown, closes it. A click outside the graph or its × closes it too, and so does Esc after a click on its title bar. |
 | Objectives: Link this tab… | | Picks an open objective to link to, or unlink from, the focused pane's tab. Linked objectives show a check. |
 | Objectives: New objective for this tab… | | Asks for a title and creates a P2 objective already linked to the focused pane's tab. |
 
@@ -41,7 +41,7 @@ Everything the plugin keeps lives in one file in Tern's plugin data folder:
 <Tern config>/plugin-data/objectives/kv.json
 ```
 
-On macOS that is `~/Library/Application Support/Tern/plugin-data/objectives/kv.json`. While the graph is shown, the same folder also holds `view-<window>.json` and `view-<window>.seq`, the drawn graph handed to its popup; they are removed when it closes. The plugin writes nothing into your project folders, your home folder or its own package folder.
+On macOS that is `~/Library/Application Support/Tern/plugin-data/objectives/kv.json`. The plugin writes nothing into your project folders, your home folder or its own package folder.
 
 ## Remove
 
@@ -54,7 +54,7 @@ Removing the plugin leaves `plugin-data/objectives/kv.json` in place; delete tha
 ## Known limits
 
 - Side notes are one line of up to 200 characters. Tern's one-line field joins pasted lines without a space, so put a space or punctuation at the end of a line before pasting.
-- In a session on another machine, the graph is a canvas, which takes no keys: Esc closes it only after you click its title bar. ⌃⌘O, a click outside and its × close it anywhere.
+- The graph takes no keys, so Esc pressed inside it does nothing until you click its title bar. ⌃⌘O, a click outside and its × close it from anywhere.
 
 ## License
 

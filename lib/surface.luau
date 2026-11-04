@@ -1,82 +1,37 @@
 --!strict
--- The window's single objectives graph, a glimpse over the current tab on one of two surfaces
--- (design G1, G2):
--- - in a session on this machine, the plugin block `objectives.graph`: the window half hands its view
---   over through two files in the data folder, and the block takes keys, so Esc closes it;
--- - in a session on another machine, a canvas filled from this window. A block would open on that
---   machine, which has neither the plugin nor this Mac's data folder.
+-- The window's single objectives graph: a canvas glimpse over the current tab, filled from this
+-- window, in every session on any machine (design G1, G2). A canvas needs nothing installed where the
+-- session runs, which a plugin block would.
 -- A glimpse that loses focus to a programmatic focus change docks into its tab as a split, so jumps
 -- close the graph first, and only an undocked glimpse in the current tab is reused.
 
-local KIND = "objectives.graph"
 local OWNER = "objectives"
 local TITLE = "Objectives"
 local ABOUT = "Objectives graph: objectives on the left, tabs on the right. Clicks select, edit, link and jump."
-
-export type Kind = "block" | "canvas"
+-- 0.3.0's graph block and the view files it read (design G5).
+local OLD_BLOCK = "objectives.graph"
 
 local M = {}
 
 local pane_id: number? = nil
-local pane_kind: Kind = "block"
 -- False until a lookup has run in this VM. A plugin reload starts a new VM while a shown graph
 -- survives, so the first event after it must look.
 local looked = false
-local stem_cache: string? = nil
-local count = 0
 
--- This window's view-file stem: its window key, safe as a file name ("window" when the key is empty,
--- as in a headless Tern).
-local function stem(cx: WindowCx): string
-	if stem_cache == nil then
-		local key = string.gsub(cx:window_key(), "[^%w_%-]", "_")
-		stem_cache = if key == "" then "window" else key
+-- Closes a 0.3.0 graph block that survived the upgrade and removes this window's view files.
+local function drop_old_block(cx: WindowCx)
+	for _, p in cx.session:panes() do
+		if p.kind == "plugin" and p.block == OLD_BLOCK then
+			cx.layout:close(p.pane)
+		end
 	end
-	return stem_cache :: string
-end
-
-local function base(cx: WindowCx): string
-	return tern.plugin.data .. "/view-" .. stem(cx)
-end
-
-local function remove_files(cx: WindowCx)
-	local b = base(cx)
-	for _, path in { b .. ".json", b .. ".seq" } do
+	local key = string.gsub(cx:window_key(), "[^%w_%-]", "_")
+	local base = tern.plugin.data .. "/view-" .. (if key == "" then "window" else key)
+	for _, path in { base .. ".json", base .. ".seq" } do
 		if tern.fs.exists(path) then
 			pcall(tern.fs.remove, path)
 		end
 	end
-end
-
--- Hands `view` to the block: the tree first, then the sequence token the block polls. The token
--- carries the load time, so a reloaded VM never repeats one the block has already shown.
-local function hand_over(cx: WindowCx, view: Node)
-	count += 1
-	local n = string.format("%d.%d.%d", os.time(), math.floor(tern.now()), count)
-	local b = base(cx)
-	tern.fs.write(b .. ".json", tern.json.encode({ n = n, tree = view }))
-	tern.fs.write(b .. ".seq", n)
-end
-
-local function is_block(info: PaneInfo?): boolean
-	return info ~= nil and info.kind == "plugin" and info.block == KIND
-end
-
--- Whether `pane` is still this window's graph, as the kind it was found as.
-local function alive(cx: WindowCx, pane: number, kind: Kind): boolean
-	if kind == "block" then
-		return is_block(cx.session:pane(pane))
-	end
-	local info = cx.canvas:get(pane)
-	return info ~= nil and info.owner == OWNER
-end
-
--- The surface the current session needs: the block on this machine, a canvas elsewhere.
-local function wanted(cx: WindowCx): Kind
-	local ok, host = pcall(function()
-		return cx.hosts:current()
-	end)
-	return if not ok or host.kind == "local" then "block" else "canvas"
 end
 
 -- Whether a graph may exist: events skip the lookup only once one has found none.
@@ -84,29 +39,23 @@ function M.known(): boolean
 	return pane_id ~= nil or not looked
 end
 
--- The pane of this window's graph, block or canvas, or nil when none exists. A canvas a 0.1.x graph
--- left behind is adopted like any other (design G5). Noticing the block gone (Esc, a click outside,
--- a close) removes its view files.
+-- The pane of this window's graph, or nil when none exists. A canvas a 0.1.x graph left behind is
+-- adopted like any other (design G5).
 function M.find(cx: WindowCx): number?
-	looked = true
+	if not looked then
+		looked = true
+		drop_old_block(cx)
+	end
 	if pane_id ~= nil then
-		if alive(cx, pane_id, pane_kind) then
+		local info = cx.canvas:get(pane_id)
+		if info ~= nil and info.owner == OWNER then
 			return pane_id
-		end
-		if pane_kind == "block" then
-			remove_files(cx)
 		end
 		pane_id = nil
 	end
-	for _, p in cx.session:panes() do
-		if is_block(p) then
-			pane_id, pane_kind = p.pane, "block"
-			return p.pane
-		end
-	end
 	for _, info in cx.canvas:list() do
 		if info.owner == OWNER then
-			pane_id, pane_kind = info.pane, "canvas"
+			pane_id = info.pane
 			return info.pane
 		end
 	end
@@ -158,48 +107,25 @@ function M.update(cx: WindowCx, view: Node): boolean
 	if pane == nil then
 		return false
 	end
-	if pane_kind == "canvas" then
-		cx.canvas:set(pane, { view = view })
-	else
-		hand_over(cx, view)
-	end
+	cx.canvas:set(pane, { view = view })
 	return true
 end
 
 -- Shows `view` as a glimpse over the current tab and gives it focus: updates the glimpse already
--- there when it is on the surface this session needs, else closes any graph (docked, in another
--- tab, or on the other surface) and opens a new one.
+-- there, else closes any graph (docked or in another tab) and opens a new one.
 function M.show(cx: WindowCx, view: Node): (number?, string?)
-	local want = wanted(cx)
 	local here = M.here(cx)
-	if here ~= nil and pane_kind == want then
+	if here ~= nil then
 		M.update(cx, view)
 		cx.layout:focus(here)
 		return here, nil
 	end
-	local existing = M.find(cx)
-	if existing ~= nil then
-		cx.layout:close(existing)
-		pane_id = nil
-	end
-	remove_files(cx)
-	if want == "canvas" then
-		local pane, err = cx.canvas:open({ title = TITLE, view = view, about = ABOUT, how = "glimpse" })
-		if pane == nil then
-			return nil, err or "This session's machine can't show the graph."
-		end
-		pane_id, pane_kind = pane, "canvas"
-		cx.layout:focus(pane)
-		return pane, nil
-	end
-	-- The files go first: the block reads them in its init.
-	hand_over(cx, view)
-	local pane = cx:new_block(KIND, { stem(cx) }, "glimpse")
+	M.close(cx)
+	local pane, err = cx.canvas:open({ title = TITLE, view = view, about = ABOUT, how = "glimpse" })
 	if pane == nil then
-		remove_files(cx)
-		return nil, "No ready `objectives` plugin defines the graph block here."
+		return nil, err or "This session's machine can't show the graph."
 	end
-	pane_id, pane_kind = pane, "block"
+	pane_id = pane
 	cx.layout:focus(pane)
 	return pane, nil
 end
@@ -211,7 +137,6 @@ function M.close(cx: WindowCx)
 		cx.layout:close(existing)
 	end
 	pane_id = nil
-	remove_files(cx)
 end
 
 return M
