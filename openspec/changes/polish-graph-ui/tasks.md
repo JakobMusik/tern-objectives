@@ -144,23 +144,42 @@ All checks run in the headless harness at `/tmp/tobj` (archived design D14) unle
 
 ## 5. Linking and hit areas
 
-- [ ] 5.1 Link bar at the foot of each tab node while an objective is selected; drop the corner ＋/×; add `Layout.px.link_h` (design P6).
+- [x] 5.1 Link bar at the foot of each tab node while an objective is selected; drop the corner ＋/×; add `Layout.px.link_h` (design P6).
 
   Verify:
   - tab-links "Linking from the graph": Add then remove a link, by kv dump after each `ctl click` on the bar, with the graph shown and the objective still selected;
   - objectives-graph "Selection": Select and clear, and "New objective button": Create and select, by shots;
   - `edgecheck.py` keeps line ends within 2 px with the bars shown.
-- [ ] 5.2 Right-click menu on tab nodes, plus pane rows if 1.2 required it (design P6).
+
+  Result:
+  - with o2 selected, 24 bars read "＋ Link" and one "× Unlink" (shot `g51_selected`);
+  - clicks on tab 15's bar gave o2 `[19, 15]`, then `[19]`, with the graph shown and o2 selected after both;
+  - an empty-space click left no bar and no selection;
+  - a new "Link bar demo" was selected, with 25 "＋ Link" bars.
+
+  The first edgecheck at full height failed by 2.3 px on the deepest tab end. Each long curve met the node edge at a slant, so `edgecheck` read a sloped line one column in. Every line now ends in 4 px level stubs (design P11), and edgecheck passes at 1400 and 460 px, light and dark, with at most 0.5 px.
+- [x] 5.2 Right-click menu on tab nodes, plus pane rows if 1.2 required it (design P6).
 
   Verify (tab-links "Link menu on tab nodes"):
   - Link without selecting and Unlink from the menu, by `ctl click … right`, a click on the row and a kv dump;
   - No objectives yet: a shot shows the single disabled row, and the kv dump is unchanged.
-- [ ] 5.3 Hit areas of 22 px for the done box, ⋯ and ▸/▾ (design P8).
+
+  Result:
+  - with no selection, the menu on "Benchmarks" listed "Link to" and every open objective in graph order, with "Speed up search" checked (shot `g52_menu`); choosing "Review pull requests" gave o5 `[27, 24]`, and a line joined the nodes (`g52_linked`);
+  - the menu opened from pane row 23 showed "Review pull requests" checked, and choosing it gave `[27]`;
+  - with every objective done (planted, then restored), the menu held "No objectives yet" and Tern's Copy, and choosing the disabled row left the kv dump unchanged.
+
+  The spec now says "the menu's only row of its own", because Tern adds Copy to every menu.
+- [x] 5.3 Hit areas of 22 px for the done box, ⋯ and ▸/▾ (design P8).
 
   Verify (objectives-graph "Larger hit areas"): the shot layout JSON gives each of them a width of at least 22 px and the height of its line, objective nodes 48 px tall and rows 22 px tall. `ctl click` 9 px right of a done box's visible centre still marks the objective done.
-- [ ] 5.4 README: describe linking with the bar and the tab menu.
+
+  Result (shot `g53_hit`): 31 done boxes and 31 ⋯ at 22 × 18; 40 ▸/▾ at 22 × 22; objective nodes 48 tall, lines 18, rows 22. A click 9 px right of o1's box centre hit `.ob-check` and marked it done; it was then reopened.
+- [x] 5.4 README: describe linking with the bar and the tab menu.
 
   Verify: the README's linking steps work as written when followed in the harness.
+
+  Result: "Using the graph" now describes the "＋ Link" / "× Unlink" bar, the "Link to" menu on a tab's header or rows, and the origin outline (group 4's doc line). The steps are the ones exercised in 5.1 and 5.2.
 
 ## 6. Release and live check
 

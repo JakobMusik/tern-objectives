@@ -486,6 +486,17 @@ function M.action(ev: Action, cx: WindowCx)
 		if Store.toggle_link(selected, tab, win.tabs[tab] :: any, win.key) == nil then
 			toast_gone(cx)
 		end
+	elseif act == "lnk" then
+		-- A row of a tab node's menu: "<objective>:<tab>", no selection needed (design P6).
+		local id, tab_text = string.match(value, "^([^:]+):(%d+)$")
+		local tab = tonumber(tab_text)
+		if id == nil or tab == nil then
+			return
+		end
+		local win = Model.read(cx, Surface.find(cx))
+		if Store.toggle_link(id, tab, win.tabs[tab] :: any, win.key) == nil then
+			toast_gone(cx)
+		end
 	elseif act == "tab" then
 		local tab = tonumber(value)
 		if tab ~= nil then

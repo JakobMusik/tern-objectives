@@ -104,6 +104,11 @@ The clickable spans of the done box, ⋯ and ▸/▾ become 22 px wide and as ta
 ### P10. Canvases left by 0.1.x
 Canvases survive a plugin reload (SDK "Window API › `cx.canvas`": "reloading a plugin does not reset its canvases"). After updating, the load-time timer closes any canvas owned by `objectives` (`cx.canvas:list()`), so an old glimpse doesn't linger.
 
+### P11. Level line ends
+Every line leaves its objective and enters its tab through a 4 px straight stub, with the curve between the stubs. Archived D4 gave stubs only to dashed lines.
+
+With every row open and link bars shown, graphs run past 3500 px, and a curve dropping that far met the tab edge at a slant. The geometric end was still exact, but the line read 2.3 px high one column inside the edge (task 5.1). With stubs, every end is level and within 0.5 px.
+
 ## Risks / Trade-offs
 
 - **R1. Render plus hand-off cost with every row open.** → Checked in task 3.3 at 30 objectives, 40 panes, 45 links and every row open:

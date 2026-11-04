@@ -24,8 +24,10 @@ The key can be changed like any other: bind a chord to `plugin.objectives.open` 
 
 ## Using the graph
 
-- **＋ New objective** asks for a title. The new objective is selected, so every tab shows a ＋ to link it.
-- **Click an objective** to select it: its lines get thicker, the others fade, and each tab shows ＋ (link) or × (unlink). Click it again, or empty space, to clear the selection.
+- **＋ New objective** asks for a title. The new objective is selected, so every tab shows a **＋ Link** bar to link it.
+- **Click an objective** to select it: its lines get thicker, the others fade, and every tab gets a bar at its foot: **＋ Link**, or **× Unlink** where it is already linked. Click it again, or empty space, to clear the selection.
+- **Right-click a tab** (its header or any pane row) for a **Link to** menu of every open objective, with a check on the linked ones. Choosing one links or unlinks it; nothing needs to be selected.
+- The tab and pane you opened the graph from are outlined in the accent colour, so you can see where you came from.
 - **The box** marks an objective done; done objectives move to the **Done** group at the bottom and draw no lines. **P0–P3** cycles the priority (red, orange, blue, grey). **⋯** renames, sets a one-line side note, a due date or tags, or deletes it.
 - **Click a tab header** to jump to that tab, or **a pane row** to jump to that pane, in whatever session it lives. Under each pane row the graph shows what the pane is doing: an omp agent's state with your last message and its last reply, a terminal's last or running command, or a file's path. **▾** folds a row's details away and **▸** brings them back; folded rows are remembered.
 - **All / This session** and the **#tag** chips filter the graph; the choice is remembered.

@@ -23,40 +23,36 @@ local function pctenc(s: string): string
 	end))
 end
 
--- A dashed line can end inside a gap of its pattern, short of the node; a 4 px solid stub at each
--- end makes every line touch both nodes.
+-- Every line leaves and enters its nodes level, through a 4 px straight stub at each end with the
+-- curve between them. A steep curve would otherwise meet the node edge at a slant (task 5.1), and a
+-- dashed line could end inside a gap of its pattern, short of the node.
 local STUB = 4
 
 local function path(e: Edge, w: number, stroke: number): string
-	local mid = w / 2
+	local a, b, mid = STUB, w - STUB, w / 2
 	local color = Layout.palette[e.priority + 1]
-	local curve = string.format(
-		"<path d='M0 %.1f C%.1f %.1f %.1f %.1f %d %.1f' stroke='%s' stroke-width='%g'%s/>",
+	return string.format(
+		"<path d='M%d %.1f C%.1f %.1f %.1f %.1f %d %.1f' stroke='%s' stroke-width='%g'%s/>"
+			.. "<path d='M0 %.1f H%d M%d %.1f H%d' stroke='%s' stroke-width='%g'/>",
+		a,
 		e.from,
 		mid,
 		e.from,
 		mid,
 		e.to,
-		w,
+		b,
 		e.to,
 		color,
 		stroke,
-		if e.dashed then " stroke-dasharray='5 4'" else ""
+		if e.dashed then " stroke-dasharray='5 4'" else "",
+		e.from,
+		a,
+		b,
+		e.to,
+		w,
+		color,
+		stroke
 	)
-	if not e.dashed then
-		return curve
-	end
-	return curve
-		.. string.format(
-			"<path d='M0 %.1f H%d M%d %.1f H%d' stroke='%s' stroke-width='%g'/>",
-			e.from,
-			STUB,
-			w - STUB,
-			e.to,
-			w,
-			color,
-			stroke
-		)
 end
 
 local function layer_rule(class: string, paths: { string }, w: number, h: number): string
