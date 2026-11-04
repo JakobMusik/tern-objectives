@@ -125,7 +125,10 @@ end
 
 type Shown = { tab: Model.Tab, status: string }
 
-local function tab_node(t: Model.Tab, status: string, first: string, linked_open: boolean, link_btn: string?, ui_state: Ui, collapsed: { [string]: boolean }): (Node, number)
+-- The link bar a tab node shows while an objective is selected (design P6).
+type Link = { unlink: boolean, title: string }
+
+local function tab_node(t: Model.Tab, status: string, first: string, linked_open: boolean, link: Link?, menu: { any }, ui_state: Ui, collapsed: { [string]: boolean }): (Node, number)
 	local cls = "ob-tab ob-t-" .. t.id .. first
 	if status ~= "live" then
 		cls ..= " ob-tab-ghost ob-tab-" .. status
@@ -143,13 +146,6 @@ local function tab_node(t: Model.Tab, status: string, first: string, linked_open
 	local head_kids: { Node } = {
 		el("div", { class = "ob-th1", key = "th1" }, {
 			span("ob-tlabel", t.label, { key = "label" }),
-			if link_btn ~= nil
-				then span("ob-link", if link_btn == "unlink" then "×" else "＋", {
-					key = "link",
-					title = if link_btn == "unlink" then "Unlink from the selected objective" else "Link to the selected objective",
-					actions = { click = "link=" .. t.id },
-				})
-				else nil :: any,
 		}),
 		span("ob-line ob-dim", where, { key = "where" }),
 	}
@@ -189,7 +185,15 @@ local function tab_node(t: Model.Tab, status: string, first: string, linked_open
 	if holds_origin then
 		cls ..= " ob-origin"
 	end
-	return el("div", { class = cls, key = "t:" .. t.id }, kids), detail_lines
+	-- Below the rows, away from the header whose click jumps, so a near miss doesn't jump.
+	if link ~= nil then
+		table.insert(kids, span("ob-linkbar" .. (if link.unlink then " ob-linkbar-on" else ""), if link.unlink then "× Unlink" else "＋ Link", {
+			key = "linkbar",
+			title = (if link.unlink then "Unlink from “" else "Link to “") .. link.title .. "”",
+			actions = { click = "link=" .. t.id },
+		}))
+	end
+	return el("div", { class = cls, key = "t:" .. t.id, actions = { menu = menu } }, kids), detail_lines
 end
 
 -- A closed or elsewhere tab drawn from its snapshot; a link without one (written by hand or lost to
@@ -331,16 +335,35 @@ function M.build(state: Store.State, win: Model.Window, ui_state: Ui): Built
 			sel_tabs[tab] = true
 		end
 	end
-	local function link_btn(tab: number): string?
+	local function link_of(tab: number): Link?
 		if sel_obj == nil then
 			return nil
 		end
-		return if sel_tabs[tab] then "unlink" else "link"
+		return { unlink = sel_tabs[tab] == true, title = sel_obj.title }
+	end
+	-- The tab menu's rows: every open objective in graph order, whatever the filters (design P6).
+	local menu_objs: { Store.Objective } = {}
+	for _, o in state.objectives do
+		if not o.done then
+			table.insert(menu_objs, o)
+		end
+	end
+	sort_open(menu_objs)
+	local function menu_of(tab: number): { any }
+		if #menu_objs == 0 then
+			return { { id = "none", label = "No objectives yet", disabled = "Create one with ＋ New objective" } }
+		end
+		local rows: { any } = { { header = "Link to" } }
+		for _, o in menu_objs do
+			table.insert(rows, { id = "lnk=" .. o.id .. ":" .. tab, label = o.title, checked = table.find(o.tabs, tab) ~= nil })
+		end
+		return rows
 	end
 	local function add_tab(t: Model.Tab, status: string)
 		local first = Layout.first(right)
-		local node, details = tab_node(t, status, first, linked_open[t.id] == true, link_btn(t.id), ui_state, view_state.collapsed)
-		tab_cy[t.id] = Layout.add_tab(right, #t.rows, details)
+		local link = link_of(t.id)
+		local node, details = tab_node(t, status, first, linked_open[t.id] == true, link, menu_of(t.id), ui_state, view_state.collapsed)
+		tab_cy[t.id] = Layout.add_tab(right, #t.rows, details, link ~= nil)
 		table.insert(right_kids, node)
 	end
 	for _, s in win.sessions do

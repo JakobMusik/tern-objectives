@@ -12,7 +12,7 @@ While an objective is selected, every tab node SHALL show a full-width link bar 
 ## ADDED Requirements
 
 ### Requirement: Link menu on tab nodes
-Right-clicking a tab node SHALL open a menu with one row per open objective, in graph order, checked when that objective is linked to the tab. Choosing a row SHALL add or remove that one link, whether or not an objective is selected. With no open objectives, the menu SHALL show a single disabled row saying so.
+Right-clicking a tab node SHALL open a menu with one row per open objective, in graph order, checked when that objective is linked to the tab. Choosing a row SHALL add or remove that one link, whether or not an objective is selected. With no open objectives, the menu's only row of its own SHALL be a disabled one saying so; Tern's own Copy row, which every menu gets, may follow it.
 
 #### Scenario: Link without selecting
 - **WHEN** no objective is selected and the user right-clicks a tab node and chooses an unchecked objective
@@ -24,4 +24,4 @@ Right-clicking a tab node SHALL open a menu with one row per open objective, in 
 
 #### Scenario: No objectives yet
 - **WHEN** the store holds no open objectives and the user right-clicks a tab node
-- **THEN** the menu shows one disabled row saying there are no objectives yet, and `kv.json` is unchanged
+- **THEN** the menu's only row of its own is a disabled one saying there are no objectives yet, choosing it does nothing, and `kv.json` is unchanged
