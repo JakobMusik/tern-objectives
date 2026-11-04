@@ -19,9 +19,9 @@ export type Ui = {
 	details: (row: Model.Row) -> { { text: string, class: string? } },
 }
 
--- An element as a plain TSP wire node {k, p, c} (tern.d.luau Node). The tree only travels to the
--- block as JSON, and tern.ui.el would convert every subtree again at each level of nesting: with
--- every row open that doubled the build time (task 3.3). `props` must be a fresh table.
+-- An element as a plain TSP wire node {k, p, c} (tern.d.luau Node), which `cx.canvas:set` takes as
+-- is. tern.ui.el would convert every subtree again at each level of nesting: with every row open that
+-- doubled the build time (task 3.3). `props` must be a fresh table.
 local function el(tag: string, props: { [string]: any }, kids: { Node }?): Node
 	props.tag = tag
 	return { k = "el", p = props, c = kids } :: any

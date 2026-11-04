@@ -45,7 +45,7 @@ local function build(cx: WindowCx): View.Built
 	return built
 end
 
--- Logs a render's cost: building the view, then handing it to the block (encode and two writes).
+-- Logs a render's cost: building the view, then handing it to the canvas.
 local function report(started: number, built: number)
 	local done = tern.now()
 	local total = done - started
@@ -71,9 +71,8 @@ function M.render(cx: WindowCx)
 	Refresh.start()
 end
 
--- Shows the graph over the current tab, on whichever surface the session needs (design G1). A fresh
--- open takes the focused pane as the origin; `keep_origin` (the reopen after one of the graph's
--- pickers) keeps the one it had.
+-- Shows the graph over the current tab (design G1). A fresh open takes the focused pane as the
+-- origin; `keep_origin` (the reopen after one of the graph's pickers) keeps the one it had.
 function M.open(cx: WindowCx, keep_origin: boolean?)
 	if not keep_origin then
 		local focused = cx.session:focused()
@@ -94,8 +93,7 @@ function M.open(cx: WindowCx, keep_origin: boolean?)
 	Refresh.start()
 end
 
--- ⌃⌘O: closes the graph shown over this tab, else opens it here. Esc closes it too, through the
--- block's own key handler.
+-- ⌃⌘O: closes the graph shown over this tab, else opens it here.
 function M.toggle(cx: WindowCx)
 	if Surface.here(cx) ~= nil then
 		Surface.close(cx)
@@ -527,27 +525,6 @@ function M.action(ev: Action, cx: WindowCx)
 		return
 	end
 	M.render(cx)
-end
-
-local function unpct(s: string): string
-	return (string.gsub(s, "%%(%x%x)", function(h)
-		return string.char(tonumber(h, 16) :: number)
-	end))
-end
-
--- A click in the graph block arrives as objectives://act/<act>/<value> (design P4). The same link
--- from any other pane is swallowed unread: a program could print one.
-function M.link(link: LinkRequest, cx: WindowCx): RouteDecision?
-	if string.sub(link.url, 1, 13) ~= "objectives://" then
-		return nil
-	end
-	local act, value = string.match(link.url, "^objectives://act/([^/]*)/(.*)$")
-	if act == nil or link.pane ~= Surface.find(cx) then
-		tern.log.debug("objectives: ignored " .. link.url .. " from pane " .. tostring(link.pane))
-		return { handled = true }
-	end
-	M.action({ act = unpct(act), value = unpct(value :: string) }, cx)
-	return { handled = true }
 end
 
 return M
