@@ -124,13 +124,23 @@ All checks run in the headless harness at `/tmp/tobj` (archived design D14) unle
 
 ## 4. Origin highlight
 
-- [ ] 4.1 Keep the origin pane in `App` and pass it to `View.build`: `ob-origin` ring on its tab node, `ob-row-origin` bar on its row (design P5).
+- [x] 4.1 Keep the origin pane in `App` and pass it to `View.build`: `ob-origin` ring on its tab node, `ob-row-origin` bar on its row (design P5).
 
   Verify by shots (objectives-graph "Origin highlight"):
   - Opened from a split pane: focus the right-hand pane of "App build", then ⌃⌘O; only that node and row are marked;
   - Origin pane moves: tobjh `move_to_tab` while the graph is shown; the marks follow;
   - Kept after a picker: the "＋ New objective" field flow with a click into the field; the same marks after the reopen;
   - New origin on a fresh open: close, focus a pane in "Components", reopen; only the new marks.
+
+  Result (view-file classes and shots `g41_*`):
+  - from pane 16, the right-hand pane of "App build", only `ob-t-15 ob-origin` and `ob-r-16 ob-row-origin` were marked;
+  - moving pane 16 between tabs 19 and 15 moved both marks within 1 s;
+  - after the field flow, which left pane 18 focused, the reopened graph still marked pane 16;
+  - a fresh open from pane 18 marked only "Components" and its `ui` row (`g41_fresh`).
+
+  Ring and bar are box-shadows, so no geometry moved.
+
+  Seen on the way: a plugin reload forgets the origin, like the selection (design P5). Once, the heartbeat stopped silently after a long idle gap in the harness. It didn't recur in three traced runs, and the refresh code is unchanged from 0.1.2.
 
 ## 5. Linking and hit areas
 

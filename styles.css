@@ -264,6 +264,17 @@
 [data-surface='plugin.objectives.graph'] .ob-root .ob-tab-closed .ob-tlabel {
 	text-decoration: line-through;
 }
+/* The tab and pane the graph was opened from (design P5). Shadows only: node and row heights,
+   which the lines are drawn from, stay as they are. */
+[data-surface='plugin.objectives.graph'] .ob-root .ob-tab.ob-origin {
+	border-color: var(--accent);
+	box-shadow: 0 0 0 1.5px var(--accent);
+}
+[data-surface='plugin.objectives.graph'] .ob-root .ob-row.ob-row-origin {
+	color: var(--t1);
+	box-shadow: inset 3px 0 0 var(--accent);
+	background: rgb(from var(--accent) r g b / 10%);
+}
 [data-surface='plugin.objectives.graph'] .ob-root .ob-thead {
 	box-sizing: border-box;
 	overflow: hidden;
