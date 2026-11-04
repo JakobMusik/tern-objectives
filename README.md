@@ -16,7 +16,7 @@ The plugin is window-half only (`window.luau`, no host half) and needs nothing o
 
 | Command | Key | What it does |
 |---|---|---|
-| Objectives: Open graph | ⌃⌘O | Shows the graph over the current tab. |
+| Objectives: Open graph | ⌃⌘O | Shows the graph over the current tab; pressed again while it is shown, closes it. |
 | Objectives: Link this tab… | | Picks an open objective to link to, or unlink from, the focused pane's tab. Linked objectives show a check. |
 | Objectives: New objective for this tab… | | Asks for a title and creates a P2 objective already linked to the focused pane's tab. |
 
@@ -52,6 +52,7 @@ Removing the plugin leaves `plugin-data/objectives/kv.json` in place; delete tha
 ## Known limits
 
 - Side notes are one line of up to 200 characters. Tern's one-line field joins pasted lines without a space, so put a space or punctuation at the end of a line before pasting.
+- Esc closes the graph only after you click its title bar: Tern doesn't pass keys to a plugin's popup. Press ⌃⌘O again, click outside the graph, or use its × instead.
 
 ## License
 

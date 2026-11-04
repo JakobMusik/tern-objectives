@@ -7,11 +7,15 @@ Shows objectives and tabs as a clickable two-column graph, with lines for links.
 ## ADDED Requirements
 
 ### Requirement: Opening the graph
-"Objectives: Open graph" SHALL be a palette command bound to ⌃⌘O by default. It SHALL show the graph as a glimpse over the current tab. Running it again SHALL show the graph again rather than stacking another one: the window SHALL hold at most one graph at a time.
+"Objectives: Open graph" SHALL be a palette command bound to ⌃⌘O by default. It SHALL show the graph as a glimpse over the current tab. Run while the graph is shown as a glimpse over the current tab, it SHALL close it, so the same key opens and closes the graph. Run anywhere else, it SHALL show the graph over the current tab, replacing a graph left docked or in another tab: the window SHALL hold at most one graph at a time.
 
-#### Scenario: Open twice
-- **WHEN** the user runs "Objectives: Open graph" twice
-- **THEN** the graph is shown and the window holds exactly one canvas owned by `objectives`
+#### Scenario: Key toggles
+- **WHEN** the user presses ⌃⌘O twice over the same tab
+- **THEN** the first press shows the graph and the second closes it, leaving no canvas owned by `objectives`
+
+#### Scenario: Replacing a docked graph
+- **WHEN** a graph was docked into a tab by a session switch and the user presses ⌃⌘O in that tab
+- **THEN** a glimpse of the graph is shown over the tab and the window holds exactly one canvas owned by `objectives`
 
 ### Requirement: Graph returns after its pickers
 When a picker or field opened from the graph closes, answered or dismissed, the graph SHALL be shown over the current tab again if a click on the field, or on the graph while the field was open, had closed it.
