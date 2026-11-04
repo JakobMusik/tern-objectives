@@ -17,6 +17,7 @@ Facts that shape the approach. Each was checked against `tern.d.luau` (Tern 0.9.
 | A canvas rejects `image` and `media` nodes, and takes no keys. | Spike B: `canvas kind "image" is not supported` |
 | Plugin CSS, both manifest `styles` and `tern.css`, reaches canvases through `[data-surface='plugin.tern.canvas']`. The `style` attribute is ignored; classes plus CSS are the only styling. | Spike B; SDK `elements/el` |
 | `el` nodes placed absolutely, plus edges drawn as a runtime `data:image/svg+xml` CSS background, stayed aligned at 1400 px and 460 px, with real `tern ctl click` hits. | Spike B2: `b2_canvas_css_460.png`, `b2_canvas_css_sel_1400.png` |
+| `mask-image: url(…)` parses but masks nothing; only `background-image` paints a `url()`. | SDK "CSS Reference" (images); task 2.2 |
 | A `tern.css` sheet vanishes after a plugin reload until it is installed again. | Spike, failure modes |
 | `tern.kv` is one JSON file rewritten whole on every set, and the last write wins. A key one half wrote was lost when the other half wrote. | L2086–2095; spike (`open_flow` lost) |
 | `os.time`, `os.date`, `os.clock` and `os.difftime` are available. `os.time{...}` reads the table as local time. | SDK "Basics" (sandbox table) |
@@ -49,15 +50,20 @@ Every API the specs need lives in the window half:
 
 **Alternative:** a host block with an SVG `image` (spike A). It renders well and supports keys. Rejected because it cannot focus panes, cannot see sessions, and would put a second writer on `kv.json`.
 
-### D2. Canvas in a glimpse, reused
-**Opening:** "Open graph" calls `cx.canvas:open{title = "Objectives", view, dock?, about, how = "glimpse"}`.
+### D2. Canvas in a glimpse, one per window
+**Opening:** "Open graph" calls `cx.canvas:open{title = "Objectives", view, about, how = "glimpse"}` and focuses the new pane.
 
-**Reuse:**
-- The VM keeps the canvas pane id.
-- On the next open, if `cx.canvas:get(id)` (L1572) still returns our canvas, the plugin `set`s it and focuses it.
-- Otherwise it searches `cx.canvas:list()` (L1574) for any canvas with `owner = "objectives"` before opening a new one. This keeps a single canvas per window, as the spec requires.
+**What task 2.1 showed** (headless, 2026-11-04):
+- A click outside the glimpse closes the canvas; it leaves `cx.canvas:list()`.
+- A picker (`cx:pick`) opens over the glimpse, its answer reaches the handler, and the glimpse stays.
+- A programmatic focus change (`cx.layout:focus` to another pane, or a session switch) does **not** close the glimpse: Tern docks it into its tab as a split pane, where it stays.
+- A glimpse's `PaneInfo` has `kind = "plugin"` and the `tab` it covers.
 
-**Fallback:** if the glimpse misbehaves (risk R1), switch to `how = "beside", ratio = 0.4`, a lasting side panel (L1451–1461). The decision is recorded in this file before going further.
+**Rules that follow:**
+- **Jumps close the canvas first** (`cx.layout:close`), then focus the target, so nothing is left over or beside it.
+- **Reuse:** the VM keeps the canvas pane id, re-checked with `cx.canvas:get(id)` (L1572), else found in `cx.canvas:list()` (L1574) by `owner = "objectives"`. If that canvas is in the current tab, the plugin `set`s and focuses it. If it is in another tab (for example docked there by a session switch), it is closed and a new glimpse opens over the current tab. The window holds at most one canvas, as the spec requires.
+
+**Fallback (not needed):** `how = "beside", ratio = 0.4`, a lasting side panel (L1451–1461).
 
 ### D3. Fixed-geometry layout from one constants table
 The graph is a flex row of `tern.ui.el("div", {class = …})` nodes: a left column, a gap column for edges, and a right column. Every row type has a fixed pixel height:
@@ -76,29 +82,31 @@ All text is single-line with ellipsis. A Lua constants table is the single sourc
 The spike showed that alignment holds exactly when the CSS and the edge geometry share one formula.
 
 **Column widths:**
-- Columns are percentages, so width changes only stretch the gap horizontally.
-- The graph is capped with `max-width` on a wrapper; the spike needed a wrapper cap.
+- The gap column has a fixed width (`gap_w`, 120 px), so the edges are drawn one SVG pixel per CSS pixel. The two node columns share the rest, 45 : 55.
+- Width changes therefore move only the node columns' widths, never any vertical position.
+- The root is capped with `max-width`.
 
 **Hover text:** full title, note and times go in the node's `title` prop.
 
-### D4. Edges as masked layers coloured by theme variables
-The gap column holds one absolutely positioned layer per priority (P0–P3), plus one "selected" layer. Each layer:
-- draws its shapes with a `data:image/svg+xml` mask (`mask-image` and `-webkit-mask-image`);
-- takes its colour from `background-color` set to a theme variable: `--bad` (P0), `--warn`, `--accent` and `--t3` respectively (SDK "Themes": `--accent`, `--ok`, `--bad`, `--warn`, `--t1`…`--t4`). This orange-for-P1 mapping is the one checked in task 2.2.
+### D4. Edges as SVG backgrounds in a fixed palette
+**What task 2.2 showed:** Tern's renderer parses `mask-image: url(…)` but masks nothing; it takes gradients only (SDK "CSS Reference": "`mask-image` takes gradients"). In this theme `--accent` is a muted teal, not blue. So edges can't take their colour from theme variables, and `--accent` doesn't mean blue anyway.
+
+**Choice:** the gap column holds at most two absolutely positioned layers, each a `data:image/svg+xml` `background-image` (proven by spike B2):
+- `ob-e-all`: every edge that isn't the selected objective's, at `opacity: .25` while an objective is selected;
+- `ob-e-sel`: the selected objective's edges, with a thicker stroke.
+
+**Colours:** one fixed palette of mid tones that reads on both light and dark pages, with no appearance detection: P0 `#e5484d` red, P1 `#f76b15` orange, P2 `#3b82f6` blue, P3 `#8b8d98` grey. It lives in `lib/layout.luau` and feeds both the stroke colours in the SVG and the badge CSS.
 
 **SVG geometry:**
-- `viewBox = "0 0 100 H"`, where H is the graph height in px, with `preserveAspectRatio = "none"` and `vector-effect = "non-scaling-stroke"`.
-- Curves are cubic Béziers from x = 0 at the objective's centre y to x = 100 at the tab header's centre y.
+- `viewBox = "0 0 W H"`, W = `gap_w`, H = the graph height in px, drawn 1:1 with `background-size: W H`. Nothing scales, so stroke widths and dashes stay true.
+- Curves are cubic Béziers from x = 0 at the objective's centre y to x = W at the tab header's centre y.
 - Closed and elsewhere tabs use `stroke-dasharray`.
-
-**Selection:**
-- Unselected layers get `opacity: .25`.
-- The selected objective's edges go on the selected layer with a thicker stroke.
 
 **Reinstalling:** the edge sheet (`tern.css("edges", …)`) is installed again on every render, on `window_start`, and at load, so a reload can't leave it missing. Install is skipped when the string is unchanged.
 
 **Alternatives considered:**
-- Spike B2's plain `background-image` with hard-coded colours. It is proven, but it can't follow the theme. It is the fallback if masks fail (R2), with the palette picked from the light/dark appearance.
+- Masked layers coloured by theme variables: what this design first chose; ruled out by task 2.2.
+- A gap that stretches with the width, scaled by `preserveAspectRatio = "none"`: the strokes would widen with the scale unless `vector-effect` works in the renderer, which nothing proves. The fixed gap avoids the question.
 - A mermaid chart, rejected: no clickable nodes and its own node order (spike B1).
 
 ### D5. Click protocol
@@ -187,6 +195,7 @@ Selection is kept in VM memory only.
 - The canvas's own pane is excluded.
 
 ### D10. Navigation
+- Every jump first closes the canvas (D2), so the target is left uncovered and no docked graph remains.
 - A tab header calls `cx.layout:focus(TabInfo.pane)`, the tab's focused block (L1126–1130).
 - A pane row calls `cx.layout:focus(pane)`.
 - The probe showed focus alone switches session and tab. If a live run shows otherwise, call `cx.sessions:switch(TabInfo.session)` first (L721), as community plugins do.
@@ -252,8 +261,8 @@ All timers stop when the canvas is gone.
 
 ## Risks / Trade-offs
 
-- **R1. Glimpse behaviour is untested in three cases:** after a jump that switches sessions, when a picker opens over it, and when shown again after being dismissed. → Task 2.1 checks all three before any feature work. If any fails, switch to the side panel (D2) and record the change here.
-- **R2. `mask-image` on a data-URL SVG is untested in Tern's renderer.** The spike only proved `background-image`. → Task 2.2 checks it first. If it fails, use per-appearance colour palettes on `background-image`.
+- **R1. Glimpse behaviour after a jump, under a picker and when shown again.** → Checked in task 2.1. A picker and a reopen work. A programmatic jump docks the glimpse as a split instead of closing it, so jumps close the canvas first (D2). A session switch made outside the graph still docks it; reopening from another tab replaces it.
+- **R2. `mask-image` on a data-URL SVG.** → Checked in task 2.2: it masks nothing (SDK: `mask-image` takes gradients only). Edges use `background-image` with a fixed palette in a fixed-width gap (D4); line ends measured within 0.6 px of node centres at 1400 and 460 px, light and dark.
 - **R3. Last write wins between windows.** Two windows changing objectives at the same moment can lose one change. → Read-before-write narrows the window to milliseconds. This is acceptable because the user runs one window.
 - **R4. Fixed one-line heights hide long text.** → Tooltips carry the full text, and titles are capped at 120 characters.
 - **R5. The cost of a transcript read is unknown.** → At most one per 250 ms tick, inside `pcall`, cached. Render time is measured with `tern.now()` and logged as a warning above 20 ms.
@@ -274,4 +283,4 @@ All timers stop when the canvas is gone.
 
 ## Open Questions
 
-- Which `cx.settings` key reports the current light/dark appearance. This is only needed if R2 forces the palette fallback. It changes no spec.
+None. The one open question (which `cx.settings` key gives the appearance) went away: the D4 palette reads in both appearances, so the plugin never needs to know which is shown.

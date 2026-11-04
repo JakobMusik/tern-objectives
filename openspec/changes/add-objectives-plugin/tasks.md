@@ -23,7 +23,7 @@ All checks run in the headless harness from design.md D14 (`/tmp/tobj`) unless a
 
 ## 2. Risk checks before feature work
 
-- [ ] 2.1 Glimpse check (design R1/D2). A stub `open` command shows a canvas glimpse with one button that jumps to a pane in another session and one that opens `cx:pick`.
+- [x] 2.1 Glimpse check (design R1/D2). A stub `open` command shows a canvas glimpse with one button that jumps to a pane in another session and one that opens `cx:pick`.
 
   Verify with `ctl click`, `shot` and `state`:
   - (a) after the jump, the target pane is focused and uncovered;
@@ -31,13 +31,17 @@ All checks run in the headless harness from design.md D14 (`/tmp/tobj`) unless a
   - (c) running `open` twice leaves exactly one canvas with owner `objectives` in `cx.canvas:list()` (kv dump of the list).
 
   If any of these fails, switch D2 to the side panel and update design.md before continuing.
-- [ ] 2.2 Edge rendering check (design R2/D4). A stub graph with three fixed nodes per column, and masked edge layers coloured by `--bad`, `--warn`, `--accent` and `--t3`.
+
+  Result: (b) and (c) passed. (a) left the glimpse docked as a split in the old tab; closing the canvas before every jump fixed it with the glimpse kept, so the side panel was not needed (design D2, R1).
+- [x] 2.2 Edge rendering check (design R2/D4). A stub graph with three fixed nodes per column, and masked edge layers coloured by `--bad`, `--warn`, `--accent` and `--t3`.
 
   Verify:
   - shots at 1400 px and 460 px wide, under both `ctl appearance light` and `ctl appearance dark`, show coloured lines;
   - `ctl dump` shows the line ends within 2 px of the node centres.
 
   If masks don't render, switch to the background-image palette fallback and update design.md D4/R2.
+
+  Result: masks paint nothing (the SDK confirms `mask-image` takes gradients only), and `--accent` is teal in the harness theme. Switched to `background-image` edges in a fixed-width gap with one red/orange/blue/grey palette (design D4, R2). Measured with `/tmp/tobj/bin/edgecheck.py`, which samples the shot's pixels at both gap edges against the layout rects: every end within 0.6 px at 1400 and 460 px, light and dark, plus the selected layer.
 
 ## 3. Store and objective editing
 

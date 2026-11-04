@@ -1,5 +1,103 @@
 /* Objectives graph. Canvas content carries [data-surface='plugin.tern.canvas'];
-   every rule is scoped under .ob-root so nothing leaks into other canvases. */
+   every rule is scoped under .ob-root so nothing leaks into other canvases.
+   Heights and margins come from the generated "layout" sheet (lib/layout.luau). */
+
 [data-surface='plugin.tern.canvas'] .ob-root {
 	font-size: 12.5px;
+	color: var(--t1);
+	max-width: 1200px;
+}
+
+/* ---- graph frame: left column, gap with edge layers, right column ---- */
+[data-surface='plugin.tern.canvas'] .ob-root .ob-graph {
+	display: flex;
+	flex-direction: row;
+	align-items: flex-start;
+	position: relative;
+}
+[data-surface='plugin.tern.canvas'] .ob-root .ob-col {
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+}
+[data-surface='plugin.tern.canvas'] .ob-root .ob-col-l {
+	flex: 45 1 0;
+}
+[data-surface='plugin.tern.canvas'] .ob-root .ob-col-r {
+	flex: 55 1 0;
+}
+/* width from the layout sheet (gap_w): edges are drawn 1:1 in it */
+[data-surface='plugin.tern.canvas'] .ob-root .ob-gap {
+	flex: none;
+	align-self: stretch;
+	position: relative;
+}
+
+/* ---- edge layers: SVG backgrounds from the edges sheet, one px per px ---- */
+[data-surface='plugin.tern.canvas'] .ob-root .ob-e {
+	position: absolute;
+	left: 0;
+	right: 0;
+	top: 0;
+	background-repeat: no-repeat;
+	background-position: 0 0;
+	pointer-events: none;
+}
+[data-surface='plugin.tern.canvas'] .ob-root .ob-e-dim {
+	opacity: 0.25;
+}
+
+/* ---- nodes ---- */
+[data-surface='plugin.tern.canvas'] .ob-root .ob-obj {
+	box-sizing: border-box;
+	flex: none;
+	overflow: hidden;
+	padding: 5px 8px;
+	border: 1px solid rgb(from var(--t1) r g b / 14%);
+	border-radius: 8px;
+	background: var(--card);
+}
+[data-surface='plugin.tern.canvas'] .ob-root .ob-session {
+	flex: none;
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	color: var(--t3);
+	font-size: 11px;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+}
+[data-surface='plugin.tern.canvas'] .ob-root .ob-tab {
+	box-sizing: content-box;
+	flex: none;
+	overflow: hidden;
+	border-style: solid;
+	border-color: rgb(from var(--t1) r g b / 14%);
+	border-radius: 8px;
+	background: var(--card);
+}
+[data-surface='plugin.tern.canvas'] .ob-root .ob-thead {
+	box-sizing: border-box;
+	overflow: hidden;
+	padding: 4px 8px 0 8px;
+}
+[data-surface='plugin.tern.canvas'] .ob-root .ob-row {
+	box-sizing: border-box;
+	overflow: hidden;
+	padding: 0 8px 0 16px;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	color: var(--t2);
+}
+[data-surface='plugin.tern.canvas'] .ob-root .ob-line {
+	display: block;
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	line-height: 18px;
+}
+[data-surface='plugin.tern.canvas'] .ob-root .ob-dim {
+	color: var(--t3);
+	font-size: 11px;
 }
