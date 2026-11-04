@@ -23,10 +23,14 @@ local function pctenc(s: string): string
 	end))
 end
 
+-- A dashed line can end inside a gap of its pattern, short of the node; a 4 px solid stub at each
+-- end makes every line touch both nodes.
+local STUB = 4
+
 local function path(e: Edge, w: number, stroke: number): string
 	local mid = w / 2
-	local dash = if e.dashed then " stroke-dasharray='5 4'" else ""
-	return string.format(
+	local color = Layout.palette[e.priority + 1]
+	local curve = string.format(
 		"<path d='M0 %.1f C%.1f %.1f %.1f %.1f %d %.1f' stroke='%s' stroke-width='%g'%s/>",
 		e.from,
 		mid,
@@ -35,10 +39,24 @@ local function path(e: Edge, w: number, stroke: number): string
 		e.to,
 		w,
 		e.to,
-		Layout.palette[e.priority + 1],
+		color,
 		stroke,
-		dash
+		if e.dashed then " stroke-dasharray='5 4'" else ""
 	)
+	if not e.dashed then
+		return curve
+	end
+	return curve
+		.. string.format(
+			"<path d='M0 %.1f H%d M%d %.1f H%d' stroke='%s' stroke-width='%g'/>",
+			e.from,
+			STUB,
+			w - STUB,
+			e.to,
+			w,
+			color,
+			stroke
+		)
 end
 
 local function layer_rule(class: string, paths: { string }, w: number, h: number): string
