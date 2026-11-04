@@ -1,0 +1,37 @@
+schema: spec-driven
+
+context: |
+  Product: a Tern terminal plugin written in Luau, plugin id `objectives`, window half only
+  (`window.luau` plus required modules; no `host.luau`). User-facing text is English.
+  Target: Tern 0.9.11 (f93bb18) on macOS. The API reference is `tern.d.luau`, generated with
+  `tern plugin types .` and gitignored; regenerate it rather than guessing signatures.
+  Testing happens only in an isolated headless Tern: every tern invocation runs with
+  `env -u TERN_PANE -u TERN_PANE_SOCKET -u TERN_WINDOW_KEY -u TERN_WINDOW_SOCKET
+  TERN_CONFIG_DIR=/tmp/<dir>/config TERN_DAEMON_SOCKET=/tmp/<dir>/daemon.sock`.
+  `tern serve` loads plugins from `<STENCIL_FIXTURE_ROOT>/crates/plugins/fixtures` after
+  `tern ctl plugins fixtures`, not from `<config>/plugins`; `tern ctl click X Y|SEL` does real
+  hit-testing and `tern ctl shot NAME` writes a PNG plus layout JSON.
+  Never run tern commands against the user's live Tern (~/Library/Application Support/Tern,
+  its daemon.sock) except the final install and glimpse check the user approved.
+  Window-half handlers run on the UI thread with a 50 ms budget (4 ms for `available`
+  and chrome formatters); overruns pause the hook.
+  `tern.kv` is one JSON file rewritten whole on every set; only the window half writes it,
+  and every window runs its own VM against the same file.
+
+rules:
+  proposal:
+    - State what is out of scope explicitly.
+  specs:
+    - Every scenario must be observable in the headless Tern (a real click, a screenshot, or a kv dump).
+  design:
+    - Back every claim about Tern behavior with a tern.d.luau line, an SDK doc page, or a recorded spike result; mark anything untested as a risk.
+  tasks:
+    - Each task names the headless check that proves it (ctl click, shot, or kv dump).
+    - Only the final install and live glimpse-check tasks may touch the user's live Tern.
+
+operations:
+  apply:
+    guidance:
+      - Keep screenshots and scratch files under /tmp; only the README screenshot enters the repo.
+      - When a spike assumption fails (for example the glimpse after a cross-session jump), stop and update the change artifacts before continuing.
+      - Commit after each task group, with its tasks.md checkboxes ticked in the same commit; push only in the publish group.
