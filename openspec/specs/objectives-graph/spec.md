@@ -220,17 +220,6 @@ Lines, badges, chips and faded nodes SHALL stay distinguishable in both Tern's l
 - **WHEN** the graph is captured in the light appearance and in the dark appearance
 - **THEN** both captures show every line, badge colour and the faded-tab style
 
-### Requirement: Closing with Esc
-While the graph has keyboard focus, Esc SHALL close it on the first press, including after clicks inside the graph. The key SHALL NOT reach any other pane.
-
-#### Scenario: Esc right after opening
-- **WHEN** the graph is opened with ⌃⌘O over a pane running `cat -v` and the user presses Esc
-- **THEN** the graph closes, and `cat -v` has printed no `^[`
-
-#### Scenario: Esc after clicking inside
-- **WHEN** the user opens the graph, clicks an objective's title and presses Esc once
-- **THEN** the graph closes
-
 ### Requirement: Origin highlight
 The pane that has focus when the graph opens SHALL be the graph's origin. While the graph is shown, the tab node holding the origin pane SHALL carry an accent ring, and the origin's pane row an accent bar. The highlight SHALL follow the pane into another tab and SHALL disappear if the pane closes. Each fresh open SHALL take a new origin; showing the graph again after one of its pickers SHALL keep it.
 
@@ -256,3 +245,18 @@ The done box, the ⋯ button and the ▸/▾ toggle SHALL each take clicks over 
 #### Scenario: Measured hit areas
 - **WHEN** a screenshot's layout data is read
 - **THEN** every done box, ⋯ button and ▸/▾ toggle is at least 22 px wide and as tall as its line, objective nodes are 48 px tall, and pane rows are 22 px tall
+
+### Requirement: Graph in any session
+"Objectives: Open graph" SHALL show the graph as a canvas, Tern's built-in block filled from window Lua, in every session the window shows, on this machine or another. Nothing SHALL need installing on another machine, and the plugin SHALL define no block of its own. If a session's machine can't show a canvas, an error toast SHALL say so and nothing SHALL open.
+
+#### Scenario: Canvas over the tab
+- **WHEN** the user presses ⌃⌘O
+- **THEN** the current tab shows a canvas owned by `objectives` with keyboard focus, and the plugin's data folder holds only `kv.json`
+
+#### Scenario: Clicks in the canvas
+- **WHEN** the graph is shown and the user selects an objective and clicks "＋ Link" on a tab node
+- **THEN** the objective is selected and `kv.json` shows the new link
+
+#### Scenario: Graph left by 0.3.0
+- **WHEN** a 0.3.0 graph block is open while the plugin reloads as this version, and the user then presses ⌃⌘O
+- **THEN** the block is gone and the canvas is shown
