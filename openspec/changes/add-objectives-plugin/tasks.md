@@ -208,10 +208,10 @@ All checks run in the headless harness from design.md D14 (`/tmp/tobj`) unless a
 
 ## 9. Package, publish and install
 
-- [ ] 9.1 Finish the README: the install command, window-half only, the three commands with ⌃⌘O, the data location and removal, and one graph screenshot at `docs/graph.png` taken from the harness.
+- [x] 9.1 Finish the README: the install command, window-half only, the three commands with ⌃⌘O, the data location and removal, and one graph screenshot at `docs/graph.png` taken from the harness.
 
   Verify: the README contains each item named in the plugin-package README scenario.
-- [ ] 9.2 Final local install check.
+- [x] 9.2 Final local install check.
 
   Verify: a fresh isolated config gets `installed objectives 0.1.0` and shows the plugin ready in `tern plugin list`.
 - [ ] 9.3 Publish: create the public repository `JakobMusik/tern-objectives` with `gh repo create --public`, set the topic `tern-plugin`, and push `main`.
