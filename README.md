@@ -52,7 +52,7 @@ Removing the plugin leaves `plugin-data/objectives/kv.json` in place; delete tha
 ## Known limits
 
 - Side notes are one line of up to 200 characters. Tern's one-line field joins pasted lines without a space, so put a space or punctuation at the end of a line before pasting.
-- Esc closes the graph only after you click its title bar: Tern doesn't pass keys to a plugin's popup. Press ⌃⌘O again, click outside the graph, or use its × instead.
+- Esc closes the graph only after you click its title bar: Tern doesn't pass keys to a plugin's popup. Press ⌃⌘O again, click outside the graph, or use its × instead. The popup's footer, "Click outside or press Esc to close · drag the header to keep it", is Tern's own hint for every popup; the plugin can't change it.
 
 ## License
 

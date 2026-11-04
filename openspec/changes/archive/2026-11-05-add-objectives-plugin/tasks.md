@@ -228,11 +228,11 @@ All checks run in the headless harness from design.md D14 (`/tmp/tobj`) unless a
 - [x] 9.6 **(live)** Install in the user's live Tern with `tern plugin install github.com/JakobMusik/tern-objectives`.
 
   Verify: `tern plugin list` shows `objectives 0.1.0` ready.
-- [ ] 9.7 **(live)** Glimpse check in the user's window: open with ⌃⌘O, jump to a tab in another session, and reopen.
+- [x] 9.7 **(live)** Glimpse check in the user's window: open with ⌃⌘O, jump to a tab in another session, and reopen.
 
   Verify with the user: the glimpse behaves as checked in task 2.1, or the side-panel fallback recorded in design.md is used.
 
-  First run: mostly fine, but a mouse click on a picker or field opened from the graph, or on the graph while one is open, closed the glimpse. Fixed in 9.8 and released in 9.9. Second run: Esc never closed the graph unless its title bar had been clicked; handled in 9.10 and released in 9.11. Re-check pending with the user.
+  First run: mostly fine, but a mouse click on a picker or field opened from the graph, or on the graph while one is open, closed the glimpse. Fixed in 9.8 and released in 9.9. Second run: Esc never closed the graph unless its title bar had been clicked; handled in 9.10 and released in 9.11. The footer hint "press Esc to close" is Tern's own and stays, documented in the README. Accepted by the user on 0.1.2.
 - [x] 9.8 Show the graph again after a picker or field it opened (live finding in 9.7; design D2, objectives-graph "Graph returns after its pickers").
 
   Verify: in the harness, click "＋ New objective", click into the field (the glimpse closes), type and press Enter; then open Side note, click into the field and click where the graph was.
