@@ -218,9 +218,11 @@ All checks run in the headless harness at `/tmp/tobj` (archived design D14) unle
   Verify: in the harness, `ctl down`/`move`/`up` 40 px along a "＋ Link" bar, before and after the change; check the shot for a text highlight and the kv dump for the link.
 
   Result: before, the drag highlighted "+ Li" and linked nothing (shot `g65_drag_before`). After, the same drag selected nothing and linked o2 to tab 22 (`g65_drag_after`), and the same drag on "× Unlink" removed it again.
-- [ ] 6.6 Release `0.2.1`: set the version, commit, push `main`, tag `v0.2.1`, and run `tern plugin install github.com/JakobMusik/tern-objectives --force` in the user's live Tern.
+- [x] 6.6 Release `0.2.1`: set the version, commit, push `main`, tag `v0.2.1`, and run `tern plugin install github.com/JakobMusik/tern-objectives --force` in the user's live Tern.
 
   Verify: `gh api repos/JakobMusik/tern-objectives/tags` lists `v0.2.1`, and the live `tern plugin list` shows `objectives 0.2.1` ready.
+
+  Result: release commit `784b8fc`; the tags API lists `v0.2.1` first; an isolated install printed `installed objectives 0.2.1`; live `tern plugin list` shows `objectives 0.2.1 … 1 blocks, 0 lenses, window ready`, with `tabnav 0.1.0` untouched.
 
 ## Workflow follow-up
 
