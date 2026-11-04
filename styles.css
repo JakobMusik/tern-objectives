@@ -268,11 +268,14 @@
 	border-radius: 8px;
 	background: var(--card);
 }
+/* A tab no open objective links to: full-strength text on a grey fill with a dashed border, so it
+   reads as clearly as a linked card but doesn't look like one (design R2). The fill is the card
+   colour under an 8% ink layer, so it stays apart from the card in both appearances: an ink layer
+   over the page alone sits on the card colour in dark mode, whose page is darker than its cards. */
 [data-surface='plugin.tern.canvas'] .ob-root .ob-tab-unlinked {
 	border-style: dashed;
 	border-color: rgb(from var(--t1) r g b / 30%);
-	background: transparent;
-	opacity: 0.55;
+	background: linear-gradient(rgb(from var(--t1) r g b / 8%), rgb(from var(--t1) r g b / 8%)), var(--card);
 }
 [data-surface='plugin.tern.canvas'] .ob-root .ob-tab-ghost {
 	border-style: dashed;
