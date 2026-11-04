@@ -313,7 +313,8 @@
 	font-weight: 600;
 }
 /* The link bar at a tab node's foot while an objective is selected (design P6). Its height comes
-   from the layout sheet (link_h), so the lines below it stay on their nodes. */
+   from the layout sheet (link_h), so the lines below it stay on their nodes. Its text can't be
+   selected: a press that drifts across "＋ Link" would select it instead of clicking (task 6.5). */
 [data-surface='plugin.objectives.graph'] .ob-root .ob-linkbar {
 	display: block;
 	box-sizing: border-box;
@@ -324,6 +325,7 @@
 	color: var(--accent);
 	box-shadow: inset 0 0 0 1px var(--accent);
 	background: rgb(from var(--accent) r g b / 8%);
+	user-select: none;
 }
 [data-surface='plugin.objectives.graph'] .ob-root .ob-linkbar-on {
 	color: var(--t2);

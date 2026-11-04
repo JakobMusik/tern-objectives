@@ -3,11 +3,15 @@
 ## MODIFIED Requirements
 
 ### Requirement: Linking from the graph
-While an objective is selected, every tab node SHALL show a full-width link bar at its foot: "＋ Link" when the tab is not linked to the selected objective, "× Unlink" when it is. Clicking the bar SHALL add or remove that one link, SHALL keep the selection, and SHALL NOT jump to the tab.
+While an objective is selected, every tab node SHALL show a full-width link bar at its foot: "＋ Link" when the tab is not linked to the selected objective, "× Unlink" when it is. Clicking the bar SHALL add or remove that one link, SHALL keep the selection, and SHALL NOT jump to the tab. The bar's text SHALL NOT be selectable, so a press that drifts a little before release still counts as a click.
 
 #### Scenario: Add then remove a link
 - **WHEN** the user selects an objective, clicks "＋ Link" on a tab node, then clicks "× Unlink" on the same node
 - **THEN** `kv.json` shows the link after the first click and not after the second, and the graph stays shown with the objective still selected
+
+#### Scenario: Press that drifts across the bar
+- **WHEN** the user presses on "＋ Link", moves the pointer 40 px along the bar and releases
+- **THEN** no text is selected and `kv.json` shows the link
 
 ## ADDED Requirements
 
