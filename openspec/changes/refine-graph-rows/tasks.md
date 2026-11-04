@@ -42,7 +42,7 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
 
 ## 3. Pane rows
 
-- [ ] 3.1 Rows start folded, `view.expanded` replaces `view.collapsed`, and the toggle is 28 px wide with a 15 px glyph (design R3).
+- [x] 3.1 Rows start folded, `view.expanded` replaces `view.collapsed`, and the toggle is 28 px wide with a 15 px glyph (design R3).
 
   Verify:
   - a fresh open shows no `.ob-detail`, only ▸;
@@ -50,15 +50,31 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
   - a click on ▾ folds it again;
   - a row opened, then the graph closed and reopened, is still open;
   - layout data shows every toggle at least 28 × 22, rows 22 and objective nodes 48; `edgecheck.py` passes with some rows open.
-- [ ] 3.2 Pane type at each row's start, with the agent's state (design R4).
+
+  Result:
+  - the first open after the upgrade showed 9 `▸` and no details;
+  - ▸ on row 15 opened it, and the kv dump read `expanded: {"15": true}` with `collapsed` gone; ▾ folded it, giving `expanded: {}`. Focus stayed on the canvas (pane 39);
+  - rows 15 and 8, opened, then the graph closed and reopened: both still open (2 `▾`, 7 `▸`);
+  - layout (shot `s31`): toggles 28 × 22, done box and ⋯ 22 × 18, nodes 48, rows 22; `edgecheck.py` passes.
+- [x] 3.2 Pane type at each row's start, with the agent's state (design R4).
 
   Verify with `ctl tree`:
   - the "Components" rows start with "shell" and "file";
   - an `omp --no-session --model haiku --max-cost 0.05` pane starts with "omp · idle", and with "omp · working" mid-turn while folded;
   - a linked tab closed with the helper shows "shell" under "Closed tabs".
-- [ ] 3.3 Agent lines `you: …` and `omp: …` with Tern's middle cut (design R5).
+
+  Result (`ctl tree '.ob-row'`):
+  - "Components" reads `shell ui`, `file todo.md`; the other terminals read `shell`;
+  - the idle omp read `omp · idle`, and once prompted its folded row read `▸omp · working` within 0.4 s;
+  - "misc", linked to o8 and then closed, shows `shell misc` under "Closed tabs". The closed omp tab shows `agent omp`: only the stored kind is left (design R4).
+- [x] 3.3 Agent lines `you: …` and `omp: …` with a middle cut (design R5).
 
   Verify: after a haiku exchange whose prompt and reply are both over 200 characters, the open row's `ctl tree` shows "you: " and "omp: " lines. The shot shows each line's beginning, "…", and the message's end. If the `text` node doesn't cut in the canvas, stop and update design R5.
+
+  Result, with a 320-character prompt and a 430-character reply (haiku, $0.01):
+  - **Native cut, dropped.** Tern's `truncate = "middle"` cut the middle, but kept about four characters too many, so the node clipped its own end ("…particip"). This held after a resize refit and with `system-ui`. Design R5 was updated and the lines moved to a CSS split.
+  - **CSS split.** `ctl tree` shows `you:` and `omp:` lines with the whole messages. Shots `s33_split_1100` and `s33_split_1500` show "you: BEGIN. Please answer in one plain paragraph o… ends with the word FINISH" and "omp: A cache is a small, fast storage layer that keep… measured latency.", with more of the beginning at 1500 px.
+  - **Measured.** Every tail ends exactly at the line's content edge (1012.4 and 1293.6), and `edgecheck.py` passes at both widths with the row open.
 
 ## 4. Unselectable controls
 

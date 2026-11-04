@@ -38,8 +38,8 @@ export type ViewState = {
 	scope: string, -- "all" or "session"
 	tag: string?,
 	done_open: boolean,
-	-- Pane rows the user folded; every other live row shows its details (design P7).
-	collapsed: { [string]: boolean },
+	-- Pane rows the user opened; every other live row starts folded (design R3).
+	expanded: { [string]: boolean },
 }
 
 export type State = {
@@ -61,7 +61,7 @@ local function default(): State
 		next_id = 1,
 		objectives = array({}),
 		tabs = {},
-		view = { scope = "all", done_open = false, collapsed = {} },
+		view = { scope = "all", done_open = false, expanded = {} },
 	}
 end
 
@@ -86,13 +86,13 @@ local function normalize(raw: any): State
 	for _, t in s.tabs do
 		t.panes = array(t.panes or {})
 	end
-	-- Rebuilt from the known fields only, so a 0.1.x `expanded` map goes at the next write.
+	-- Rebuilt from the known fields only, so 0.4.0's `collapsed` list goes at the next write (design R3).
 	local v = (s.view or {}) :: any
 	s.view = {
 		scope = if v.scope == "session" then "session" else "all",
 		tag = if type(v.tag) == "string" then v.tag else nil,
 		done_open = v.done_open == true,
-		collapsed = if type(v.collapsed) == "table" then v.collapsed else {},
+		expanded = if type(v.expanded) == "table" then v.expanded else {},
 	}
 	return s
 end

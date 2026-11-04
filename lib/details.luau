@@ -1,16 +1,21 @@
 --!strict
--- Pane details (design D11): the lines an open pane row shows. Agents come from one
--- cx.agents:list() per render; the user's last message comes from a transcript cache that reads at
--- most one transcript per tick.
+-- Pane details (design D11): each row's type (design R4) and the lines an open pane row shows.
+-- Agents come from one cx.agents:list() per render; the user's last message comes from a transcript
+-- cache that reads at most one transcript per tick.
 
 local Model = require("./model")
 local Text = require("./text")
 
 local M = {}
 
-export type Line = { text: string, class: string? }
+-- A detail line: plain text cut at its end, or a message (`label` set) drawn as label, head and
+-- tail, whose head the view lets CSS cut (design R5).
+export type Line = { text: string, class: string?, label: string?, tail: string? }
 
 local CLIP = 160
+-- Agent messages keep both ends up to SQUEEZE characters; the last TAIL always show (design R5).
+local SQUEEZE = 1000
+local TAIL = 28
 
 local STATE_TEXT: { [string]: string } = {
 	working = "working",
@@ -71,24 +76,62 @@ local function home_short(path: string): string
 	return path
 end
 
-local function agent_lines(pane: number, a: AgentBlock): { Line }
-	local out: { Line } = {
-		{ text = STATE_TEXT[a.state] or a.state, class = "ob-d-state ob-d-" .. a.state },
-	}
+-- The last path segment of a program or of a command's first word, or nil when there is none.
+local function base_name(s: string?): string?
+	local first = if s ~= nil then string.match(s, "^%s*(%S+)") else nil
+	if first == nil then
+		return nil
+	end
+	return string.match(first, "([^/]+)$") or first
+end
+
+-- An agent's name: its program (`omp` typed at a shell has no command), else its command, else
+-- "agent" (design R4).
+local function agent_name(row: Model.Row, a: AgentBlock?): string
+	local program = if row.info ~= nil then row.info.program else nil
+	return base_name(program) or base_name(if a ~= nil then a.command else nil) or "agent"
+end
+
+-- The type a pane row starts with, and the class that colours it: an agent's name with its state,
+-- "shell", "note", "file", or the pane's kind (design R4). Ghost rows have only their stored kind.
+function M.type(row: Model.Row): (string, string?)
+	local a = agents[row.pane]
+	local info = row.info
+	-- A snapshot written before kinds were stored has none: those panes were terminals.
+	local kind = (if info ~= nil and info.kind ~= nil then info.kind else row.kind) or "terminal"
+	if a ~= nil then
+		return agent_name(row, a) .. " · " .. (STATE_TEXT[a.state] or a.state), "ob-d-" .. a.state
+	elseif kind == "agent" then
+		return agent_name(row, nil), nil
+	elseif kind == "terminal" then
+		return "shell", nil
+	elseif kind == "file" then
+		local path = if info ~= nil then info.path else nil
+		return if path ~= nil and string.sub(path, 1, 5) == "note:" then "note" else "file", nil
+	end
+	return kind, nil
+end
+
+-- "you: …" and "<agent>: …", each kept whole up to SQUEEZE characters and split before its last
+-- TAIL characters for the view's middle cut.
+local function agent_lines(row: Model.Row, a: AgentBlock): { Line }
+	local out: { Line } = {}
 	local key = agent_key(a)
-	local entry = cache[pane]
+	local entry = cache[row.pane]
 	if entry == nil or entry.key ~= key then
-		stale[pane] = true
+		stale[row.pane] = true
 	end
 	if entry == nil or not entry.read then
-		table.insert(out, { text = "you  …", class = "ob-d-wait" })
+		table.insert(out, { label = "you:", text = "…", class = "ob-d-wait" })
 	elseif entry.you ~= nil then
-		table.insert(out, { text = "you  " .. entry.you })
+		local head, tail = Text.split_end(entry.you, TAIL)
+		table.insert(out, { label = "you:", text = head, tail = tail })
 	end
 	if type(a.last_message) == "string" and a.last_message ~= "" then
 		-- omp ends a turn's text with a footer block ("\n·\n1.6s · 557 tok · …"): not part of the reply.
 		local reply = string.match(a.last_message, "^(.-)\n·\n[^\n]*$") or a.last_message
-		table.insert(out, { text = "omp  " .. Text.clip(reply, CLIP) })
+		local head, tail = Text.split_end(Text.squeeze(reply, SQUEEZE), TAIL)
+		table.insert(out, { label = agent_name(row, a) .. ":", text = head, tail = tail })
 	end
 	return out
 end
@@ -114,7 +157,7 @@ end
 function M.lines(_cx: WindowCx, row: Model.Row): { Line }
 	local a = agents[row.pane]
 	if a ~= nil then
-		return agent_lines(row.pane, a)
+		return agent_lines(row, a)
 	end
 	local info = row.info
 	if info == nil then
@@ -154,7 +197,7 @@ function M.tick(cx: WindowCx): boolean
 			local msgs = cx.agents:transcript(pane, { last = last })
 			for i = #msgs, 1, -1 do
 				if msgs[i].role == "user" then
-					you = Text.clip(msgs[i].text, CLIP)
+					you = Text.squeeze(msgs[i].text, SQUEEZE)
 					return
 				end
 			end

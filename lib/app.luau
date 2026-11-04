@@ -34,6 +34,7 @@ local function build(cx: WindowCx): View.Built
 		selected = selected,
 		origin = origin,
 		today = Dates.today(),
+		kind = Details.type,
 		details = function(row)
 			return Details.lines(cx, row)
 		end,
@@ -497,7 +498,7 @@ function M.action(ev: Action, cx: WindowCx)
 		return
 	elseif act == "exp" then
 		Store.set_view(function(v)
-			v.collapsed[value] = if v.collapsed[value] then nil else true
+			v.expanded[value] = if v.expanded[value] then nil else true
 			return true
 		end)
 	elseif act == "scope" then
