@@ -124,7 +124,7 @@ type Shown = { tab: Model.Tab, status: string }
 local function tab_node(t: Model.Tab, status: string, first: string, linked_open: boolean, link_btn: string?, ui_state: Ui, expanded: { [string]: boolean }): (Node, number)
 	local cls = "ob-tab ob-t-" .. t.id .. first
 	if status ~= "live" then
-		cls ..= " ob-tab-ghost"
+		cls ..= " ob-tab-ghost ob-tab-" .. status
 	elseif not linked_open then
 		cls ..= " ob-tab-unlinked"
 	end
