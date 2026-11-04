@@ -366,7 +366,26 @@ function M.build(state: Store.State, win: Model.Window, ui_state: Ui): Built
 		tab_cy[t.id] = Layout.add_tab(right, #t.rows, details, link ~= nil)
 		table.insert(right_kids, node)
 	end
+	-- The origin's session comes first, and its tab first inside it (design R1).
+	local origin_tab: Model.Tab? = nil
+	if ui_state.origin ~= nil then
+		for _, t in win.tabs do
+			for _, r in t.rows do
+				if r.pane == ui_state.origin then
+					origin_tab = t
+				end
+			end
+		end
+	end
+	local sessions: { Model.Session } = {}
 	for _, s in win.sessions do
+		if origin_tab ~= nil and s.id == origin_tab.session then
+			table.insert(sessions, 1, s)
+		else
+			table.insert(sessions, s)
+		end
+	end
+	for _, s in sessions do
 		if view_state.scope == "all" or s.id == win.current then
 			local first = Layout.first(right)
 			Layout.add_session(right)
@@ -374,8 +393,13 @@ function M.build(state: Store.State, win: Model.Window, ui_state: Ui): Built
 				span("ob-sname", s.name, { key = "name" }),
 				if s.current then span("ob-scur", "● current", { key = "cur" }) else nil :: any,
 			}))
+			if origin_tab ~= nil and s.id == origin_tab.session then
+				add_tab(origin_tab, "live")
+			end
 			for _, t in s.tabs do
-				add_tab(t, "live")
+				if t ~= origin_tab then
+					add_tab(t, "live")
+				end
 			end
 		end
 	end

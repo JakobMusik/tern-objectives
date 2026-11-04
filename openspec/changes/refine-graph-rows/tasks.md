@@ -11,12 +11,17 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
 
 ## 1. Column order
 
-- [ ] 1.1 Origin's session and tab first (design R1).
+- [x] 1.1 Origin's session and tab first (design R1).
 
   Verify, from the tree order of `.ob-session` and `.ob-tab` nodes:
   - opened from api's "Benchmarks", the column reads api (Benchmarks, Server), web, docs;
   - closed, then reopened from web's "Components", it reads web (Components, App build), api, docs;
   - after the origin pane closes (helper `close`) while shown, Tern's order returns within a second.
+
+  Result (`/tmp/tobj/bin/order`):
+  - from Benchmarks (pane 17): `[api] Benchmarks Server [web] App build Components [docs] Guides omp`;
+  - from Components (pane 15): `[web] Components App build [api] Server Benchmarks [docs] …`;
+  - origin split 31 in Components, then closed: 1.2 s later `[web] App build Components …`, with no origin mark left.
 
 ## 2. Tab node look
 
