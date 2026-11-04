@@ -78,13 +78,18 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
 
 ## 4. Unselectable controls
 
-- [ ] 4.1 `user-select: none` on chips, badges, header buttons and the toggle (design R6).
+- [x] 4.1 `user-select: none` on chips, badges, header buttons and the toggle (design R6).
 
   Verify: `ctl down`/`move`/`up` drags:
   - from the header's empty space across "＋ New objective", the tag filter chips and "All" / "This session";
   - from an objective's side note across its due and tag chips, then up across its badge.
 
   Shots show no highlight on those controls, and the kv dump shows the priority unchanged.
+
+  Result (`/tmp/tobj/bin/dragsel` and `seldiff.py`: each control's mean pixel change between a clean shot and the shot after the drag):
+  - **Drags.** A selection runs from press to release, so each direction was its own drag: rightwards from the header gap past "＋ New objective"; leftwards across the tag filters and scope buttons; from o1's note rightwards across its chips; from o1's title leftwards across its badge.
+  - **Before.** "Prune closed tabs" 15.1, tag filters 14–17, scope buttons 6–14, due chip 18.6, tag chip 16.7, badge 12.2. "＋ New objective" read 1.0, since a highlight barely shows on its accent fill, so `.ob-btn` is proven on the quiet button.
+  - **After.** Every control 0.0, while the selectable note (8.9) and title (6.0) still highlight, proving the drags selected. o1's priority stayed P0. The ▸/▾ toggle got the same property in 3.1.
 
 ## 5. Docs and release
 
