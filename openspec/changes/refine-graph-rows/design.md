@@ -67,23 +67,26 @@ Ghost rows have no `PaneInfo`, only the stored kind, so they map it the same way
 For agents it reads `<name> · <state>` with the state words of 0.4.0 (working, waiting for input, idle, exited), coloured by the existing state classes (`ob-d-working`, `ob-d-waiting_input`). The state line leaves the details.
 
 ### R5. Agent lines with a middle cut
-Each agent detail is `el("div", {class = "ob-detail ob-d-msg"})` holding one `text` node:
-`{k = "text", p = {spans = {{t = "you: ", s = "strong"}, message}, wrap = "none", truncate = "middle"}}`.
-- Tern cuts the middle only when the line overflows. The cut uses the element's real width, so a wide window shows more of both ends, and the full text becomes the tooltip for free.
+Each agent detail is a flex row `div.ob-detail.ob-d-msg` (title: the whole line) of three spans:
+- **`.ob-mlabel`:** `you:`, or the agent's name from R4 plus `:`. Fixed width, bold.
+- **`.ob-mhead`:** the message up to its last ~28 characters. It shrinks (`flex: 0 1 auto; min-width: 0`) and ends in the browser's own `text-overflow: ellipsis` when the line is too narrow, the same mechanism `.ob-tlabel` and `.ob-rlabel` already use.
+- **`.ob-mtail`:** the last ~28 characters, moved forward to the next word start when one is within the first third. It never shrinks.
+
+Both text spans use `white-space: pre`, so a space at the split survives. When the whole line fits, head and tail read as one unbroken text. When it doesn't, the line shows the beginning, "…", then the end, at any width.
 - The 18 px detail height stays from the layout sheet (`.ob-detail`).
 - Messages are no longer cut to 160 characters. `Text.squeeze(s, 1000)` keeps whole messages up to 1000 characters, and longer ones as their first 600 and last 399 joined by "…", so the true end still shows while the view stays small.
-- The labels are `you:` and the agent's name from R4 plus `:`. The unread placeholder is `you: …`.
+- The unread placeholder is `you: …`.
 - Terminal, file and other details keep `Text.clip` and the CSS tail cut.
 
-**Alternative:** splitting the text into a shrinking head span and a fixed tail span in CSS. It needs a hand-picked tail length and space handling at the split, where the native `truncate = "middle"` handles both.
+**Tried first, and dropped:** Tern's `text` node with `truncate = "middle"` (SDK "Building Views › `text`"). In the canvas it did cut the middle, but its fit kept about four characters too many. The node then clipped its own end, so "…participate." showed as "…particip" (task 3.3, shots `s33_msg`, `s33_msg2`; again after a resize refit, and with `system-ui` instead of Geist, which rules out a web-font measuring gap). The end of the message is the point of the change, so the line is split in CSS instead.
 
 ### R6. Unselectable controls
 `user-select: none` on `.ob-chip` (tag and due chips, the header's tag filters), `.ob-badge`, `.ob-segb`, `.ob-btn` and `.ob-exp`. This is the same property the link bar uses since 0.2.1.
 
 ## Risks / Trade-offs
 
-- **Middle cut in the canvas.** The SDK documents `truncate = "middle"` for `text` nodes. That it renders inside our sans-face canvas, within `.ob-detail`, is unproven. → Task 3.2 checks it in a shot. If it fails, fall back to the two-span split (R5 alternative) and record it.
-- **Dark-mode fill.** The 5 % light fill may sit close to the dark card colour. → Task 2.2 checks the dark shot and adjusts the alpha if needed.
+- **Middle cut.** The native `truncate = "middle"` was tried and dropped (R5). → The CSS split relies on `text-overflow: ellipsis` on a shrinking flex child, which the tab and row labels already show working.
+- **Dark-mode fill.** A 5 % ink layer over the page sat 3 levels from the dark card. → Resolved by the ink layer over the card (R2, task 2.2).
 - **Notes untestable headless.** `cx:open("note:…")` opens nothing there. → The live check covers the `note` label.
 - **Agent tests cost a model call.** → Use `omp --no-session --model haiku --max-cost 0.05`, as in archived task 7.x.
 

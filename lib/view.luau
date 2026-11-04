@@ -15,8 +15,11 @@ export type Ui = {
 	-- The pane the graph was opened from (design P5).
 	origin: number?,
 	today: Dates.Day,
-	-- Detail lines for an open live pane row: { {text, class} }.
-	details: (row: Model.Row) -> { { text: string, class: string? } },
+	-- The type a pane row starts with, and its class (design R4).
+	kind: (row: Model.Row) -> (string, string?),
+	-- Detail lines for an open live pane row: plain {text, class}, or a message {label, text, tail}
+	-- whose text CSS may cut before the tail (design R5).
+	details: (row: Model.Row) -> { { text: string, class: string?, label: string?, tail: string? } },
 }
 
 -- An element as a plain TSP wire node {k, p, c} (tern.d.luau Node), which `cx.canvas:set` takes as
@@ -128,7 +131,7 @@ type Shown = { tab: Model.Tab, status: string }
 -- The link bar a tab node shows while an objective is selected (design P6).
 type Link = { unlink: boolean, title: string }
 
-local function tab_node(t: Model.Tab, status: string, first: string, linked_open: boolean, link: Link?, menu: { any }, ui_state: Ui, collapsed: { [string]: boolean }): (Node, number)
+local function tab_node(t: Model.Tab, status: string, first: string, linked_open: boolean, link: Link?, menu: { any }, ui_state: Ui, expanded: { [string]: boolean }): (Node, number)
 	local cls = "ob-tab ob-t-" .. t.id .. first
 	if status ~= "live" then
 		cls ..= " ob-tab-ghost ob-tab-" .. status
@@ -155,7 +158,7 @@ local function tab_node(t: Model.Tab, status: string, first: string, linked_open
 	local detail_lines = 0
 	local holds_origin = false
 	for _, r in t.rows do
-		local open = status == "live" and collapsed[tostring(r.pane)] ~= true
+		local open = status == "live" and expanded[tostring(r.pane)] == true
 		local row_kids: { Node } = {}
 		if status == "live" then
 			table.insert(row_kids, span("ob-exp", if open then "▾" else "▸", {
@@ -164,6 +167,8 @@ local function tab_node(t: Model.Tab, status: string, first: string, linked_open
 				actions = { click = "exp=" .. r.pane },
 			}))
 		end
+		local kind, kind_cls = ui_state.kind(r)
+		table.insert(row_kids, span("ob-rtype" .. (if kind_cls ~= nil then " " .. kind_cls else ""), kind, { key = "type" }))
 		table.insert(row_kids, span("ob-rlabel", r.title, {
 			key = "label",
 			title = r.title,
@@ -178,7 +183,23 @@ local function tab_node(t: Model.Tab, status: string, first: string, linked_open
 		if open then
 			for i, d in ui_state.details(r) do
 				detail_lines += 1
-				table.insert(kids, span("ob-detail" .. (if d.class ~= nil then " " .. d.class else ""), d.text, { key = "d:" .. r.pane .. ":" .. i, title = d.text }))
+				local key = "d:" .. r.pane .. ":" .. i
+				local cls = "ob-detail" .. (if d.class ~= nil then " " .. d.class else "")
+				if d.label ~= nil then
+					-- Label, a head that CSS cuts with "…" when the line is too narrow, and a tail that
+					-- always shows, so the message's beginning and end both stay (design R5).
+					local parts: { Node } = {
+						span("ob-mlabel", d.label, { key = "l" }),
+						span("ob-mhead", d.text, { key = "h" }),
+					}
+					if d.tail ~= nil and d.tail ~= "" then
+						table.insert(parts, span("ob-mtail", d.tail, { key = "t" }))
+					end
+					local whole = d.label .. " " .. d.text .. (d.tail or "")
+					table.insert(kids, el("div", { class = cls .. " ob-d-msg", key = key, title = whole }, parts))
+				else
+					table.insert(kids, span(cls, d.text, { key = key, title = d.text }))
+				end
 			end
 		end
 	end
@@ -362,7 +383,7 @@ function M.build(state: Store.State, win: Model.Window, ui_state: Ui): Built
 	local function add_tab(t: Model.Tab, status: string)
 		local first = Layout.first(right)
 		local link = link_of(t.id)
-		local node, details = tab_node(t, status, first, linked_open[t.id] == true, link, menu_of(t.id), ui_state, view_state.collapsed)
+		local node, details = tab_node(t, status, first, linked_open[t.id] == true, link, menu_of(t.id), ui_state, view_state.expanded)
 		tab_cy[t.id] = Layout.add_tab(right, #t.rows, details, link ~= nil)
 		table.insert(right_kids, node)
 	end
