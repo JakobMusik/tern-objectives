@@ -245,7 +245,7 @@ All checks run in the headless harness from design.md D14 (`/tmp/tobj`) unless a
 
   Verify: in the harness press ⌃⌘O three times; press it with focus inside the graph; press it after a field flow reopened the graph; press it in a tab where the graph was docked by a session switch.
 
-  Result: open, closed, open; closed with focus in the graph; closed after the field flow; the docked graph was replaced by a glimpse. A command bound to `escape` was probed first and never fired (terminal and glimpse take the key), so Esc is documented in the README instead.
+  Result: open, closed, open; closed with focus in the graph; closed after the field flow; the docked graph was replaced by a glimpse. A command bound to `escape` was probed first: Tern left the bind out because its defaults already bind Esc (log: `plugin bind left out`), so Esc is documented in the README instead.
 - [x] 9.11 Release `0.1.2`: commit, push `main`, tag `v0.1.2`, and reinstall in the live Tern with `--force`.
 
   Verify: `gh api repos/JakobMusik/tern-objectives/tags` lists `v0.1.2`, and the live `tern plugin list` shows `objectives 0.1.2` ready.
