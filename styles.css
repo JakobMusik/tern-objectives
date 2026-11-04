@@ -353,16 +353,29 @@
 	white-space: nowrap;
 	color: var(--t2);
 }
-/* ▸/▾: 28 px wide and the row's full height, with a glyph larger than the row's text that can't be
-   selected or copied (design R3). */
+/* ▸/▾: 28 px wide and the row's full height, can't be selected or copied (design R3). The font's
+   ▸ is a small triangle at any size, so the text stays for its meaning but is hidden, and the arrow
+   is drawn instead: an 8 × 10 px triangle pointing right, or 10 × 8 px pointing down when open. */
 [data-surface='plugin.tern.canvas'] .ob-root .ob-exp {
 	flex: none;
 	align-self: stretch;
+	display: flex;
+	align-items: center;
+	justify-content: center;
 	width: 28px;
-	text-align: center;
-	font-size: 15px;
-	color: var(--t3);
+	font-size: 0;
+	color: transparent;
 	user-select: none;
+}
+[data-surface='plugin.tern.canvas'] .ob-root .ob-exp::before {
+	content: "";
+	border-style: solid;
+	border-color: transparent transparent transparent var(--t3);
+	border-width: 5px 0 5px 8px;
+}
+[data-surface='plugin.tern.canvas'] .ob-root .ob-exp.ob-exp-open::before {
+	border-color: var(--t3) transparent transparent transparent;
+	border-width: 8px 5px 0 5px;
 }
 /* A row's pane type, and an agent's state after its name (design R4). */
 [data-surface='plugin.tern.canvas'] .ob-root .ob-rtype {

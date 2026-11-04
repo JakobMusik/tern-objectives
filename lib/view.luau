@@ -161,7 +161,7 @@ local function tab_node(t: Model.Tab, status: string, first: string, linked_open
 		local open = status == "live" and expanded[tostring(r.pane)] == true
 		local row_kids: { Node } = {}
 		if status == "live" then
-			table.insert(row_kids, span("ob-exp", if open then "▾" else "▸", {
+			table.insert(row_kids, span("ob-exp" .. (if open then " ob-exp-open" else ""), if open then "▾" else "▸", {
 				key = "exp",
 				title = if open then "Hide details" else "Show details",
 				actions = { click = "exp=" .. r.pane },
