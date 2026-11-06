@@ -50,7 +50,7 @@ local function build(cx: WindowCx): View.Built
 	if selected ~= nil and Store.find(state, selected) == nil then
 		select(nil)
 	end
-	Details.begin(cx)
+	Details.begin(cx, state.agents)
 	local built = View.build(state, win, {
 		selected = selected,
 		pinned = pinned,
