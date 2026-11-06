@@ -75,9 +75,11 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
 
 ## 4. README
 
-- [ ] 4.1 Update "Using the graph" (Resume brings back omp chats) and "Known limits": omp only, Claude and Codex chats are not resumed (and Claude Resume from 0.9.0 to 0.10.0 is gone), a chat needs one message or a file it was started from, this Mac only, and an omp that holds no file and was switched with `/new` may reopen the earlier chat.
+- [x] 4.1 Update "Using the graph" (Resume brings back omp chats) and "Known limits": omp only, Claude and Codex chats are not resumed (and Claude Resume from 0.9.0 to 0.10.0 is gone), a chat needs one message or a file it was started from, this Mac only, and an omp that holds no file and was switched with `/new` may reopen the earlier chat.
 
   Verify by reading the rendered sections against specs/agent-resume.
+
+  Result: "Using the graph" says Resume brings back omp chats, noted at each turn, at plugin start and on opening the graph, and runs `omp --resume <chat file>`. "Known limits" adds: omp only, with the Claude Resume of 0.9.0 to 0.10.0 gone; a chat is noted once its first reply has ended or when it was started from a file; no Resume for a tab closed during the first reply or whose file moved; `/new` with no message reopens the earlier chat; the undocumented `TERN_PANE`; this Mac only. Every sentence matches a requirement of `specs/agent-resume` or a risk in design.md.
 
 ## 5. Release 0.11.0
 
