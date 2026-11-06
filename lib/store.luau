@@ -447,6 +447,10 @@ end
 
 -- ---- saved Claude sessions (design D3) ----
 
+-- A session saved this recently is kept even when its pane is neither live nor in a snapshot yet:
+-- a resumed chat's new pane is listed only after the call that opened it (design D6).
+local FRESH_S = 10
+
 -- Saved sessions whose pane is neither in `live` nor a row of a snapshot: nothing could resume them.
 local function orphan_sessions(s: State, live: { [number]: boolean }): { string }
 	local in_snap: { [string]: boolean } = {}
@@ -455,10 +459,11 @@ local function orphan_sessions(s: State, live: { [number]: boolean }): { string 
 			in_snap[tostring(p.pane)] = true
 		end
 	end
+	local now = os.time()
 	local out = {}
-	for key in s.agents do
+	for key, entry in s.agents do
 		local pane = tonumber(key)
-		if not in_snap[key] and (pane == nil or not live[pane]) then
+		if not in_snap[key] and (pane == nil or not live[pane]) and now - (entry.seen or 0) > FRESH_S then
 			table.insert(out, key)
 		end
 	end
@@ -493,6 +498,35 @@ function M.save_sessions(s: State, found: { [string]: AgentSession }, live: { [n
 		return true
 	end)
 	s.agents = fresh.agents
+end
+
+-- The new tab a closed tab's chats were resumed into takes its place (design D6): every objective
+-- linking `old` links `new` instead, in the same place; `old`'s snapshot and saved sessions go; and
+-- `moved` (sessions by their new pane ids) is saved, so the new tab can be resumed again.
+function M.adopt(old: number, new: number, moved: { [string]: AgentSession })
+	M.mutate(function(s)
+		for _, o in s.objectives do
+			local i = table.find(o.tabs, old)
+			if i ~= nil then
+				if table.find(o.tabs, new) ~= nil then
+					table.remove(o.tabs, i)
+				else
+					o.tabs[i] = new
+				end
+			end
+		end
+		local snap = s.tabs[tostring(old)]
+		if snap ~= nil then
+			for _, p in snap.panes do
+				s.agents[tostring(p.pane)] = nil
+			end
+		end
+		s.tabs[tostring(old)] = nil
+		for key, entry in moved do
+			s.agents[key] = entry
+		end
+		return true
+	end)
 end
 
 -- ---- view settings ----

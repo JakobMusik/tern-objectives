@@ -396,7 +396,9 @@ function M.build(state: Store.State, win: Model.Window, ui_state: Ui): Built
 		local resume = false
 		if status == "closed" then
 			for _, r in t.rows do
-				if state.agents[tostring(r.pane)] ~= nil then
+				-- Only a row stored as an agent: a session saved under a pane id another pane now holds
+				-- must not turn a shell into a chat.
+				if r.kind == "agent" and state.agents[tostring(r.pane)] ~= nil then
 					resume = true
 				end
 			end

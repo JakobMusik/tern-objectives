@@ -4,7 +4,9 @@
 -- chat's id is saved under its pane, so a closed tab can resume it. A folder holding more than one
 -- chat, or more than one such process, saves nothing: an unsure match could resume the wrong chat.
 
+local Model = require("./model")
 local Store = require("./store")
+local Surface = require("./surface")
 
 local M = {}
 
@@ -164,14 +166,21 @@ local QUERY: ProcessQuery = { name = "claude", limit = 500 }
 local WAIT_MS = 1000
 local TRIES = 3
 
-local function use(list: { Chat }, live: { [number]: boolean }, res: ProcessList, started: number)
+local function use(cx: WindowCx?, list: { Chat }, live: { [number]: boolean }, res: ProcessList, started: number)
 	pending = false
 	local found = M.pair(list, res.processes, os.time())
 	local saved = 0
 	for _ in found do
 		saved += 1
 	end
-	Store.save_sessions(Store.read(), found, live)
+	local state = Store.read()
+	-- Linked tabs' snapshots too, so a chat's row is stored as an agent even if its tab closes
+	-- before the graph is next drawn (a Resume button needs that, design D4).
+	if cx ~= nil then
+		local win = Model.read(cx, Surface.find(cx))
+		Store.refresh_snapshots(state, win.tabs :: any, win.key)
+	end
+	Store.save_sessions(state, found, live)
 	tern.log.info(string.format("objectives: session capture %.0f ms, %d chat(s), %d paired", tern.now() - started, #list, saved))
 end
 
@@ -197,11 +206,11 @@ local function capture(cx: WindowCx)
 					pending = false
 					return
 				end
-				cx2.procs:list(QUERY):next(function(res: ProcessList?, err2: any)
+				cx2.procs:list(QUERY):next(function(res: ProcessList?, err2: any, cx3: WindowCx?)
 					if res == nil then
 						fail("could not list processes: " .. tostring(err2))
 					elseif res.sample ~= first.sample then
-						use(list, live, res, started)
+						use(cx3, list, live, res, started)
 					elseif left > 1 then
 						again(left - 1)
 					else
