@@ -2,17 +2,17 @@
 
 Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
 - **Harness setup for Claude chats** (design, source record):
-  - `/tmp/tobj/config/settings.json` holds `{"agents":{"auto_acp":true}}` before the shells start;
+  - `agents.auto_acp` is on in the running serve: helper op `setting_set` with `{"key":"agents.auto_acp","value":true}`, before the chat's shell starts;
   - the chats run in folders under `/tmp/tobj/w/`;
   - each check sends one short message, such as "Reply with exactly: ok";
   - the test Tern's clock moves only on `ctl wait`, so advance it while a turn runs.
-- **Helper ops** (`/tmp/tobj/bin/op`): `agents`, `panes`, `run`, `close`, `new_tab_cmd`, `procs` (async, its result in the helper's kv) and `read`.
+- **Helper ops** (`/tmp/tobj/bin/op`): `agents`, `panes`, `run`, `close`, `new_tab`, `tab_type`, `procs` (async, its result in the helper's kv), `events` (the `agent_state` log), `setting_set` and `read`.
 - **Kv dump** reads `/tmp/tobj/config/plugin-data/objectives/kv.json`.
 - **After the checks**, delete `~/.claude/projects/-private-tmp-tobj-*` and `/tmp/tobj/config/settings.json`.
 
 ## 1. Spike
 
-- [ ] 1.1 Check D1 and D2's assumptions on a shell-typed Claude chat, with the 0.8.x plugin.
+- [x] 1.1 Check D1 and D2's assumptions on a shell-typed Claude chat, with the 0.8.x plugin.
 
   Verify, and record in design.md's source record:
   - its pane row's type in a shot of the graph (expected "omp · idle", proposal item 3);
@@ -20,9 +20,26 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
   - that `cx.procs:list` then returns its `claude` process with the session id.
 
   If any differs, stop and update the artifacts before group 2.
-- [ ] 1.2 Typing timing (design D5): close the chat's tab, then in one helper op open a new shell tab in its folder and `cx:run` `claude --resume <id>` with no wait.
+
+  Result (harness, 2026-11-06, chat in `/tmp/tobj/w/chatA`, pane 8):
+  - the row read "omp · idle";
+  - one message ("Reply with exactly: ok") fired one `agent_state`, idle → working;
+  - `cx.procs:list` returned its `claude` process with `--session-id=82ec7f14-…` and folder `/private/tmp/tobj/w/chatA`.
+
+  Two things differed from the setup notes:
+  - the chat opened as an ACP chat only after `cx.settings:set("agents.auto_acp", true)`, because the running serve hadn't read the `settings.json` written after it started;
+  - another, non-Tern `claude` process used the two-argument form `--resume <id>`, so the parser takes both forms.
+
+  Both are recorded in design.md's source record.
+- [x] 1.2 Typing timing (design D5): close the chat's tab, then in one helper op open a new shell tab in its folder and `cx:run` `claude --resume <id>` with no wait.
 
   Verify, with a shot after advancing the clock, that the chat comes back with its earlier message. If it doesn't, try waiting for the pane's `at_prompt` and record which works in D5.
+
+  Result:
+  - typing at once works: the agent ran `claude --resume 82ec7f14-…`, and shot `r_resume_now` showed the earlier message and reply;
+  - the first attempt typed nothing, because `cx.layout:new_tab` returns the new pane's id, not the tab's, and in the same call `layout`, `tabs` and `panes` don't list it. `cx.session:tab_of(pane)` does give its tab.
+
+  D5 and D6 were updated: the returned id is the pane, `tab_of` gives the tab, a 250 ms timer writes the new tab's snapshot, and each resumed chat's session moves to its new pane.
 
 ## 2. Saving sessions
 
