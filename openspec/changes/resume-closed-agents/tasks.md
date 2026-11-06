@@ -95,13 +95,20 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
 
 ## 4. Resume
 
-- [ ] 4.1 Resume button in `lib/view.luau` and `styles.css` (design D4).
+- [x] 4.1 Resume button in `lib/view.luau` and `styles.css` (design D4).
 
   Verify:
   - "Button on a closed chat tab": a shot with a closed chat tab and a closed shell-only tab, both linked;
   - its rectangle in the layout JSON is at least 28 × 22;
   - `/tmp/tobj/bin/dragsel` across it shows no highlight;
   - "Header click still toasts": `ctl click` on the closed tab's label toasts "That tab is closed".
+
+  Result:
+  - "Button on a closed chat tab": shot `r_resume_btn2`. Closed tab 117, holding the saved chat 116, shows "Resume"; closed tab 139, holding only a shell, shows none. Both are linked to o2;
+  - its rectangle is 58 × 22;
+  - a drag from the label across the button: 0.00 change on the button (`hl.py`), and nothing opened;
+  - "Header click still toasts": a click on tab 117's label showed the toast "That tab is closed" (shot `r_toast`), and focus stayed on the graph;
+  - the first shot (`r_resume_btn`) showed the button greyed out like the rest of the closed tab, so the fade moved onto the node's parts (design D4, "Strength").
 - [ ] 4.2 Resume action in `lib/app.luau`, plus `Store.adopt` (design D5, D6).
 
   Verify:

@@ -90,6 +90,7 @@ Alternatives:
 - **Placement:** a `span` in the header's first line (`.ob-th1`), right of the label, with `click = "resume=<tab>"`.
 - **Clicks:** the inner node's action wins over the header's `tab=` (source record), so the rest of the header still toasts.
 - **Size:** 28 × 22 px, like the jump button, with `user-select: none`. It fits the 38 px header, so `lib/layout.luau` doesn't change.
+- **Strength:** a ghost used to fade as a whole node (`opacity: 0.5`), which also greyed the button out. The fade now sits on the node's parts other than the button (`:not()`, SDK "Pseudo-classes"), and the dashed border's colour carries the other half: 9% ink instead of 18% (task 4.1).
 - **When it shows:** `View.build` gets `state.agents`. A ghost with status "closed" shows the button when one of its rows' panes has an entry.
 
 ### D5. Resume steps
