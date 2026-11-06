@@ -200,7 +200,7 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
   - `alt+r` bound without a warning (`keys_all`: `alt+r → plugin.objectives.rename`).
   - With the graph closed, Option+R in Benchmarks's shell typed nothing and showed the hint (shot `o_shell`).
   - In the graph with X selected, it opened the Rename field filled with "Write release notes", and X stayed selected after Enter.
-- [ ] 7.2 The key becomes `alt+r` in `window.luau` and the comments of `window.luau` and `lib/app.luau`. README:
+- [x] 7.2 The key becomes `alt+r` in `window.luau` and the comments of `window.luau` and `lib/app.luau`. README:
   - ⌥R in the commands table and in "Using the graph";
   - a known limit: Option+R runs the command in every pane, so it doesn't type "®" or Meta-R, and outside the graph it shows the hint; bind `plugin.objectives.rename` elsewhere to keep Option+R;
   - a known limit: Reset on a plugin command's row in Tern's Keyboard settings removes its key and the row, by writing an empty entry such as `"alt+r": []`; delete that entry from `keybinds` to get the default back.
@@ -210,6 +210,13 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
   - "Rename by key" and "Nothing selected" with ⌥R;
   - "Letters still reach the panes": "r" and "R" in Benchmarks's shell show "rR";
   - the README has ⌥R in the table and in "Using the graph", both known limits, and no ⌥⌘R.
+
+  Result:
+  - **Keymap:** the R chords in `keys_all` are `alt+r → plugin.objectives.rename`, `shift+cmd+r → rename_tab`, `cmd+r → sqlite.*` and `r → canvas.tool_rect, git.refresh, notebook.to_raw`. Nothing maps `alt+cmd+r`, and the load logged no warning.
+  - **Rename by key:** with o1 selected in the reopened graph, ⌥R opened the field filled with "Fix login bug". Enter kept the title, and o1 stayed selected.
+  - **Nothing selected:** ⌥R opened no field and showed the toast (shot `o2_none`).
+  - **Letters:** `r` then Shift+R in Benchmarks's shell showed `rR` (shot `o2_letters`), with no toast. Both characters were then deleted.
+  - **README:** the table row and "Using the graph" read ⌥R, and Known limits has both new entries. No ⌥⌘R or `alt+cmd+r` is left in the README or the code.
 - [ ] 7.3 Version `0.8.2`: an isolated install prints `installed objectives 0.8.2`; commit, push `main`, tag `v0.8.2`; `tern plugin install github.com/JakobMusik/tern-objectives --force` live, from a shell with no harness variables.
 
   Verify: the tags API lists `v0.8.2`, and live `tern plugin list` shows `objectives 0.8.2` ready.
