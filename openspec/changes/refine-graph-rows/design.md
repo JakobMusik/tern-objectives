@@ -58,7 +58,9 @@ Ghost tabs (closed or elsewhere) keep their 0.5 opacity: they are history, not u
 
 ### R4. Pane type
 `Details.type(row)` returns the label at the start of each row:
-- **agent** (in `cx.agents:list()` or `kind == "agent"`): the base name of `PaneInfo.program`; else the first word of `AgentBlock.command`; else `agent`;
+- **agent** in `cx.agents:list()`: an agent block's `command`, its first word's base name. A shell running omp has `command = tern.json.null` (SDK "Agent cx": "shells running omp (typed at the prompt; their `command` is `tern.json.null`)"), so it reads `omp`. A `kind == "agent"` pane missing from the list reads `agent`.
+
+  **Fix (0.6.1).** 0.5.0 and 0.6.0 took the name from `PaneInfo.program` first. That is the pane's foreground process, and the user saw `zsh · idle` and `zsh:` on omp panes, where Tern still listed omp while zsh was in front. It wasn't reproduced naturally in the harness: quitting omp drops the pane from the list, so it reads `shell`, and omp's bash tool keeps `program = "omp"`. Task 8.1 simulates it.
 - **terminal** (or no kind): `shell`;
 - **file:** `note` when the path starts `note:`, else `file`;
 - **browser:** `browser`;

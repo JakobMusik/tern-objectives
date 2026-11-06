@@ -146,12 +146,29 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
   Verify: the tags API lists `v0.6.0`, and live `tern plugin list` shows `objectives 0.6.0` ready.
 
   Result: the isolated install printed `installed objectives 0.6.0` (`0 blocks, 0 lenses, window ready`); release commit `1d85f90`; the tags API lists `v0.6.0` first; live `tern plugin list` shows `objectives 0.6.0 … ready`, with `tabnav 0.1.0` untouched.
-- [ ] 7.2 **(live)** With the user:
+
+  The user's check of 0.6.0 found omp rows named `zsh` (group 8). The live check moved to 8.3.
+
+## 8. Fix: omp rows named zsh
+
+- [x] 8.1 Name agents by `AgentBlock.command`, and as `omp` when it is `tern.json.null` (a shell running omp), never by the pane's foreground program (design R4). `base_name` takes only strings, since `command` is the non-nil `tern.json.null`.
+
+  Verify, in the fixtures copy only, by simulating the user's state (`Model.read` sets `program = "zsh"` on `kind == "agent"` panes): before the fix the omp row and its reply label read `zsh`; after it, `omp`. Then, without the simulation, every row type is unchanged.
+
+  Result:
+  - **Reported (user, 0.6.0):** some panes running omp read `zsh` at the row's start, and `zsh:` on the reply line.
+  - **Not reproduced naturally.** Quitting omp (two Ctrl+C) leaves `kind = "terminal"`, `program = "zsh"`, and the pane drops out of `cx.agents:list()`, so the row reads `shell`. During a haiku turn that ran `sleep 15` through omp's bash tool, `program` stayed `omp`.
+  - **Simulated, before the fix:** the omp row (pane 57) read `zsh · idle`, with labels `you:` / `zsh:`.
+  - **After the fix:** `omp · idle` with `you:` / `omp:`, simulated or not. The other rows still read `shell` and `file`, and no new errors are logged.
+- [ ] 8.2 Version `0.6.1`: an isolated install prints `installed objectives 0.6.1`; commit, push `main`, tag `v0.6.1`; `tern plugin install github.com/JakobMusik/tern-objectives --force` live.
+
+  Verify: the tags API lists `v0.6.1`, and live `tern plugin list` shows `objectives 0.6.1` ready.
+- [ ] 8.3 **(live)** With the user:
   - the graph opened from a later tab lists that tab's session and tab first;
   - unlinked tabs read at full strength;
   - rows start folded, a click on a row's name opens it, and its arrow button jumps;
   - a note's row starts with "note";
-  - an omp row reads "omp · <state>", with "you:" / "omp:" lines cut in the middle;
+  - every omp row, including ones whose omp sits idle, reads "omp · <state>", with "you:" / "omp:" lines cut in the middle;
   - dragging across chips, badges, header buttons and rows selects nothing.
 
   Record the findings here.

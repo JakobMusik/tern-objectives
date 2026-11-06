@@ -76,20 +76,23 @@ local function home_short(path: string): string
 	return path
 end
 
--- The last path segment of a program or of a command's first word, or nil when there is none.
-local function base_name(s: string?): string?
-	local first = if s ~= nil then string.match(s, "^%s*(%S+)") else nil
+-- The last path segment of a command's first word, or nil when there is none.
+local function base_name(s: any): string?
+	local first = if type(s) == "string" then string.match(s, "^%s*(%S+)") else nil
 	if first == nil then
 		return nil
 	end
 	return string.match(first, "([^/]+)$") or first
 end
 
--- An agent's name: its program (`omp` typed at a shell has no command), else its command, else
--- "agent" (design R4).
-local function agent_name(row: Model.Row, a: AgentBlock?): string
-	local program = if row.info ~= nil then row.info.program else nil
-	return base_name(program) or base_name(if a ~= nil then a.command else nil) or "agent"
+-- An agent's name (design R4). An agent block's command names its program. A shell running omp has
+-- no command (`tern.json.null`, SDK "Agent cx"), so it is omp. The pane's program is no guide: it is
+-- the foreground process, which can be zsh while Tern still lists omp in the pane (task 8.1).
+local function agent_name(a: AgentBlock?): string
+	if a == nil then
+		return "agent"
+	end
+	return base_name(a.command) or "omp"
 end
 
 -- The type a pane row starts with, and the class that colours it: an agent's name with its state,
@@ -100,9 +103,9 @@ function M.type(row: Model.Row): (string, string?)
 	-- A snapshot written before kinds were stored has none: those panes were terminals.
 	local kind = (if info ~= nil and info.kind ~= nil then info.kind else row.kind) or "terminal"
 	if a ~= nil then
-		return agent_name(row, a) .. " · " .. (STATE_TEXT[a.state] or a.state), "ob-d-" .. a.state
+		return agent_name(a) .. " · " .. (STATE_TEXT[a.state] or a.state), "ob-d-" .. a.state
 	elseif kind == "agent" then
-		return agent_name(row, nil), nil
+		return agent_name(nil), nil
 	elseif kind == "terminal" then
 		return "shell", nil
 	elseif kind == "file" then
@@ -131,7 +134,7 @@ local function agent_lines(row: Model.Row, a: AgentBlock): { Line }
 		-- omp ends a turn's text with a footer block ("\n·\n1.6s · 557 tok · …"): not part of the reply.
 		local reply = string.match(a.last_message, "^(.-)\n·\n[^\n]*$") or a.last_message
 		local head, tail = Text.split_end(Text.squeeze(reply, SQUEEZE), TAIL)
-		table.insert(out, { label = agent_name(row, a) .. ":", text = head, tail = tail })
+		table.insert(out, { label = agent_name(a) .. ":", text = head, tail = tail })
 	end
 	return out
 end
