@@ -8,6 +8,7 @@ local M = {}
 M.px = {
 	obj_h = 48, -- objective node, border included
 	obj_m = 8,
+	review_h = 30, -- review mode's button row under an objective node: 8 px gap and 22 px buttons
 	group_h = 24, -- "Done (n)", "Closed tabs", "Other windows"
 	group_m = 14,
 	hint_h = 48, -- empty-state hint
@@ -38,6 +39,7 @@ function M.css(): string
 	local p = M.px
 	local rules = {
 		string.format("%s .ob-obj { height: %dpx; margin-top: %dpx; }", SCOPE, p.obj_h, p.obj_m),
+		string.format("%s .ob-obj.ob-review { height: %dpx; }", SCOPE, p.obj_h + p.review_h),
 		string.format("%s .ob-group { height: %dpx; line-height: %dpx; margin-top: %dpx; }", SCOPE, p.group_h, p.group_h, p.group_m),
 		string.format("%s .ob-hint { height: %dpx; margin-top: %dpx; }", SCOPE, p.hint_h, p.hint_m),
 		string.format("%s .ob-session { height: %dpx; line-height: %dpx; margin-top: %dpx; }", SCOPE, p.session_h, p.session_h, p.session_m),
@@ -74,9 +76,10 @@ local function add(s: Stack, m: number, h: number): number
 	return top
 end
 
--- Objective node; returns its vertical centre.
-function M.add_obj(s: Stack): number
-	return add(s, M.px.obj_m, M.px.obj_h) + M.px.obj_h / 2
+-- Objective node, taller with review mode's button row; returns its vertical centre.
+function M.add_obj(s: Stack, review: boolean?): number
+	local h = M.px.obj_h + (if review then M.px.review_h else 0)
+	return add(s, M.px.obj_m, h) + h / 2
 end
 
 function M.add_group(s: Stack)

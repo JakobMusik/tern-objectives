@@ -65,6 +65,10 @@ local function offer_undo(text: string, saved: Store.Saved)
 	undo = entry
 end
 
+-- Review mode (review-done-objectives, design D4): never stored; a fresh open of the graph starts
+-- without it, and it ends once nothing is due.
+local reviewing = false
+
 local function toast_gone(cx: WindowCx)
 	cx:toast("info", "That objective no longer exists")
 end
@@ -89,7 +93,11 @@ local function build(cx: WindowCx): View.Built
 			return Details.lines(cx, row)
 		end,
 		undo = if undo ~= nil then undo.text else nil,
+		reviewing = reviewing,
 	})
+	if built.due == 0 then
+		reviewing = false
+	end
 	if built.css ~= edges_css then
 		tern.css("edges", built.css)
 		edges_css = built.css
@@ -128,6 +136,7 @@ end
 function M.open(cx: WindowCx, keep_origin: boolean?)
 	if not keep_origin then
 		drop_undo()
+		reviewing = false
 		local focused = cx.session:focused()
 		if focused ~= nil and focused ~= Surface.find(cx) then
 			origin = focused
@@ -618,6 +627,16 @@ function M.action(ev: Action, cx: WindowCx)
 		end
 	elseif act == "noop" then
 		-- A done objective's box: done is final, so the click only drops the notice (design D7).
+	elseif act == "rev" then
+		reviewing = not reviewing
+	elseif act == "rate" then
+		-- "<objective>:<hard|good|easy>" from a review node's buttons (review design D4).
+		local id, grade = string.match(value, "^([^:]+):(%a+)$")
+		if id ~= nil and (grade == "hard" or grade == "good" or grade == "easy") then
+			if not Store.rate(id, grade :: any, Dates.today()) then
+				toast_gone(cx)
+			end
+		end
 	elseif act == "prio" then
 		if not Store.cycle_priority(value) then
 			toast_gone(cx)
