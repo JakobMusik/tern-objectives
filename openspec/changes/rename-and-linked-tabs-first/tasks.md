@@ -217,9 +217,11 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
   - **Nothing selected:** ⌥R opened no field and showed the toast (shot `o2_none`).
   - **Letters:** `r` then Shift+R in Benchmarks's shell showed `rR` (shot `o2_letters`), with no toast. Both characters were then deleted.
   - **README:** the table row and "Using the graph" read ⌥R, and Known limits has both new entries. No ⌥⌘R or `alt+cmd+r` is left in the README or the code.
-- [ ] 7.3 Version `0.8.2`: an isolated install prints `installed objectives 0.8.2`; commit, push `main`, tag `v0.8.2`; `tern plugin install github.com/JakobMusik/tern-objectives --force` live, from a shell with no harness variables.
+- [x] 7.3 Version `0.8.2`: an isolated install prints `installed objectives 0.8.2`; commit, push `main`, tag `v0.8.2`; `tern plugin install github.com/JakobMusik/tern-objectives --force` live, from a shell with no harness variables.
 
   Verify: the tags API lists `v0.8.2`, and live `tern plugin list` shows `objectives 0.8.2` ready.
+
+  Result: the isolated install printed `installed objectives 0.8.2` (`0 blocks, 0 lenses, window ready`). The release commit is `d3e2454`, and the tags API lists `v0.8.2` first. The live install, run after checking the shell had no harness variables, wrote `~/Library/Application Support/Tern/plugins/objectives`. `tern plugin list` shows `objectives 0.8.2 … ready`, with `tabnav 0.1.0` untouched. The user's `settings.json` still holds Reset's `"alt+cmd+r": []`, which now unbinds nothing, and was left alone.
 - [ ] 7.4 **(live)** With the user:
   - select an objective and press ⌥R to rename it; without a selection, ⌥R shows the hint;
   - the command's row is back in Tern's Keyboard settings with ⌥R;
