@@ -220,6 +220,7 @@
 }
 
 /* ---- groups, hint, sessions ---- */
+/* Headings are labels, not text to copy: a double-click on "Done (n)" or a session name selects nothing. */
 [data-surface='plugin.tern.canvas'] .ob-root .ob-group {
 	flex: none;
 	display: flex;
@@ -231,12 +232,12 @@
 	color: var(--t3);
 	font-size: 11px;
 	font-weight: 600;
+	user-select: none;
 }
 /* The selected objective's tabs, first in the right column, and the divider before the rest
    (design D4). The divider's rule is a shadow, so the row keeps the group height the lines assume. */
 [data-surface='plugin.tern.canvas'] .ob-root .ob-linkhead {
 	color: var(--accent);
-	user-select: none;
 }
 [data-surface='plugin.tern.canvas'] .ob-root .ob-linkhead .ob-gtext {
 	min-width: 0;
@@ -245,7 +246,6 @@
 }
 [data-surface='plugin.tern.canvas'] .ob-root .ob-divider {
 	box-shadow: inset 0 1px 0 var(--l2);
-	user-select: none;
 }
 [data-surface='plugin.tern.canvas'] .ob-root .ob-hint {
 	box-sizing: border-box;
@@ -266,6 +266,7 @@
 	font-size: 11px;
 	font-weight: 600;
 	letter-spacing: 0.04em;
+	user-select: none;
 }
 [data-surface='plugin.tern.canvas'] .ob-root .ob-sname {
 	text-transform: uppercase;
