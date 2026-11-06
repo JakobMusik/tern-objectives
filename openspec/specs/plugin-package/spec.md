@@ -22,14 +22,21 @@ Tern's install-time checks SHALL accept the package.
 - **THEN** it reports `installed objectives` with the manifest's version, and `tern plugin list` shows the plugin ready with 0 blocks and no problems
 
 ### Requirement: Palette commands
-The plugin SHALL register three palette commands under the group "Objectives":
+The plugin SHALL register four palette commands under the group "Objectives":
 - "Objectives: Open graph", default key ⌃⌘O;
+- "Objectives: Rename selected objective", default key ⌥R;
 - "Objectives: Link this tab…";
 - "Objectives: New objective for this tab…".
 
+The palette SHALL list the rename command only while an objective is selected in a graph shown over the current tab. Its key works either way.
+
 #### Scenario: Commands listed
-- **WHEN** the palette's actions are listed with the query "objectives"
-- **THEN** the three commands appear, and the first shows ⌃⌘O
+- **WHEN** an objective is selected in the graph shown over the current tab, and the palette is opened with the query "objectives"
+- **THEN** the four commands appear, "Open graph" with ⌃⌘O and "Rename selected objective" with ⌥R
+
+#### Scenario: Rename hidden without a selection
+- **WHEN** no graph is shown over the current tab, and the palette is opened with the query "objectives"
+- **THEN** "Open graph", "Link this tab…" and "New objective for this tab…" appear, and "Rename selected objective" doesn't
 
 ### Requirement: Install from GitHub
 The plugin SHALL install with `tern plugin install github.com/JakobMusik/tern-objectives` from the public repository's default branch, with no credentials and nothing extra needed on `PATH` besides git.
@@ -49,14 +56,14 @@ The repository SHALL be public under `JakobMusik`. It SHALL carry an MIT license
 The README SHALL give:
 - the exact install command;
 - that it needs nothing on `PATH` but `git`, and nothing on the machines sessions run on;
-- the three commands and the ⌃⌘O key;
+- the four commands with the ⌃⌘O and ⌥R keys;
 - how to close the graph: ⌃⌘O, a click outside, its ×, or Esc after a click on its title bar;
 - where its data lives and how to remove it;
 - one screenshot of the graph.
 
 #### Scenario: README contents
 - **WHEN** a reader opens the README
-- **THEN** it contains the install command, the commands with ⌃⌘O, the ways to close the graph, that nothing is installed on other machines, the data location under `plugin-data/objectives/`, and a screenshot of the graph
+- **THEN** it contains the install command, the commands with ⌃⌘O and ⌥R, the ways to close the graph, that nothing is installed on other machines, the data location under `plugin-data/objectives/`, and a screenshot of the graph
 
 ### Requirement: Package folder stays read-only at run time
 The plugin SHALL never write into its own package folder, so that using it never triggers a plugin reload.
