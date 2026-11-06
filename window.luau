@@ -30,14 +30,15 @@ tern.command({
 	run = App.toggle,
 })
 
--- ⌃⌘R, the partner of ⌃⌘O. Tern keeps plain R for itself, and a plugin's Shift+R would take every
--- capital R typed in any pane: a plugin key runs whatever `available` says (design D6).
+-- ⌥⌘R. A plain R can't work, not even inside the graph only: Tern keeps plain R for itself, a canvas
+-- gets no keys, and a plugin key runs in every pane whatever `available` says. ⌘⇧R is Tern's
+-- rename_tab, and ⌃⌘R a common rename_session binding (design D6).
 tern.command({
 	id = "rename",
 	title = "Objectives: Rename selected objective",
 	icon = "pencil",
 	group = "Objectives",
-	keys = { "ctrl+cmd+r" },
+	keys = { "alt+cmd+r" },
 	available = App.can_rename,
 	run = App.rename_selected,
 })

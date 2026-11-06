@@ -460,7 +460,7 @@ end
 
 -- ---- the rename key (design D6) ----
 
--- ⌃⌘R: the Rename field for the selected objective, while the graph is shown over this tab. A plugin
+-- ⌥⌘R: the Rename field for the selected objective, while the graph is shown over this tab. A plugin
 -- key runs wherever focus is, whatever `available` says, so without both it says what it needs.
 function M.rename_selected(cx: WindowCx)
 	local o = if selected ~= nil then Store.find(Store.read(), selected) else nil
