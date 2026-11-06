@@ -143,8 +143,37 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
   Verify: the tags API lists `v0.8.0`, and live `tern plugin list` shows `objectives 0.8.0` ready.
 
   Result: the isolated install printed `installed objectives 0.8.0` (`0 blocks, 0 lenses, window ready`). The release commit is `7226826`, and the tags API lists `v0.8.0` first. The live install, run only after checking the shell had no `TERN_CONFIG_DIR` or `TERN_DAEMON_SOCKET`, wrote `~/Library/Application Support/Tern/plugins/objectives`. `tern plugin list` shows `objectives 0.8.0 … ready`, with `tabnav 0.1.0` untouched.
-- [ ] 5.5 **(live)** With the user:
-  - select an objective and press ⌃⌘R to rename it; without a selection, ⌃⌘R shows the hint;
+
+  The user's check of 0.8.0 found ⌃⌘R already bound to "rename session". The user asked for another key, and said R was meant inside the open graph with an objective selected (group 6). The live check moved to 6.4.
+
+## 6. Move the rename key
+
+- [x] 6.1 Spike: can R work only inside the open graph; and which chord is free in the user's Tern (design D6, source record).
+
+  Verify, in the fixtures copy only and from the user's `settings.json`, read only:
+  - a `shift+r` command whose `available` always returns false: does it run;
+  - `tern.override("canvas.tool_rect", …)`: does it register;
+  - which candidate chords are free in Tern's defaults and in the user's `keybinds`.
+
+  Result:
+  - the always-unavailable command ran with the graph focused (`focused=30`), so `available` never gates a key;
+  - the override raised ``unknown command `canvas.tool_rect` ``;
+  - the SDK gives canvases no key handler, so R inside the graph only isn't possible;
+  - the user's `keybinds` map `ctrl+cmd+r` to `rename_session`. `cmd+shift+r` is free there and in Tern's defaults, and becomes the key.
+- [ ] 6.2 The rename command's key becomes `cmd+shift+r` (design D6), in `window.luau`, the comments of `window.luau` and `lib/app.luau`, and the README's table and "Using the graph".
+
+  Verify:
+  - `cx.actions:keys()` maps `cmd+shift+r` to `plugin.objectives.rename`, and `ctrl+cmd+r` no longer to it, with no `bind left out` in the log;
+  - "Rename by key" with ⌘⇧R: o1 selected, the field opens filled with its title, Enter keeps it, and o1 stays selected;
+  - "Nothing selected" with ⌘⇧R: the toast, and no field;
+  - "Letters still reach the panes": "r" and "R" in Benchmarks's shell show "rR";
+  - the README has ⌘⇧R in the table and in "Using the graph", and no ⌃⌘R.
+- [ ] 6.3 Version `0.8.1`: an isolated install prints `installed objectives 0.8.1`; commit, push `main`, tag `v0.8.1`; `tern plugin install github.com/JakobMusik/tern-objectives --force` live, from a shell with no harness variables.
+
+  Verify: the tags API lists `v0.8.1`, and live `tern plugin list` shows `objectives 0.8.1` ready.
+- [ ] 6.4 **(live)** With the user:
+  - select an objective and press ⌘⇧R to rename it; without a selection, ⌘⇧R shows the hint;
+  - ⌃⌘R renames the session again, as the user's keybind says;
   - "r" and "R" still type normally in panes;
   - double-click no longer renames;
   - selecting an objective brings its tabs to the top under `Linked to “<title>”` and "Other tabs", and a session's heading shows in both sections when it has tabs in both;
