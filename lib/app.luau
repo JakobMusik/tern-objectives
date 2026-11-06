@@ -560,7 +560,7 @@ function M.action(ev: Action, cx: WindowCx)
 		end
 		select(nil)
 	elseif act == "done" then
-		if not Store.toggle_done(value) then
+		if Store.mark_done(value, Dates.today()) == nil and Store.find(Store.read(), value) == nil then
 			toast_gone(cx)
 		end
 	elseif act == "prio" then

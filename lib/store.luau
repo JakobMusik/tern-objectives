@@ -2,6 +2,8 @@
 -- The objective store (design D6): one JSON value under kv key "state". Every change re-reads the
 -- stored state, applies itself and writes it back, so changes other windows saved are kept.
 
+local Dates = require("./dates")
+local Review = require("./review")
 local Text = require("./text")
 
 local M = {}
@@ -20,6 +22,8 @@ export type Objective = {
 	due: string?,
 	tags: { string },
 	tabs: { number },
+	-- Once done: when it is next reviewed, and how (review-done-objectives, design D1).
+	review: Review.Schedule?,
 }
 
 export type PaneSnap = { pane: number, title: string, kind: string }
@@ -92,6 +96,13 @@ local function normalize(raw: any): State
 		o.tabs = array(o.tabs or {})
 		o.priority = o.priority or 2
 		o.done = o.done == true
+		-- Done before 0.10.0: scheduled as if marked done on its done date, so it is due the day
+		-- after; with no done date, today (design D1).
+		if o.done and type(o.review) ~= "table" then
+			o.review = if o.done_at ~= nil
+				then Review.start(Dates.day_of(o.done_at))
+				else Review.start(Dates.add(Dates.today(), -1))
+		end
 	end
 	s.tabs = s.tabs or {}
 	for _, t in s.tabs do
@@ -270,10 +281,65 @@ function M.rename(id: string, title: string): boolean
 	end)
 end
 
-function M.toggle_done(id: string): boolean
+-- What Undo needs to put an objective back as it was (review-done-objectives, design D2): the record
+-- before the change, its place in the list, and what was removed with it.
+export type Saved = {
+	kind: string, -- "done" or "removed"
+	record: Objective,
+	index: number,
+	tabs: { [string]: TabSnap },
+	agents: { [string]: AgentSession },
+}
+
+-- A shallow copy. Stored values come from JSON with protected metatables, which `table.clone`
+-- refuses (task 1.2).
+local function copy(t: { [any]: any }): { [any]: any }
+	local c = {}
+	for k, v in t do
+		c[k] = v
+	end
+	return c
+end
+
+local function copy_objective(o: Objective): Objective
+	local c = copy(o) :: Objective
+	c.tags = array(copy(o.tags) :: any)
+	c.tabs = array(copy(o.tabs) :: any)
+	if o.review ~= nil then
+		c.review = copy(o.review) :: any
+	end
+	return c
+end
+
+-- Marks an open objective done on `day` and starts its review schedule. Done is final: a done one is
+-- left alone. Returns what Undo needs, or nil when the objective is gone or already done.
+function M.mark_done(id: string, day: Dates.Day): Saved?
+	local saved: Saved? = nil
+	M.mutate(function(s)
+		for i, o in s.objectives do
+			if o.id == id then
+				if o.done then
+					return false
+				end
+				saved = { kind = "done", record = copy_objective(o), index = i, tabs = {}, agents = {} }
+				o.done = true
+				o.done_at = os.time()
+				o.review = Review.start(day)
+				return true
+			end
+		end
+		return false
+	end)
+	return saved
+end
+
+-- Rates a done objective whose review is due on `today`; returns false when it is gone.
+function M.rate(id: string, grade: Review.Grade, today: Dates.Day): boolean
 	return change(id, function(o)
-		o.done = not o.done
-		o.done_at = if o.done then os.time() else nil
+		if not o.done or o.review == nil or not Review.is_due(o.review, today) then
+			return false
+		end
+		o.review = Review.rate(o.review, grade, today)
 		return true
 	end)
 end
@@ -355,6 +421,72 @@ function M.delete(id: string): boolean
 		return false
 	end)
 	return found
+end
+
+-- Removes a done objective at once (its trash icon), with its links. Returns what Undo needs: the
+-- record, its place, and the snapshots and saved sessions that went with it; nil when it is gone or
+-- isn't done.
+function M.remove(id: string): Saved?
+	local saved: Saved? = nil
+	M.mutate(function(s)
+		for i, o in s.objectives do
+			if o.id == id then
+				if not o.done then
+					return false
+				end
+				local before = copy(s.tabs) :: { [string]: TabSnap }
+				table.remove(s.objectives, i)
+				drop_orphans(s)
+				local tabs: { [string]: TabSnap } = {}
+				local agents: { [string]: AgentSession } = {}
+				for key, snap in before do
+					if s.tabs[key] == nil then
+						tabs[key] = snap
+						-- The next render drops these sessions with their snapshot; Undo brings both back.
+						for _, p in snap.panes do
+							local a = s.agents[tostring(p.pane)]
+							if a ~= nil then
+								agents[tostring(p.pane)] = a
+							end
+						end
+					end
+				end
+				saved = { kind = "removed", record = o, index = i, tabs = tabs, agents = agents }
+				return true
+			end
+		end
+		return false
+	end)
+	return saved
+end
+
+-- Undo: puts the saved record back in its place, replacing the one with its id if there is one, and
+-- the snapshots and sessions that went with it where they are missing.
+function M.restore(saved: Saved)
+	M.mutate(function(s)
+		local at: number? = nil
+		for i, o in s.objectives do
+			if o.id == saved.record.id then
+				at = i
+			end
+		end
+		if at ~= nil then
+			s.objectives[at] = saved.record
+		else
+			table.insert(s.objectives, math.clamp(saved.index, 1, #s.objectives + 1), saved.record)
+		end
+		for key, snap in saved.tabs do
+			if s.tabs[key] == nil then
+				s.tabs[key] = snap
+			end
+		end
+		for key, a in saved.agents do
+			if s.agents[key] == nil then
+				s.agents[key] = a
+			end
+		end
+		return true
+	end)
 end
 
 -- ---- tab links and pruning ----
