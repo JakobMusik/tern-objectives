@@ -53,6 +53,8 @@ Motivation is in proposal.md, and the behaviour in `specs/objectives-graph/spec.
 | A canvas has no key handler: a button's `keys` are drawn only ("your program handles the key"), and only blocks get `key(state, key, cx)`. Input and editor nodes are rejected because canvases take no keys | SDK `button` (L14879), `menu` (L11150), "Canvas cx" (L32343); `tern.d.luau` L438–440 |
 | Tern's own R action for canvas panes can't be overridden: `tern.override("canvas.tool_rect", …)` raises ``unknown command `canvas.tool_rect` ``. Only palette commands can be overridden | harness log (task 6.1); SDK "Overrides" (L4399–4411) |
 | `alt+cmd+r` is free in Tern's defaults and in the user's `keybinds`, binds without a warning, and shows in `cx.actions:keys()` as `plugin.objectives.rename`. `cmd+shift+r` is refused (`the preset binds these keys`), being Tern's `rename_tab`. That corrects task 6.1, which read `cmd+shift+r` as free because of the spelling above | harness log and `keys_all` dump (task 6.2); live `settings.json` |
+| Reset on the rename command's row in Tern's Keyboard settings wrote `"alt+cmd+r": []` to the user's `keybinds`. That empty entry removes a plugin's chord without replacing it, and the Keyboard page lists only plugin actions in effect, so the row disappeared. Reset restores Tern's own default for the chord, which is no binding, not the plugin's | live `settings.json` after the user's Reset, read only (task 7.1); SDK "Keymap layering" (`[]` removes a plugin's chord) and "Plugin actions in `settings.json`" (L4394–4395) |
+| `alt+r` is free in Tern's defaults and the user's `keybinds`, and binds without a warning. With the graph closed, Option+R in Benchmarks's shell showed the hint toast and typed nothing. In the graph with X selected, it opened the Rename field | harness log, `keys_all` dump, shot `o_shell` (task 7.1) |
 
 ## Goals / Non-Goals
 
@@ -114,12 +116,13 @@ Alternatives:
 - Copy the linked tabs to the top and keep them below as well: no tab would move, but every linked tab would draw twice and its lines would have two ends.
 - Re-sort the whole column by link count: no divider needed, but tabs would move on every link.
 
-### D5. Releases: 0.7.0, 0.8.0, then 0.8.1
-0.7.0 and 0.8.0 are minor versions, since behaviour changes. 0.7.0 shipped D1–D4. 0.8.0 dropped D1–D2 and added D6 on ⌃⌘R. 0.8.1, a patch, moves D6's key to ⌥⌘R, because 0.8.0's never reached the plugin in the user's Tern. The README covers the top section and the rename key. Its screenshot shows the graph with nothing selected, so it stays.
+### D5. Releases: 0.7.0, 0.8.0, 0.8.1, then 0.8.2
+0.7.0 and 0.8.0 are minor versions, since behaviour changes. 0.7.0 shipped D1–D4. 0.8.0 dropped D1–D2 and added D6 on ⌃⌘R. 0.8.1 and 0.8.2, patches, move D6's key: to ⌥⌘R, because 0.8.0's never reached the plugin in the user's Tern, then to ⌥R at the user's request. The README covers the top section, the rename key and its known limits. Its screenshot shows the graph with nothing selected, so it stays.
 
 ### D6. Rename key
-- `window.luau` registers "Objectives: Rename selected objective" (`id = "rename"`, icon `pencil`, group "Objectives") with `keys = { "alt+cmd+r" }`. Its action is `plugin.objectives.rename`, so users can rebind it in `settings.json` `keybinds`.
-- 0.8.0 used `ctrl+cmd+r`, the partner of ⌃⌘O, but the user's `keybinds` map it to `rename_session` (source record). ⌘⇧R is Tern's own `rename_tab`. 0.8.1 uses ⌥⌘R, which is free in Tern's defaults and the user's keybinds, keeps the R, and types nothing anywhere, as a ⌘ chord.
+- `window.luau` registers "Objectives: Rename selected objective" (`id = "rename"`, icon `pencil`, group "Objectives") with `keys = { "alt+r" }`. Its action is `plugin.objectives.rename`, so users can rebind it in `settings.json` `keybinds`.
+- The key's history: 0.8.0 used `ctrl+cmd+r`, but the user's `keybinds` map it to `rename_session`. ⌘⇧R is Tern's own `rename_tab`. 0.8.1 used ⌥⌘R. 0.8.2 uses ⌥R, which the user asked for, and which is free in Tern's defaults and the user's keybinds.
+- ⌥R's cost: a plugin key runs in every pane, so Option+R no longer types "®", or sends Meta-R to a shell, anywhere in Tern. Outside the graph it shows the hint. The README lists this as a known limit, with the action name to rebind.
 - R, even scoped to the open graph with an objective selected, isn't possible in Tern 0.9.11. A canvas gets no keys of its own, a plugin can't bind plain `r`, a plugin key runs in every pane whatever `available` says, and the canvas panes' own R action can't be overridden (source record).
 - `available` returns whether an objective is selected and the graph is shown over the current tab (`Surface.here`). It only decides whether the palette lists the row.
 - `run` calls `App.rename_selected(cx)`. With the graph shown here and a selected objective still in the store, it calls `rename(cx, o)`, the ⋯ menu's field, which shows the graph again afterwards. Otherwise an info toast reads "Select an objective in the graph to rename it". The selection is left as it is either way.
@@ -131,8 +134,9 @@ Alternatives:
 
 ## Risks / Trade-offs
 
-- **[A user's own `keybinds` take ⌥⌘R]** → The user layer always wins (SDK "Keymap layering"). The command stays in the palette, and `plugin.objectives.rename` can be bound to another chord. ⌃⌘R in 0.8.0 hit exactly this.
-- **[⌥⌘R pressed without the graph, or without a selection]** → The command still runs, since a key isn't gated by `available`, and it shows the hint toast.
+- **[A user's own `keybinds` take ⌥R]** → The user layer always wins (SDK "Keymap layering"). The command stays in the palette, and `plugin.objectives.rename` can be bound to another chord. ⌃⌘R in 0.8.0 hit exactly this.
+- **[⌥R pressed without the graph, or without a selection]** → The command still runs, since a key isn't gated by `available`. It shows the hint toast, and the pane gets no "®" or Meta-R. Accepted at the user's request, and documented.
+- **[Reset in Tern's Keyboard settings]** → It writes an empty entry for the plugin's chord, which removes the key and the row (source record). Only Tern can change that, so the README tells users to delete the `"alt+r": []` entry to get the default back.
 - **[The top section scrolled out of view]** → Accepted, with no automatic scrolling (proposal, out of scope). The lines from the selected objective still run up to the section.
 - **[A stale fixed set]** → A pinned tab that closes becomes a ghost in the top section's "Closed tabs". A new tab, which isn't pinned, goes below the divider. Pruning removes closed tabs from both.
 - **[Two passes over the tabs]** → Same node count as today; the render budget isn't affected.

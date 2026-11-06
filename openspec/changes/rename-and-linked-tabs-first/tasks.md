@@ -182,9 +182,41 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
   Verify: the tags API lists `v0.8.1`, and live `tern plugin list` shows `objectives 0.8.1` ready.
 
   Result: the isolated install printed `installed objectives 0.8.1` (`0 blocks, 0 lenses, window ready`). The release commit is `956f620`, and the tags API lists `v0.8.1` first. The live install, run after checking the shell had no harness variables, wrote `~/Library/Application Support/Tern/plugins/objectives`. `tern plugin list` shows `objectives 0.8.1 … ready`, with `tabnav 0.1.0` untouched.
-- [ ] 6.4 **(live)** With the user:
-  - select an objective and press ⌥⌘R to rename it; without a selection, ⌥⌘R shows the hint;
-  - ⌃⌘R renames the session again, as the user's keybind says;
+
+  The user's check of 0.8.1 found two things:
+  - Reset on the command's row in Tern's Keyboard settings made the row disappear;
+  - the user asked for Option+R as the default (group 7).
+
+  The live check moved to 7.4.
+
+## 7. Option+R, and Reset in Tern's Keyboard settings
+
+- [x] 7.1 Find what Reset wrote, and spike `alt+r` (design D6, source record).
+
+  Verify: the user's `settings.json`, read only. In the fixtures copy, `keys = { "alt+r" }`: check the bind, then Option+R in a shell and in the graph with an objective selected.
+
+  Result:
+  - Reset had written `"alt+cmd+r": []`, an empty entry that removes the plugin's chord, so the Keyboard page, which lists only actions in effect, dropped the row. That is Tern's Reset, not something the plugin controls.
+  - `alt+r` bound without a warning (`keys_all`: `alt+r → plugin.objectives.rename`).
+  - With the graph closed, Option+R in Benchmarks's shell typed nothing and showed the hint (shot `o_shell`).
+  - In the graph with X selected, it opened the Rename field filled with "Write release notes", and X stayed selected after Enter.
+- [ ] 7.2 The key becomes `alt+r` in `window.luau` and the comments of `window.luau` and `lib/app.luau`. README:
+  - ⌥R in the commands table and in "Using the graph";
+  - a known limit: Option+R runs the command in every pane, so it doesn't type "®" or Meta-R, and outside the graph it shows the hint; bind `plugin.objectives.rename` elsewhere to keep Option+R;
+  - a known limit: Reset on a plugin command's row in Tern's Keyboard settings removes its key and the row, by writing an empty entry such as `"alt+r": []`; delete that entry from `keybinds` to get the default back.
+
+  Verify:
+  - `keys_all` maps `alt+r` to `plugin.objectives.rename` and `alt+cmd+r` to nothing, with no `bind left out`;
+  - "Rename by key" and "Nothing selected" with ⌥R;
+  - "Letters still reach the panes": "r" and "R" in Benchmarks's shell show "rR";
+  - the README has ⌥R in the table and in "Using the graph", both known limits, and no ⌥⌘R.
+- [ ] 7.3 Version `0.8.2`: an isolated install prints `installed objectives 0.8.2`; commit, push `main`, tag `v0.8.2`; `tern plugin install github.com/JakobMusik/tern-objectives --force` live, from a shell with no harness variables.
+
+  Verify: the tags API lists `v0.8.2`, and live `tern plugin list` shows `objectives 0.8.2` ready.
+- [ ] 7.4 **(live)** With the user:
+  - select an objective and press ⌥R to rename it; without a selection, ⌥R shows the hint;
+  - the command's row is back in Tern's Keyboard settings with ⌥R;
+  - ⌃⌘R renames the session, as the user's keybind says;
   - "r" and "R" still type normally in panes;
   - double-click no longer renames;
   - selecting an objective brings its tabs to the top under `Linked to “<title>”` and "Other tabs", and a session's heading shows in both sections when it has tabs in both;
