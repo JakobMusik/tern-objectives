@@ -8,18 +8,34 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
 
 ## 1. Schedule and store
 
-- [ ] 1.1 `lib/review.luau` (design D3).
+- [x] 1.1 `lib/review.luau` (design D3).
 
   Verify with a throwaway Luau script run through a helper op, against "Rating arithmetic":
   - from interval 1, ease 250, due today: Good gives 2.5 / 250, Easy 3.5 / 270, Hard 1 / 230;
   - from interval 4, ease 250, due three days ago: Good gives 13.8;
   - `preview` of a fresh schedule gives 1, 3 and 4 days.
-- [ ] 1.2 Store (design D1, D2): the `review` field and its default in `normalize`; `mark_done`, `rate`, `remove` and `restore`, with `toggle_done` gone.
+
+  Result (helper op `review_test` on copies of `review.luau` and `dates.luau`, 2026-11-06):
+  - Good gave 2.5 / 250, next 2026-11-09; Easy 3.5 / 270, next 2026-11-10; Hard 1 / 230, next 2026-11-07;
+  - three days overdue, Good gave 13.8, next 2026-11-20;
+  - `preview` gave 1, 3 and 4. `start` scheduled the next day, which `is_due` says isn't due today.
+- [x] 1.2 Store (design D1, D2): the `review` field and its default in `normalize`; `mark_done`, `rate`, `remove` and `restore`, with `toggle_done` gone.
 
   Verify by kv dump:
   - o7 reads as due the day after its done date ("Done before this version");
   - after `mark_done`, the record holds next review tomorrow, interval 1, ease 250, reps 0 ("Marked done");
   - `restore` after each operation gives back the earlier record exactly, compared field by field.
+
+  Result (helper op `store_test` on copies of the store's modules, against the helper's own kv seeded from `kv.pre-explore.json`; then the plugin itself):
+  - o7 read, and was stored after the next change, as `{due 2026-11-05, interval 1, ease 250, reps 0}`;
+  - `mark_done("o1")` stored `{due 2026-11-07, interval 1, ease 250, reps 0}`, and a second `mark_done` was refused;
+  - `restore` after it gave back o1 field for field, at the same index, with no done time and no schedule;
+  - o5 (done, the only link of closed tab 900, whose pane 901 had a saved session) was removed with the snapshot. An open objective's `remove` was refused. After the sweep had dropped the session, `restore` brought back the record, its index, the snapshot and the session, each equal field for field;
+  - `rate("o7", "good")`, one day overdue, gave interval 3.8, next 2026-11-10, reps 1. A not-due objective was left alone;
+  - in the plugin, clicking o4's box stored `{due 2026-11-07, interval 1, ease 250, reps 0}`, and the log showed no errors;
+  - found on the way: `table.clone` refuses stored values (protected metatables from JSON), so the store copies field by field.
+
+  `dates.luau` gained `day_of`, and the done box calls `mark_done` until group 2 adds its Undo.
 
 ## 2. Done is final, trash and Undo
 

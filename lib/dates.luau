@@ -19,6 +19,11 @@ function M.today(): Day
 	return from_time(os.time())
 end
 
+-- The local calendar day of a Unix time.
+function M.day_of(t: number): Day
+	return from_time(t)
+end
+
 function M.key(d: Day): string
 	return string.format("%04d-%02d-%02d", d.year, d.month, d.day)
 end
