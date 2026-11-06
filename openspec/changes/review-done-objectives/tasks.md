@@ -39,7 +39,7 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
 
 ## 2. Done is final, trash and Undo
 
-- [ ] 2.1 Done box, trash icon and Undo notice in `lib/view.luau`, `lib/app.luau` and `styles.css` (design D6, D7).
+- [x] 2.1 Done box, trash icon and Undo notice in `lib/view.luau`, `lib/app.luau` and `styles.css` (design D6, D7).
 
   Verify:
   - "Box of a done objective" and "Done stays done": `ctl click` a done objective's box. It stays done in the kv dump, and the count is unchanged;
@@ -48,9 +48,19 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
   - "Notice expires": `ctl wait 10500`, then a shot shows no notice;
   - "Notice dropped by another click": `ctl click` another title, then a shot shows no notice;
   - ⋯ › Delete still asks first ("Confirmed delete", "Cancelled delete").
-- [ ] 2.2 Review chip and tooltip (design D8).
+
+  Result (store from `kv.pre-explore.json`):
+  - "Box of a done objective": clicking o7's box left "Done (1)", o7 done, and nothing selected. Its title reads "Done 2026-11-04 22:03";
+  - "Undo marking done": o1's box showed "Marked done “Fix login bug” · Undo". Undo gave back o1's kv record and index exactly (`jq -S` compare), and shot `v_undo_done` shows o1 open with its dashed line to closed tab 8;
+  - "Trash icon" and "Undo removing": o2, marked done, was the only link of closed tabs 6, 11, 13 and 17. Its trash icon (22 × 18) removed it with those four snapshots, keeping tab 8 for o1, and showed "Removed “Write release notes” · Undo". Undo brought back o2 at index 1 with its links and the four snapshots, equal field for field;
+  - "Notice expires": o3's notice was still there after about 7 s and gone after about 13 s, with o3 still done. The harness ran timers only with `/tmp/tobj/bin/pump` keeping the window active (see resume-closed-agents, task 2.2);
+  - "Notice dropped by another click": o4's notice went at a click on o5's title, and o4 stayed done;
+  - ⋯ › Delete: o6's confirm picker opened (shot `v_delete_confirm`); Escape left the objectives unchanged, and confirming removed o6.
+- [x] 2.2 Review chip and tooltip (design D8).
 
   Verify "Done node" by the node's text (`ctl tree`) and its `title`: a trash icon, "review in 1d", no due chip, and the tooltip's "Reviewed 0× · next <tomorrow>".
+
+  Result: o4, which had shown "overdue 1d", once done shows a trash icon and the chips "review in 1d" and "#api", and no due chip. Its title ends "Done 2026-11-06 23:39" and "Reviewed 0× · next 2026-11-07". o7, done 2026-11-04, shows "review due". Shot `v_done_nodes` shows the trash icon drawn on every done node, so the icon risk in design.md is settled.
 
 ## 3. Review mode
 
