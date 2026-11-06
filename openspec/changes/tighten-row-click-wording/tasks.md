@@ -23,7 +23,7 @@ Checks run in the headless harness at `/tmp/tobj`. Nothing here touches the live
 
 ## 2. Headless check
 
-- [ ] 2.1 The plugin, unchanged, behaves as the new scenario "Click beside the name" says.
+- [x] 2.1 The plugin, unchanged, behaves as the new scenario "Click beside the name" says.
 
   Verify: restart the harness, sync the repo into the fixtures, and open the graph from a live tab.
   - The layout gives a folded live row's `.ob-jump` rectangle.
@@ -32,6 +32,14 @@ Checks run in the headless harness at `/tmp/tobj`. Nothing here touches the live
   - The shown session and tab, read before the first click and after the second, are the same.
   - Right-clicking a pane row opens the tab's "Link to" menu (README, right-click bullet).
   - Marking done the only objective linked to a tab draws that tab with the unlinked grey fill and dashed border, and reopening it brings the solid card back (README, unlinked bullet). Afterwards the kv dump holds the same objectives as before.
+
+  Result (0.6.1 synced, the restarted harness came up with one session "Default"; pane 2 was split into tab 3 as panes 2 and 4, then the graph was opened from a new tab 8, so it showed as canvas pane 9 over tab 8):
+  - Row 4 of tab 3: type 661.9–685.7, name 691.7–1155.6, jump 1161.5–1189.5 (x, px). The click at (1158.5, 325.7) lands in the 6 px gap between name and jump.
+  - After it, tab 3 grows from 88 to 106 px with one `.ob-detail` line, and the kv dump's `expanded` gains `"4"`. After the click on the type at (673.8, 325.7), tab 3 is 88 px again with no detail line, and `"4"` is gone.
+  - Before and after: session "Default", focus on canvas pane 9 over tab 8, tab 3's own focus on pane 2. Nothing jumped.
+  - Right-click at (900, 325.7), on row 4's name, opens a menu headed "Link to" with the 7 open objectives (shot `t_menu`). Choosing "Read about rate limiting" (o6) links it to tab 3 (`tabs: [9, 3]`), and the node loses `ob-tab-unlinked`.
+  - Marking o6 done gives tab 3 `ob-tab-unlinked` again, and the shot turns it from the white card with a solid border to the grey fill with a dashed border (`t_linked` against `t_done`). Reopening o6 from the Done group brings the card back.
+  - After the Done group was folded and o6 unlinked through the same menu, the kv dump's objectives and the rest of its state equal the backup `/tmp/tobj/kv.pre-tighten.json`. This run logged nothing from `objectives`.
 
 ## 3. Publish
 
