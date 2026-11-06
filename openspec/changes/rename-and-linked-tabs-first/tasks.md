@@ -138,9 +138,11 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
   Verify: `grep` finds "⌃⌘R" in the table and in "Using the graph", and no "Double-click".
 
   Result: the table has a "Rename selected objective" row with ⌃⌘R, and "Using the graph" says "With an objective selected, **⌃⌘R** renames it". "double-click" appears nowhere. The key note now names `plugin.objectives.rename` too, and says why a plain R can't be the key.
-- [ ] 5.4 Version `0.8.0`: an isolated install prints `installed objectives 0.8.0`; commit, push `main`, tag `v0.8.0`; `tern plugin install github.com/JakobMusik/tern-objectives --force` live, from a shell with no harness variables.
+- [x] 5.4 Version `0.8.0`: an isolated install prints `installed objectives 0.8.0`; commit, push `main`, tag `v0.8.0`; `tern plugin install github.com/JakobMusik/tern-objectives --force` live, from a shell with no harness variables.
 
   Verify: the tags API lists `v0.8.0`, and live `tern plugin list` shows `objectives 0.8.0` ready.
+
+  Result: the isolated install printed `installed objectives 0.8.0` (`0 blocks, 0 lenses, window ready`). The release commit is `7226826`, and the tags API lists `v0.8.0` first. The live install, run only after checking the shell had no `TERN_CONFIG_DIR` or `TERN_DAEMON_SOCKET`, wrote `~/Library/Application Support/Tern/plugins/objectives`. `tern plugin list` shows `objectives 0.8.0 … ready`, with `tabnav 0.1.0` untouched.
 - [ ] 5.5 **(live)** With the user:
   - select an objective and press ⌃⌘R to rename it; without a selection, ⌃⌘R shows the hint;
   - "r" and "R" still type normally in panes;
