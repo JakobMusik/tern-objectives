@@ -3,6 +3,7 @@
 -- clicks (canvas_action) and the window events that keep a shown graph current; everything else
 -- lives in lib/.
 
+local Agents = require("./lib/agents")
 local App = require("./lib/app")
 local Layout = require("./lib/layout")
 local Refresh = require("./lib/refresh")
@@ -78,8 +79,6 @@ for _, name in {
 	"title",
 	"command_started",
 	"command_finished",
-	"agent_state",
-	"agent_finished",
 	"float_moved",
 	"session_ended",
 } do
@@ -87,6 +86,23 @@ for _, name in {
 		Refresh.request(cx)
 	end)
 end
+
+-- An agent's state changed: redraw, and at a turn's start save Claude sessions (resume design D2).
+tern.on("agent_state", function(ev: AgentStateEvent, cx: WindowCx)
+	Refresh.request(cx)
+	if ev.new == "working" then
+		Agents.request(cx, ev.pane)
+	end
+end)
+
+-- A turn ended: redraw, and save Claude sessions too, in case the turn was too short for Tern to see
+-- it working (resume design D2). An exited or closed agent has no process left to read.
+tern.on("agent_finished", function(ev: AgentFinishedEvent, cx: WindowCx)
+	Refresh.request(cx)
+	if ev.result == "done" or ev.result == "failed" then
+		Agents.request(cx, ev.pane)
+	end
+end)
 
 -- A paused hook stops live refresh; say so in the log, where `tern plugin` users look.
 tern.on("budget", function(ev: BudgetEvent, _cx: WindowCx)

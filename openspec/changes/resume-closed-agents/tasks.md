@@ -43,10 +43,18 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
 
 ## 2. Saving sessions
 
-- [ ] 2.1 Add `State.agents` to `lib/store.luau`: filled by `normalize`, with entries dropped by `drop_orphans` and `prune` (design D3).
+- [x] 2.1 Add `State.agents` to `lib/store.luau`: filled by `normalize`, with entries dropped by `drop_orphans` and `prune` (design D3).
 
   Verify: a kv dump from 0.8.x loads with an empty `agents`. After a delete, an unlink and a prune, no entry is left for a pane in no snapshot.
-- [ ] 2.2 Add `lib/agents.luau`: request, capture and matching (design D2), with the request called from the `agent_state` handler in `window.luau`. Log each capture's time.
+
+  Result:
+  - the 0.8.x store (`kv.pre-explore.json`) loaded, and its first write held `"agents": {}`;
+  - one change from D3: the store doesn't know which panes are live, so `drop_orphans` leaves the map alone. Instead `Store.save_sessions` drops sessions whose pane is neither live nor in a snapshot, at every render (`win.live`, every pane `cx.session:panes()` lists) and every capture. `prune` drops its tabs' sessions itself;
+  - two closed chat tabs that had never been linked lost their sessions at the next render (`["25","63","9"]` → `["9"]`);
+  - unlinking chatB's closed tab from o1 removed its snapshot and session 89;
+  - deleting o33 removed chatD's snapshot and session 92;
+  - pruning removed chatA's snapshot and session 9 (`"agents": []`).
+- [x] 2.2 Add `lib/agents.luau`: request, capture and matching (design D2), with the request called from the `agent_state` handler in `window.luau`. Log each capture's time.
 
   Verify, by kv dump:
   - "First turn saves the session": the entry appears within 3 s of a message, holding the id from the process's argv;
@@ -54,6 +62,20 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
   - "No turn, no session": a chat opened and closed without a message leaves no entry;
   - "Pruned with its tab": after the chat's linked tab closes and "Prune closed tabs" is confirmed, neither its snapshot nor its entry is left;
   - the logged capture times. Record them in design.md's risks.
+
+  Result:
+  - "First turn saves the session": after a 25 s pause, pane 9's entry held `74fd9b19-…`, the id in its process's `--session-id`, 2.3 s after the message;
+  - "No turn, no session": chatA's turn, with an idle chat in chatC and two in chatB, saved only pane 9 (log: "4 chat(s), 1 paired"). Closing the chatC chat left no entry;
+  - "Two chats in one folder": both chatB chats were sent a message, and neither got an entry. Once one was closed, the other's next turn saved it;
+  - "Pruned with its tab": see 2.1;
+  - capture times were 1190–1389 ms (design, risks).
+
+  Found and fixed on the way, each recorded in design D2 and its source record:
+  - the first capture saved a closed chat's id. `cx.procs:list` returns the sampler's latest finished sample, which can be minutes old, so a capture now lists again until the sample number moves on;
+  - a short turn fired no `working` event while the harness clock stood still, so `agent_finished` ("done" or "failed") also triggers a capture;
+  - another chat's turn would have saved an idle chat's id, so only chats that have had a turn are saved.
+
+  Harness note: the headless serve runs plugin timers only while the window has activity, not on `ctl wait` alone. A 0 ms timer set from a helper command never fired until a tab opened. `/tmp/tobj/bin/pump N` opens and closes a scratch tab N times, 0.6 s apart, to keep timers running during these checks.
 
 ## 3. Naming Claude chats
 
