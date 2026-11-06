@@ -3,7 +3,9 @@
 -- Agents come from one cx.agents:list() per render; the user's last message comes from a transcript
 -- cache that reads at most one transcript per tick.
 
+local Agents = require("./agents")
 local Model = require("./model")
+local Store = require("./store")
 local Text = require("./text")
 
 local M = {}
@@ -26,6 +28,8 @@ local STATE_TEXT: { [string]: string } = {
 
 -- Agents of the current render, by pane.
 local agents: { [number]: AgentBlock } = {}
+-- Saved Claude sessions by pane id, which name closed tabs' chats.
+local saved: { [string]: Store.AgentSession } = {}
 
 -- Transcript cache: the user's last message per agent pane, valid while `key` matches.
 type Entry = { key: string, you: string?, read: boolean }
@@ -39,9 +43,10 @@ local function agent_key(a: AgentBlock): string
 	return a.state .. "\n" .. (if type(a.last_message) == "string" then a.last_message else "")
 end
 
--- Reads the agents once for the render that follows.
-function M.begin(cx: WindowCx)
+-- Reads the agents once for the render that follows; `sessions` are the store's saved sessions.
+function M.begin(cx: WindowCx, sessions: { [string]: Store.AgentSession })
 	agents = {}
+	saved = sessions
 	running_shown = false
 	local ok, list = pcall(function()
 		return cx.agents:list()
@@ -76,23 +81,18 @@ local function home_short(path: string): string
 	return path
 end
 
--- The last path segment of a command's first word, or nil when there is none.
-local function base_name(s: any): string?
-	local first = if type(s) == "string" then string.match(s, "^%s*(%S+)") else nil
-	if first == nil then
-		return nil
-	end
-	return string.match(first, "([^/]+)$") or first
-end
-
--- An agent's name (design R4). An agent block's command names its program. A shell running omp has
--- no command (`tern.json.null`, SDK "Agent cx"), so it is omp. The pane's program is no guide: it is
--- the foreground process, which can be zsh while Tern still lists omp in the pane (task 8.1).
-local function agent_name(a: AgentBlock?): string
+-- An agent's name (design R4). An agent block's command names its program. A chat typed at a shell
+-- prompt has no command (`tern.json.null`, SDK "Agent cx"): it is Claude when its pane's program is
+-- claude (resume-closed-agents, design D1), else omp. Beyond that the program is no guide: it is the
+-- foreground process, which can be zsh while Tern still lists omp in the pane (task 8.1).
+local function agent_name(a: AgentBlock?, program: string?): string
 	if a == nil then
 		return "agent"
 	end
-	return base_name(a.command) or "omp"
+	if Agents.is_claude(a, program) then
+		return "claude"
+	end
+	return Agents.base_name(a.command) or "omp"
 end
 
 -- The type a pane row starts with, and the class that colours it: an agent's name with its state,
@@ -103,9 +103,11 @@ function M.type(row: Model.Row): (string, string?)
 	-- A snapshot written before kinds were stored has none: those panes were terminals.
 	local kind = (if info ~= nil and info.kind ~= nil then info.kind else row.kind) or "terminal"
 	if a ~= nil then
-		return agent_name(a) .. " · " .. (STATE_TEXT[a.state] or a.state), "ob-d-" .. a.state
+		return agent_name(a, if info ~= nil then info.program else nil) .. " · " .. (STATE_TEXT[a.state] or a.state), "ob-d-" .. a.state
 	elseif kind == "agent" then
-		return agent_name(nil), nil
+		-- A closed tab's chat: its saved session names it (resume-closed-agents, design D1).
+		local s = saved[tostring(row.pane)]
+		return if s ~= nil then s.agent else agent_name(nil, nil), nil
 	elseif kind == "terminal" then
 		return "shell", nil
 	elseif kind == "file" then
@@ -134,7 +136,7 @@ local function agent_lines(row: Model.Row, a: AgentBlock): { Line }
 		-- omp ends a turn's text with a footer block ("\n·\n1.6s · 557 tok · …"): not part of the reply.
 		local reply = string.match(a.last_message, "^(.-)\n·\n[^\n]*$") or a.last_message
 		local head, tail = Text.split_end(Text.squeeze(reply, SQUEEZE), TAIL)
-		table.insert(out, { label = agent_name(a) .. ":", text = head, tail = tail })
+		table.insert(out, { label = agent_name(a, if row.info ~= nil then row.info.program else nil) .. ":", text = head, tail = tail })
 	end
 	return out
 end

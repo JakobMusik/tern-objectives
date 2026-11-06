@@ -79,12 +79,19 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
 
 ## 3. Naming Claude chats
 
-- [ ] 3.1 Name Claude chats in `lib/details.luau` (design D1). Closed rows with a saved session read "claude".
+- [x] 3.1 Name Claude chats in `lib/details.luau` (design D1). Closed rows with a saved session read "claude".
 
   Verify, in shots (`ctl tree '.ob-rtype'`):
   - "Claude chat typed in a shell": the live chat's row reads "claude · idle";
   - "Closed Claude chat": after its linked tab closes, the row reads "claude";
   - "Mixed tab": an omp row still reads "omp · idle".
+
+  Result:
+  - "Claude chat typed in a shell": pane 116 read "claude · idle";
+  - "Closed Claude chat": once its turn had saved `e747b7a1-…` and its tab was closed, its row under "closed · Default · tab 2" read "claude";
+  - "Mixed tab": an omp typed in a shell (`command` null, `program` "omp") read "omp · idle".
+
+  `Details.begin` now takes the store's saved sessions, and `details.luau` uses `Agents.base_name` and `Agents.is_claude` in place of its own `base_name`.
 
 ## 4. Resume
 
