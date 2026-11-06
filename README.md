@@ -17,10 +17,11 @@ The plugin is one window script (`window.luau` and `lib/`): it keeps the objecti
 | Command | Key | What it does |
 |---|---|---|
 | Objectives: Open graph | ⌃⌘O | Shows the graph over the current tab; pressed again while it is shown, closes it. A click outside the graph or its × closes it too, and so does Esc after a click on its title bar. |
+| Objectives: Rename selected objective | ⌃⌘R | Opens the Rename field for the objective selected in the graph. With nothing selected, or the graph not shown, it says so and does nothing. |
 | Objectives: Link this tab… | | Picks an open objective to link to, or unlink from, the focused pane's tab. Linked objectives show a check. |
 | Objectives: New objective for this tab… | | Asks for a title and creates a P2 objective already linked to the focused pane's tab. |
 
-The key can be changed like any other: bind a chord to `plugin.objectives.open` in Tern's keybind settings.
+The keys can be changed like any other: bind a chord to `plugin.objectives.open` or `plugin.objectives.rename` in Tern's keybind settings. A plain R can't be the rename key, since Tern uses it in its own panes and a plugin's key works in every pane.
 
 ## Using the graph
 
@@ -28,7 +29,7 @@ The key can be changed like any other: bind a chord to `plugin.objectives.open` 
 - **Click an objective** to select it: its lines get thicker, the others fade, and every tab gets a bar at its foot: **＋ Link**, or **× Unlink** where it is already linked. Its tabs move to the top of the right column under **Linked to “…”**, with an **Other tabs** divider before the rest; a session with tabs on both sides shows its heading twice. They stay where they are while you link and unlink, and the usual order comes back when you clear the selection: click the objective again, or empty space.
 - **Right-click a tab** (its header or any pane row) for a **Link to** menu of every open objective, with a check on the linked ones. Choosing one links or unlinks it; nothing needs to be selected.
 - The tab you opened the graph from has an accent-coloured ring, and the pane you opened it from an accent bar at its row's left edge. That tab's session comes first in the right column with the tab at its top, so you can see where you came from.
-- **The box** marks an objective done; done objectives move to the **Done** group at the bottom and draw no lines. **P0–P3** cycles the priority (red, orange, blue, grey). **Double-click** a title to rename it, or the line under it to edit its side note. **⋯** renames, sets a one-line side note, a due date or tags, or deletes it.
+- **The box** marks an objective done; done objectives move to the **Done** group at the bottom and draw no lines. **P0–P3** cycles the priority (red, orange, blue, grey). With an objective selected, **⌃⌘R** renames it. **⋯** renames, sets a one-line side note, a due date or tags, or deletes it.
 - **Click a tab header** to jump to that tab, or **a pane row's → button** to jump to that pane, in whatever session it lives. Each pane row starts with its type: an agent's name and state (`omp · working`), `shell`, `note`, `file`, `browser`, or the pane's kind. Rows start folded: **click anywhere on a row but its → button** to open its details, and click again to fold them; the rows you open are remembered. The details show what the pane is doing: for an omp agent, `you:` with your last message and `omp:` with its last reply, each cut in the middle when it is too long so its beginning and its end both show; a terminal's last or running command; or a file's path.
 - **All / This session** and the **#tag** chips filter the graph; the choice is remembered.
 - Tabs linked to no open objective have a grey fill and a dashed border. A linked tab that closes stays as a ghost under **Closed tabs**, links kept, until **Prune closed tabs**; tabs held by another Tern window show under **Other windows**.
