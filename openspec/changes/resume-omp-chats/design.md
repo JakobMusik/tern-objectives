@@ -29,6 +29,9 @@ All on 2026-11-07, on the user's Mac (read-only `ps` and `lsof` of their own pro
 | A plugin may run any program, with no declared permission | SDK book: "`tern.process.run` starts any program with any arguments"; "Tern does not declare, check or prompt for capabilities" |
 | One `/bin/sh` running `pgrep`, `ps -wwE` and `lsof` returns the pids, panes and files | harness helper op `proc_run`: status 0 in 134 ms, 60 lines, matching the shell's own output |
 | `tern.process.run` with a callback gives the window callback a fresh `cx` | `tern.d.luau:2129` |
+| A shell-typed omp in the harness is an agent block, and D1's script pairs it with its pane and file | task 1.1: pane 16, `program` "omp"; pid 72648 with `TERN_WINDOW_PANE=16` held its `.jsonl` open; the script took 198 ms |
+| `omp --resume '<file>'` typed at once into a new shell tab brings the chat back, and keeps writing to the same file | task 1.1: shot `s11_resumed` showed the earlier message; pid 73544 named the file on its command line, then held that same file after its next message |
+| omp names the folder of a chat outside home with `--` around it | task 1.1: `sessions/--private-tmp-tobj-w-ompA--/` |
 
 ## Goals / Non-Goals
 
@@ -83,7 +86,7 @@ Alternatives:
 As in 0.9.0 (`resume-closed-agents` D5, D6), with three changes:
 - **Entries:** only valid entries whose file exists. If none: toast "That tab has no omp chat left to resume".
 - **Typing:** `omp --resume '<file>'` and Return, with `'` written as `'\''`. Folder names may hold spaces (source record). D3 has already refused control characters.
-- **Moved entries:** each new pane gets the same file. [INFERENCE] `omp --resume` keeps writing to that file, so the next capture confirms or replaces it (task 1.1 checks).
+- **Moved entries:** each new pane gets the same file: `omp --resume` keeps writing to it (task 1.1).
 
 ### D6. Release
 0.11.0, a minor release. It changes Resume and removes Claude support, which is breaking for anyone who resumes Claude chats. The README says so.
@@ -98,5 +101,5 @@ As in 0.9.0 (`resume-closed-agents` D5, D6), with three changes:
 - **Remote sessions** are untested headless, as in 0.9.0. → Panes in sessions on remote hosts are skipped, and Resume refuses while the current session is remote.
 - **Harness checks reach outside `/tmp`:**
   - they use the user's model account, one short message per check;
-  - they write chat files under `~/.omp/agent/sessions/-private-tmp-tobj-*`, deleted after the checks;
+  - they write chat files under `~/.omp/agent/sessions/--private-tmp-tobj-*`, deleted after the checks;
   - the harness plugin also sees the user's live omp processes. Their panes, from `TERN_PANE`, aren't harness panes, so they are ignored.
