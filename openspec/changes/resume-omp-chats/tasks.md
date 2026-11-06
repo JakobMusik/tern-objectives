@@ -8,19 +8,27 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
   - the test Tern's clock moves only on `ctl wait`, and plugin timers fire only with window activity: use `/tmp/tobj/bin/pump`.
 - **Helper ops** (`/tmp/tobj/bin/op`): `agents`, `panes`, `run`, `close`, `new_tab`, `tab_type`, `read`, and `proc_run` (its result in the helper's kv as `proc`).
 - **Kv dump** reads `/tmp/tobj/config/plugin-data/objectives/kv.json`.
-- **After the checks**, delete `~/.omp/agent/sessions/-private-tmp-tobj-*`.
+- **After the checks**, delete `~/.omp/agent/sessions/--private-tmp-tobj-*` (omp wraps folders outside home in `--`).
 
 ## 1. Spike
 
-- [ ] 1.1 Check D1 and D5's assumptions on a harness omp chat, with the 0.10.0 plugin.
+- [x] 1.1 Check D1 and D5's assumptions on a harness omp chat, with the 0.10.0 plugin.
 
   Type `omp` in a shell tab in `/tmp/tobj/w/ompA` and send one message. Verify, and record in design.md's source record:
-  - `proc_run` of D1's script shows that chat's pid with `TERN_WINDOW_PANE` equal to its pane id, and its open `.jsonl` under `sessions/-private-tmp-tobj-w-ompA/`;
+  - `proc_run` of D1's script shows that chat's pid with `TERN_WINDOW_PANE` equal to its pane id, and its open `.jsonl` under `sessions/--private-tmp-tobj-w-ompA--/`;
   - `cx.agents:list()` (op `agents`) lists the pane;
   - after the tab is closed, `omp --resume '<file>'` typed at once into a new shell tab in the same folder shows the earlier message (shot), and op `agents` lists the new pane;
   - `proc_run` then shows the resumed process holding the same file.
 
   If any differs, stop and update the artifacts before group 2.
+
+  Result (harness, 2026-11-07, script `/tmp/tobj/bin/ompscan.sh`, which D1 embeds):
+  - Tern listed the shell-typed omp as an agent: pane 16, `program` "omp", state idle. One message ("Reply with exactly: ok") answered "ok" in 2.8 s;
+  - the script ran in 198 ms with status 0. Pid 72648's command line read `omp`, its environment `TERN_WINDOW_PANE=16`, and it held `~/.omp/agent/sessions/--private-tmp-tobj-w-ompA--/2026-11-06T19-11-12-973Z_….jsonl` open;
+  - after pane 16 was closed, `omp --resume '<file>'` typed at once into a new shell tab in the same folder showed the earlier message and reply (shot `s11_resumed`), and `agents` listed the new pane 54, `program` "omp";
+  - before a message, the resumed pid 73544 held no file, and its command line named it (`omp --resume <file>`), which D1's fallback reads. After one message ("ok2") it held the same file, and no second file appeared in the folder.
+
+  One thing differed from the setup notes: omp names the folder of a chat outside home `--private-tmp-tobj-w-ompA--`, not `-private-…`. The cleanup paths are fixed.
 
 ## 2. Saving omp chats
 
@@ -63,5 +71,5 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
 ## Workflow follow-up
 
 - Archive the change (`openspec archive resume-omp-chats --yes`). Then edit the Purpose of `openspec/specs/agent-resume/spec.md`, which still says "Claude chats", run `openspec validate --specs --strict`, commit and push.
-- Delete `~/.omp/agent/sessions/-private-tmp-tobj-*` and stop the harness service.
+- Delete `~/.omp/agent/sessions/--private-tmp-tobj-*` and stop the harness service.
 - Next change: "Close linked tabs" for done objectives, which captures omp chats just before closing.
