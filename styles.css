@@ -175,6 +175,54 @@
 [data-surface='plugin.tern.canvas'] .ob-root .ob-obj-done .ob-title {
 	text-decoration: line-through;
 }
+/* Review mode's nodes (review-done-objectives, design D4): full strength, a card to look back on,
+   with a row of rating buttons under the usual two lines. Their heights come from the layout sheet. */
+[data-surface='plugin.tern.canvas'] .ob-root .ob-obj.ob-review {
+	opacity: 1;
+}
+[data-surface='plugin.tern.canvas'] .ob-root .ob-review .ob-title {
+	text-decoration: none;
+}
+[data-surface='plugin.tern.canvas'] .ob-root .ob-l3 {
+	display: flex;
+	flex-direction: row;
+	gap: 6px;
+	height: 22px;
+	margin-top: 8px;
+}
+[data-surface='plugin.tern.canvas'] .ob-root .ob-rate {
+	flex: 1 1 0;
+	min-width: 0;
+	height: 22px;
+	line-height: 22px;
+	border-radius: 6px;
+	text-align: center;
+	white-space: nowrap;
+	overflow: hidden;
+	font-size: 11px;
+	font-weight: 600;
+	user-select: none;
+}
+[data-surface='plugin.tern.canvas'] .ob-root .ob-rate-hard {
+	color: var(--warn);
+	box-shadow: inset 0 0 0 1px var(--warn);
+	background: rgb(from var(--warn) r g b / 8%);
+}
+[data-surface='plugin.tern.canvas'] .ob-root .ob-rate-good {
+	color: var(--accent);
+	box-shadow: inset 0 0 0 1px var(--accent);
+	background: rgb(from var(--accent) r g b / 8%);
+}
+[data-surface='plugin.tern.canvas'] .ob-root .ob-rate-easy {
+	color: var(--ok);
+	box-shadow: inset 0 0 0 1px var(--ok);
+	background: rgb(from var(--ok) r g b / 8%);
+}
+[data-surface='plugin.tern.canvas'] .ob-root .ob-revbtn.ob-on {
+	color: white;
+	background: var(--accent-fill);
+	box-shadow: none;
+}
 [data-surface='plugin.tern.canvas'] .ob-root .ob-l1,
 [data-surface='plugin.tern.canvas'] .ob-root .ob-l2 {
 	display: flex;

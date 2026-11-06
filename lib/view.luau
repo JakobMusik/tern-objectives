@@ -26,6 +26,8 @@ export type Ui = {
 	details: (row: Model.Row) -> { { text: string, class: string?, label: string?, tail: string? } },
 	-- The Undo notice's text after marking done or removing, until it is dropped (review design D6).
 	undo: string?,
+	-- Review mode: the due done objectives with their rating buttons (review design D4).
+	reviewing: boolean,
 }
 
 -- An element as a plain TSP wire node {k, p, c} (tern.d.luau Node), which `cx.canvas:set` takes as
@@ -106,7 +108,8 @@ local function review_chip(r: Review.Schedule, today: Dates.Day): Node
 	return span("ob-chip", string.format("review in %dd", n))
 end
 
-local function objective_node(o: Store.Objective, ui_state: Ui, first: string): Node
+-- `review`: review mode's node, with Hard, Good and Easy under it (review-done-objectives, design D4).
+local function objective_node(o: Store.Objective, ui_state: Ui, first: string, review: boolean?): Node
 	local selected = ui_state.selected == o.id
 	local cls = "ob-obj ob-o-" .. o.id .. first
 	if selected then
@@ -114,6 +117,9 @@ local function objective_node(o: Store.Objective, ui_state: Ui, first: string): 
 	end
 	if o.done then
 		cls ..= " ob-obj-done"
+	end
+	if review then
+		cls ..= " ob-review"
 	end
 	local line2: { Node } = {}
 	if o.note ~= nil then
@@ -148,10 +154,24 @@ local function objective_node(o: Store.Objective, ui_state: Ui, first: string): 
 		}))
 	end
 	table.insert(l1, span("ob-more", "⋯", { key = "more", title = "Rename, note, due date, tags, delete", actions = { click = "menu=" .. o.id } }))
-	return el("div", { class = cls, key = "o:" .. o.id, title = tooltip(o), actions = { click = "sel=" .. o.id } }, {
+	local lines: { Node } = {
 		el("div", { class = "ob-l1", key = "l1" }, l1),
 		el("div", { class = "ob-l2", key = "l2" }, line2),
-	})
+	}
+	if review and o.review ~= nil then
+		-- Each button names the whole days its rating gives, as obsidian-spaced-repetition does.
+		local days = Review.preview(o.review, ui_state.today)
+		local row: { Node } = {}
+		for _, g in { { "hard", "Hard", days.hard }, { "good", "Good", days.good }, { "easy", "Easy", days.easy } } do
+			table.insert(row, span("ob-rate ob-rate-" .. g[1], string.format("%s · %dd", g[2], g[3]), {
+				key = g[1],
+				title = string.format("%s: next review in %d day%s", g[2], g[3], if g[3] == 1 then "" else "s"),
+				actions = { click = "rate=" .. o.id .. ":" .. g[1] },
+			}))
+		end
+		table.insert(lines, el("div", { class = "ob-l3", key = "l3" }, row))
+	end
+	return el("div", { class = cls, key = "o:" .. o.id, title = tooltip(o), actions = { click = "sel=" .. o.id } }, lines)
 end
 
 type Shown = { tab: Model.Tab, status: string }
@@ -278,6 +298,7 @@ export type Built = {
 	view: Node,
 	css: string,
 	closed: { number }, -- linked closed tabs shown (for prune)
+	due: number, -- done objectives due for review under the filters; 0 ends review mode
 }
 
 function M.build(state: Store.State, win: Model.Window, ui_state: Ui): Built
@@ -335,12 +356,42 @@ function M.build(state: Store.State, win: Model.Window, ui_state: Ui): Built
 	sort_open(open_list)
 	sort_done(done_list)
 
+	-- Review mode's list (review-done-objectives, design D4): the done objectives the filters show whose
+	-- review is due, the longest due first, then the most recently done. An empty list is normal mode.
+	local due_list: { Store.Objective } = {}
+	for _, o in done_list do
+		if o.review ~= nil and Review.is_due(o.review, ui_state.today) then
+			table.insert(due_list, o)
+		end
+	end
+	table.sort(due_list, function(a, b)
+		local da, db = (a.review :: Review.Schedule).due, (b.review :: Review.Schedule).due
+		if da ~= db then
+			return da < db
+		end
+		local ta, tb = a.done_at or 0, b.done_at or 0
+		if ta ~= tb then
+			return ta > tb
+		end
+		return a.id < b.id
+	end)
+	local reviewing = ui_state.reviewing and #due_list > 0
+
 	-- Left column.
 	local left = Layout.stack()
 	local left_kids: { Node } = {}
 	local obj_cy: { [string]: number } = {}
 	local sel_obj: Store.Objective? = nil
-	if #state.objectives == 0 then
+	if reviewing then
+		for _, o in due_list do
+			local first = Layout.first(left)
+			obj_cy[o.id] = Layout.add_obj(left, true)
+			table.insert(left_kids, objective_node(o, ui_state, first, true))
+			if o.id == selected then
+				sel_obj = o
+			end
+		end
+	elseif #state.objectives == 0 then
 		local first = Layout.first(left)
 		Layout.add_hint(left)
 		table.insert(left_kids, el("div", { class = "ob-hint" .. first, key = "hint" }, {
@@ -354,7 +405,7 @@ function M.build(state: Store.State, win: Model.Window, ui_state: Ui): Built
 			span("ob-line", "No objectives match this filter.", { key = "a" }),
 		}))
 	end
-	for _, o in open_list do
+	for _, o in (if reviewing then {} else open_list) :: { Store.Objective } do
 		local first = Layout.first(left)
 		obj_cy[o.id] = Layout.add_obj(left)
 		table.insert(left_kids, objective_node(o, ui_state, first))
@@ -362,7 +413,7 @@ function M.build(state: Store.State, win: Model.Window, ui_state: Ui): Built
 			sel_obj = o
 		end
 	end
-	if #done_list > 0 then
+	if #done_list > 0 and not reviewing then
 		local first = Layout.first(left)
 		Layout.add_group(left)
 		table.insert(left_kids, el("div", { class = "ob-group ob-donegrp" .. first, key = "donegrp", actions = { click = "donegrp=" } }, {
@@ -587,7 +638,8 @@ function M.build(state: Store.State, win: Model.Window, ui_state: Ui): Built
 
 	-- Edges: open objectives in the left column to tabs in the right column.
 	local edges: { Edges.Edge } = {}
-	for _, o in open_list do
+	-- Open objectives' lines, or in review mode the listed objectives' (review design D4).
+	for _, o in (if reviewing then due_list else open_list) :: { Store.Objective } do
 		local from = obj_cy[o.id]
 		for _, tab in o.tabs do
 			local to = tab_cy[tab]
@@ -636,6 +688,13 @@ function M.build(state: Store.State, win: Model.Window, ui_state: Ui): Built
 			span("ob-undo-btn", "Undo", { key = "btn", actions = { click = "undo=" } }),
 		}))
 	end
+	if #due_list > 0 then
+		table.insert(head, span("ob-btn ob-btn-quiet ob-revbtn" .. (if reviewing then " ob-on" else ""), string.format("Review (%d)", #due_list), {
+			key = "review",
+			title = if reviewing then "Back to all objectives" else "Review the done objectives that are due",
+			actions = { click = "rev=" },
+		}))
+	end
 	if #closed > 0 then
 		table.insert(head, span("ob-btn ob-btn-quiet", "Prune closed tabs", {
 			key = "prune",
@@ -653,7 +712,7 @@ function M.build(state: Store.State, win: Model.Window, ui_state: Ui): Built
 			el("div", { class = "ob-col ob-col-r", key = "r" }, right_kids),
 		}),
 	})
-	return { view = view, css = css, closed = closed }
+	return { view = view, css = css, closed = closed, due = #due_list }
 end
 
 return M

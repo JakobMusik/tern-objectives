@@ -64,7 +64,7 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
 
 ## 3. Review mode
 
-- [ ] 3.1 Review button, review mode, review nodes and lines (design D4, D5).
+- [x] 3.1 Review button, review mode, review nodes and lines (design D4, D5).
 
   Verify, with o7 due and a second done objective due today with a fresh schedule:
   - "One due" and "Nothing due" read from the header in shots;
@@ -72,7 +72,14 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
   - "Lines in review mode": `edgecheck.py` finds each listed objective's lines within 2 px of both centres, at 1400 and 460 px wide;
   - "Review nodes": every rating button is at least 22 px tall, and the listed nodes share one height. Outside review mode, "Measured hit areas" still holds, the trash icon included;
   - the trash icon draws in the shot (design, risks).
-- [ ] 3.2 Ratings and leaving (design D2, D4).
+
+  Result (2026-11-06; schedules set in the kv file. A redraw was forced by clicking "All", because a click on empty space doesn't redraw when nothing is selected):
+  - "Nothing due" (o7 and o2 due 2026-12-01): no Review button (shot `v_nothing_due`). "One due" (o7 due 2026-11-05): "Review (1)" (shot `v_one_due`). With o2 also given a fresh schedule due today: "Review (2)";
+  - "Two due": the button drawn active, and only "Set up CI" (o7) then "Write release notes" (o2) listed, with no Done group. o2's buttons read "Hard · 1d", "Good · 3d", "Easy · 4d"; o7's, a day overdue, "Hard · 1d", "Good · 4d", "Easy · 7d";
+  - "Lines in review mode": `edgecheck.py` passed at 1400 and at 460 px wide. o2's five dashed lines to its closed tabs end within 0.2 px of both centres;
+  - "Review nodes": both listed nodes are 78 px tall and every rating button 22 px. Outside review mode (shot `v_hit`), the done box, trash icon and ⋯ are 22 × 18, nodes 48 px, pane rows 22 px, and jump buttons 28 × 22;
+  - the trash icon draws (task 2.2, shot `v_done_nodes`).
+- [x] 3.2 Ratings and leaving (design D2, D4).
 
   Verify:
   - "Good on <today>": `ctl click` Good on the fresh one. The kv dump shows the next review three days on and reps 1, and it leaves the list;
@@ -80,12 +87,24 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
   - "Button clicked again": clicking the active button ends the mode with the count unchanged;
   - a fresh ⌃⌘O open after closing the graph starts outside review mode;
   - "Drag across review buttons": `dragsel` across the three buttons shows no highlight, and the schedule is unchanged.
-- [ ] 3.3 README: "Using the graph" describes:
+
+  Result:
+  - "Good on 2026-11-06": o2's schedule became `{due 2026-11-09, interval 2.5, ease 250, reps 1}`. o2 left the list, and the button read "Review (1)";
+  - "Last one rated": Easy on o7, a day overdue, gave `{due 2026-11-13, interval 7, ease 270, reps 1}`. Review mode ended: no Review button, with the four open objectives and "Done (4)" back;
+  - "Button clicked again": with two listed, the active button ended the mode, still reading "Review (2)", with the open objectives and the Done group back;
+  - a fresh ⌃⌘O open started outside review mode, with "Review (1)" inactive;
+  - "Drag across review buttons": a drag from Hard across Easy, released past them, left each button unchanged (0.00 with `hl.py`), o2's schedule unchanged, and review mode on.
+- [x] 3.3 README: "Using the graph" describes:
   - done being final, the trash icon and Undo;
   - the review chip;
   - review mode and the three ratings, with the schedule credited to obsidian-spaced-repetition's SM-2-OSR.
 
   "Known limits": no keys in review, and no Undo of a rating. Verify by reading the README.
+
+  Result:
+  - the box bullet now says done is final, with the Undo notice (next click or 10 s) and the trash icon;
+  - a new bullet describes review: the chip, "Review (n)", the three buttons with their days, what each rating does, and when the mode ends. It credits obsidian-spaced-repetition's SM-2-OSR with a link;
+  - "Known limits" adds no keys in review, no Undo of a rating, and that "Review (n)" counts what the filters show.
 
 ## 4. Release 0.10.0
 
