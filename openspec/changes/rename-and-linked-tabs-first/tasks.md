@@ -133,9 +133,11 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
   - **Letters:** with the graph closed and Benchmarks's shell focused, `r` then Shift+R showed `rR` at the prompt (shot `k_letters`), with no toast. Both characters were then deleted with Backspace.
   - **Double-click:** on o3's title, it opened no field and selected o3 once.
   - **`dragsel`:** o1's note and title change (mean 9.7 and 3.4), and the crop shows a text highlight on each. The chips, badge and header controls stay at 0.0.
-- [ ] 5.3 README: the commands table lists "Objectives: Rename selected objective" with ⌃⌘R, "Using the graph" says to select an objective and press ⌃⌘R, and the double-click sentence goes.
+- [x] 5.3 README: the commands table lists "Objectives: Rename selected objective" with ⌃⌘R, "Using the graph" says to select an objective and press ⌃⌘R, and the double-click sentence goes.
 
   Verify: `grep` finds "⌃⌘R" in the table and in "Using the graph", and no "Double-click".
+
+  Result: the table has a "Rename selected objective" row with ⌃⌘R, and "Using the graph" says "With an objective selected, **⌃⌘R** renames it". "double-click" appears nowhere. The key note now names `plugin.objectives.rename` too, and says why a plain R can't be the key.
 - [ ] 5.4 Version `0.8.0`: an isolated install prints `installed objectives 0.8.0`; commit, push `main`, tag `v0.8.0`; `tern plugin install github.com/JakobMusik/tern-objectives --force` live, from a shell with no harness variables.
 
   Verify: the tags API lists `v0.8.0`, and live `tern plugin list` shows `objectives 0.8.0` ready.
