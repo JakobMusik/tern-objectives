@@ -55,6 +55,9 @@ Removing the plugin leaves `plugin-data/objectives/kv.json` in place; delete tha
 
 - Side notes are one line of up to 200 characters. Tern's one-line field joins pasted lines without a space, so put a space or punctuation at the end of a line before pasting.
 - The graph takes no keys, so Esc pressed inside it does nothing until you click its title bar. ⌃⌘O, a click outside and its × close it from anywhere.
+- The tab's **Link to** menu has a row for every open objective and doesn't scroll. When there are more than fit the window's height (23 in an 800 px tall window), the rest fall below the window's edge and can't be picked; select the objective and use its **＋ Link** bar instead.
+- A plugin reload, for example after an update, forgets where you opened the graph from and which objective was selected. A graph left open loses its accent marks and its origin-first order until you open it again.
+- Rows in closed tabs and in other windows' tabs keep only the pane's stored kind, so an agent there reads `agent` instead of its name, and a note reads `file`.
 
 ## License
 
