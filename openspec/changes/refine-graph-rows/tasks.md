@@ -160,9 +160,11 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
   - **Not reproduced naturally.** Quitting omp (two Ctrl+C) leaves `kind = "terminal"`, `program = "zsh"`, and the pane drops out of `cx.agents:list()`, so the row reads `shell`. During a haiku turn that ran `sleep 15` through omp's bash tool, `program` stayed `omp`.
   - **Simulated, before the fix:** the omp row (pane 57) read `zsh · idle`, with labels `you:` / `zsh:`.
   - **After the fix:** `omp · idle` with `you:` / `omp:`, simulated or not. The other rows still read `shell` and `file`, and no new errors are logged.
-- [ ] 8.2 Version `0.6.1`: an isolated install prints `installed objectives 0.6.1`; commit, push `main`, tag `v0.6.1`; `tern plugin install github.com/JakobMusik/tern-objectives --force` live.
+- [x] 8.2 Version `0.6.1`: an isolated install prints `installed objectives 0.6.1`; commit, push `main`, tag `v0.6.1`; `tern plugin install github.com/JakobMusik/tern-objectives --force` live.
 
   Verify: the tags API lists `v0.6.1`, and live `tern plugin list` shows `objectives 0.6.1` ready.
+
+  Result: the isolated install printed `installed objectives 0.6.1`; fix commit `4e08852`, release commit `4ee78a4`; the tags API lists `v0.6.1` first; live `tern plugin list` shows `objectives 0.6.1 … ready`, with `tabnav 0.1.0` untouched.
 - [ ] 8.3 **(live)** With the user:
   - the graph opened from a later tab lists that tab's session and tab first;
   - unlinked tabs read at full strength;
