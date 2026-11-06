@@ -89,9 +89,14 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
 
 ## 4. Release and live check
 
-- [ ] 4.1 Version `0.7.0`: an isolated install prints `installed objectives 0.7.0`; commit, push `main`, tag `v0.7.0`; `tern plugin install github.com/JakobMusik/tern-objectives --force` live.
+- [x] 4.1 Version `0.7.0`: an isolated install prints `installed objectives 0.7.0`; commit, push `main`, tag `v0.7.0`; `tern plugin install github.com/JakobMusik/tern-objectives --force` live.
 
   Verify: the tags API lists `v0.7.0`, and live `tern plugin list` shows `objectives 0.7.0` ready.
+
+  Result:
+  - The isolated install printed `installed objectives 0.7.0` (`0 blocks, 0 lenses, window ready`). The release commit is `c7ffc3b`, and the tags API lists `v0.7.0` first.
+  - The first "live" install landed in `/tmp/tobj/config`, because the shell still held the harness's `TERN_CONFIG_DIR` and `TERN_DAEMON_SOCKET` from an earlier `. env.sh` ("no daemon running"). That stray copy was removed, the variables were unset, and the install was run again.
+  - The second install wrote `~/Library/Application Support/Tern/plugins/objectives`. Live `tern plugin list` shows `objectives 0.7.0 … ready`, with `tabnav 0.1.0` untouched.
 - [ ] 4.2 **(live)** With the user:
   - double-click a title to rename it, and a second line to edit the side note;
   - a double-click leaves the selection as it was;
