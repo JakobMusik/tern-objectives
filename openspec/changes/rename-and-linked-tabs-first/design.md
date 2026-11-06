@@ -82,13 +82,13 @@ So `app.luau` records, for each `sel=`, the selection and fixed set from just be
 ### D4. Two sections from one ordering
 - `View.build`'s right column becomes one function, `place(keep)`, that emits the current order (sessions with origin first, their tabs, then the ghost groups) for the tabs where `keep(tab)` is true.
 - With a selected objective found (`sel_obj`) and at least one shown tab in `pinned`:
-  1. a heading row `.ob-group.ob-linkhead` reading `Linked to "<title>"`;
+  1. a heading row `.ob-group.ob-linkhead` reading `Linked to “<title>”`, the quotes as in Delete's “…”;
   2. `place(pinned)`;
   3. a divider row `.ob-group.ob-divider` reading "Other tabs", only when at least one shown tab follows;
   4. `place(not pinned)`.
 
   Otherwise `place(all)`, as today.
-- The heading and divider take `Layout.add_group` (24 px plus 14 px margin). The divider's rule is a top border drawn inside that box, so the stack arithmetic and line ends need nothing new.
+- The heading and divider take `Layout.add_group` (24 px plus 14 px margin). The divider's rule is a 1 px inset shadow along its top, not a border, so the stack arithmetic and line ends need nothing new.
 - Keys stay unique among siblings: tab nodes keep `t:<id>` (a tab appears once), and the top section's session headings and ghost groups take the prefix `l`: `ls:<id>`, `lclosedgrp`, `lelsegrp`.
 - Scope applies inside `place`, as now: "This session" keeps only the current session's tabs and its closed linked tabs, and drops other windows.
 - A done objective selected while the Done group is folded isn't found, so there's no top section, just as there are no bars.

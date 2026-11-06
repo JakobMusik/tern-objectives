@@ -12,6 +12,9 @@ local M = {}
 
 export type Ui = {
 	selected: string?,
+	-- The tabs the selection was linked to when it was made; they stay first in the right column until
+	-- the selection changes (design D3).
+	pinned: { [number]: boolean }?,
 	-- The pane the graph was opened from (design P5).
 	origin: number?,
 	today: Dates.Day,
@@ -397,29 +400,23 @@ function M.build(state: Store.State, win: Model.Window, ui_state: Ui): Built
 			end
 		end
 	end
-	local sessions: { Model.Session } = {}
+	local placed: { { s: Model.Session, tabs: { Model.Tab } } } = {}
 	for _, s in win.sessions do
-		if origin_tab ~= nil and s.id == origin_tab.session then
-			table.insert(sessions, 1, s)
-		else
-			table.insert(sessions, s)
-		end
-	end
-	for _, s in sessions do
 		if view_state.scope == "all" or s.id == win.current then
-			local first = Layout.first(right)
-			Layout.add_session(right)
-			table.insert(right_kids, el("div", { class = "ob-session" .. first .. (if s.current then " ob-session-current" else ""), key = "s:" .. s.id }, {
-				span("ob-sname", s.name, { key = "name" }),
-				if s.current then span("ob-scur", "● current", { key = "cur" }) else nil :: any,
-			}))
+			local tabs: { Model.Tab } = {}
 			if origin_tab ~= nil and s.id == origin_tab.session then
-				add_tab(origin_tab, "live")
+				table.insert(tabs, origin_tab)
 			end
 			for _, t in s.tabs do
 				if t ~= origin_tab then
-					add_tab(t, "live")
+					table.insert(tabs, t)
 				end
+			end
+			local entry = { s = s, tabs = tabs }
+			if origin_tab ~= nil and s.id == origin_tab.session then
+				table.insert(placed, 1, entry)
+			else
+				table.insert(placed, entry)
 			end
 		end
 	end
@@ -456,8 +453,94 @@ function M.build(state: Store.State, win: Model.Window, ui_state: Ui): Built
 			add_tab(ghost(tab, state.tabs[tostring(tab)], status), status)
 		end
 	end
-	ghost_group("Closed tabs", "closedgrp", closed, "closed")
-	ghost_group("Other windows", "elsegrp", elsewhere, "elsewhere")
+	-- Draws the column in the order above, for the tabs `keep` accepts (all without it). `prefix` keeps
+	-- the keys of headings that show in both sections apart (design D4).
+	local function place(keep: ((tab: number) -> boolean)?, prefix: string)
+		local function kept(list: { number }): { number }
+			if keep == nil then
+				return list
+			end
+			local out: { number } = {}
+			for _, tab in list do
+				if keep(tab) then
+					table.insert(out, tab)
+				end
+			end
+			return out
+		end
+		for _, p in placed do
+			local tabs = p.tabs
+			if keep ~= nil then
+				tabs = {}
+				for _, t in p.tabs do
+					if keep(t.id) then
+						table.insert(tabs, t)
+					end
+				end
+			end
+			if keep == nil or #tabs > 0 then
+				local s = p.s
+				local first = Layout.first(right)
+				Layout.add_session(right)
+				table.insert(right_kids, el("div", { class = "ob-session" .. first .. (if s.current then " ob-session-current" else ""), key = prefix .. "s:" .. s.id }, {
+					span("ob-sname", s.name, { key = "name" }),
+					if s.current then span("ob-scur", "● current", { key = "cur" }) else nil :: any,
+				}))
+				for _, t in tabs do
+					add_tab(t, "live")
+				end
+			end
+		end
+		ghost_group("Closed tabs", prefix .. "closedgrp", kept(closed), "closed")
+		ghost_group("Other windows", prefix .. "elsegrp", kept(elsewhere), "elsewhere")
+	end
+	-- While an objective is selected, the shown tabs it was linked to when it was selected come first
+	-- under a heading, and a divider leads to the rest (design D4).
+	local pinned = if sel_obj ~= nil then ui_state.pinned else nil
+	local n_top, n_rest = 0, 0
+	if pinned ~= nil then
+		local function count(tab: number)
+			if pinned[tab] == true then
+				n_top += 1
+			else
+				n_rest += 1
+			end
+		end
+		for _, p in placed do
+			for _, t in p.tabs do
+				count(t.id)
+			end
+		end
+		for _, tab in closed do
+			count(tab)
+		end
+		for _, tab in elsewhere do
+			count(tab)
+		end
+	end
+	if sel_obj ~= nil and pinned ~= nil and n_top > 0 then
+		local top = pinned
+		local heading = "Linked to “" .. sel_obj.title .. "”"
+		local first = Layout.first(right)
+		Layout.add_group(right)
+		table.insert(right_kids, el("div", { class = "ob-group ob-linkhead" .. first, key = "linkhead", title = heading }, {
+			span("ob-gtext", heading, { key = "text" }),
+		}))
+		place(function(tab)
+			return top[tab] == true
+		end, "l")
+		if n_rest > 0 then
+			Layout.add_group(right)
+			table.insert(right_kids, el("div", { class = "ob-group ob-divider", key = "divider" }, {
+				span("ob-gtext", "Other tabs", { key = "text" }),
+			}))
+			place(function(tab)
+				return top[tab] ~= true
+			end, "")
+		end
+	else
+		place(nil, "")
+	end
 
 	-- Edges: open objectives in the left column to tabs in the right column.
 	local edges: { Edges.Edge } = {}
