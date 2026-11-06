@@ -165,7 +165,7 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
   Verify: the tags API lists `v0.6.1`, and live `tern plugin list` shows `objectives 0.6.1` ready.
 
   Result: the isolated install printed `installed objectives 0.6.1`; fix commit `4e08852`, release commit `4ee78a4`; the tags API lists `v0.6.1` first; live `tern plugin list` shows `objectives 0.6.1 … ready`, with `tabnav 0.1.0` untouched.
-- [ ] 8.3 **(live)** With the user:
+- [x] 8.3 **(live)** With the user:
   - the graph opened from a later tab lists that tab's session and tab first;
   - unlinked tabs read at full strength;
   - rows start folded, a click on a row's name opens it, and its arrow button jumps;
@@ -174,6 +174,8 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
   - dragging across chips, badges, header buttons and rows selects nothing.
 
   Record the findings here.
+
+  Result (user, 0.6.1): confirmed.
 
 ## Workflow follow-up
 
