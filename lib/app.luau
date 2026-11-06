@@ -13,6 +13,26 @@ local Refresh = require("./refresh")
 local M = {}
 
 local selected: string? = nil
+-- The tabs the selection was linked to when it was made: they stay first in the right column until
+-- the selection changes, whatever is linked meanwhile (design D3). Never stored, like the selection.
+local pinned: { [number]: boolean }? = nil
+
+-- Every change of the selection goes through here, so the fixed set always matches it.
+local function select(id: string?)
+	selected = id
+	pinned = nil
+	if id ~= nil then
+		local o = Store.find(Store.read(), id)
+		if o ~= nil then
+			local set: { [number]: boolean } = {}
+			for _, tab in o.tabs do
+				set[tab] = true
+			end
+			pinned = set
+		end
+	end
+end
+
 -- The pane that had focus when the graph was last opened fresh (design P5); never stored.
 local origin: number? = nil
 local edges_css = ""
@@ -27,11 +47,12 @@ local function build(cx: WindowCx): View.Built
 	local win = Model.read(cx, Surface.find(cx))
 	Store.refresh_snapshots(state, win.tabs :: any, win.key)
 	if selected ~= nil and Store.find(state, selected) == nil then
-		selected = nil
+		select(nil)
 	end
 	Details.begin(cx)
 	local built = View.build(state, win, {
 		selected = selected,
+		pinned = pinned,
 		origin = origin,
 		today = Dates.today(),
 		kind = Details.type,
@@ -147,7 +168,7 @@ local function new_objective(cx: WindowCx, tab: number?, facts: Model.Tab?, wind
 		if id == nil then
 			cx2:toast("error", "An objective needs a title")
 		elseif tab == nil then
-			selected = id
+			select(id)
 		else
 			cx2:toast("success", "Objective created for this tab")
 		end
@@ -334,7 +355,7 @@ local function delete(cx: WindowCx, o: Store.Objective)
 		icon = "trash",
 	}):next(function(item, _err, cx2)
 		if item ~= nil and item.op == "delete" and Store.delete(o.id) and selected == o.id then
-			selected = nil
+			select(nil)
 		end
 		finish(cx2, true)
 	end)
@@ -444,12 +465,12 @@ export type Action = { act: string, value: string? }
 function M.action(ev: Action, cx: WindowCx)
 	local act, value = ev.act, ev.value or ""
 	if act == "sel" then
-		selected = if selected == value then nil else value
+		select(if selected == value then nil else value)
 	elseif act == "bg" then
 		if selected == nil then
 			return
 		end
-		selected = nil
+		select(nil)
 	elseif act == "done" then
 		if not Store.toggle_done(value) then
 			toast_gone(cx)

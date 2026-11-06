@@ -15,7 +15,7 @@ The user asked for two refinements to 0.6.1:
    - A double-click leaves the selection as it was before it.
    - Titles and side notes become unselectable text, so a double-click doesn't highlight a word. The node's tooltip still holds the full title and note.
 2. **Linked tabs first while selected.**
-   - Selecting an objective moves the tabs linked to it into a top section headed `Linked to "<title>"`: live tabs under their session headings, then linked closed tabs and other-window tabs under their usual headings.
+   - Selecting an objective moves the tabs linked to it into a top section headed `Linked to “<title>”`: live tabs under their session headings, then linked closed tabs and other-window tabs under their usual headings.
    - A divider labelled `Other tabs` follows, then every other tab in today's order. A session with tabs in both sections shows its heading in both.
    - The tab the graph was opened from stays first within each section, and "This session" filters both sections.
    - The split is fixed when the objective is selected. Linking or unlinking while it stays selected updates the link bars and lines but moves no tab.

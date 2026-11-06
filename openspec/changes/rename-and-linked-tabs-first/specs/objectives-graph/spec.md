@@ -16,11 +16,11 @@ Double-clicking an objective's title SHALL open the one-line Rename field, fille
 - **THEN** A is still selected with its link bars and top section, and B's title is unchanged
 
 ### Requirement: Linked tabs first
-While an objective is selected, the right column SHALL start with a section headed `Linked to "<title>"`: the shown tabs that were linked to it when it was selected. A divider "Other tabs" and every other shown tab SHALL follow, each part ordered as "Tab column" says. Linking or unlinking while it stays selected SHALL NOT move a tab. Deselecting SHALL restore the normal order. With no such tab, neither heading nor divider SHALL show.
+While an objective is selected, the right column SHALL start with a section headed `Linked to “<title>”`: the shown tabs that were linked to it when it was selected. A divider "Other tabs" and every other shown tab SHALL follow, each part ordered as "Tab column" says. Linking or unlinking while it stays selected SHALL NOT move a tab. Deselecting SHALL restore the normal order. With no such tab, neither heading nor divider SHALL show.
 
 #### Scenario: Linked tabs on top
 - **WHEN** the window holds sessions "web" (tabs "App build" and "Components") and "api" (tabs "Server" and "Benchmarks"), objective X is linked to "Components" and "Benchmarks", the graph was opened from "Server", and the user selects X
-- **THEN** the column reads: `Linked to "X"`, "api" with "Benchmarks", "web" with "Components", the "Other tabs" divider, "api" with "Server", then "web" with "App build"
+- **THEN** the column reads: `Linked to “X”`, "api" with "Benchmarks", "web" with "Components", the "Other tabs" divider, "api" with "Server", then "web" with "App build"
 
 #### Scenario: Linked closed tab
 - **WHEN** X is also linked to a closed tab and the user selects X
