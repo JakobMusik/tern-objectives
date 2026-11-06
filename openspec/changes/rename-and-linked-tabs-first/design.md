@@ -39,6 +39,16 @@ Motivation is in proposal.md, and the behaviour in `specs/objectives-graph/spec.
 
 [INFERENCE] The harness's `dblclick` is synthetic, so a live double-click may space its presses 100–300 ms apart, and might also send a second `sel=`. D2's rule covers both.
 
+**Keys (spike, task 5.1; harness 2026-11-06):**
+
+| Fact | Source |
+|---|---|
+| A plugin command's `keys` are chords spelled as in `settings.json` `keybinds`. A plugin bind is left out, with a warning, when Tern's defaults or preset already bind those keys | SDK "Commands, Keys, and Overrides › Keymap layering" (book L4337–4372) |
+| Tern's defaults bind plain `r` to `canvas.tool_rect`, `git.refresh` and `notebook.to_raw`. `shift+r`, `ctrl+cmd+r` and `cmd+shift+r` are free, and `cmd+r` is taken by four `sqlite.*` actions | `cx.actions:keys()` (`tern.d.luau` L879–880), read through the test helper's `keys` op |
+| `keys = { "r" }` is refused: `plugin bind left out: the preset binds these keys keys="r"` | test copy of `window.luau`, harness log |
+| A plugin command's key runs wherever focus is, whatever `available` returns. With `keys = { "shift+r" }` and `available` true only while the graph had focus, Shift+R in Benchmarks's shell still ran the command (`focused=12`), and the prompt showed no "R". `available` only hides the palette row | harness log `SPIKE rename key ran, focused=12`, shot `k_term` |
+| `ctrl+cmd+r` binds without a warning (`cx.actions:keys()` lists `plugin.objectives.rename`) and runs with the graph focused (`focused=27`) | harness log |
+
 ## Goals / Non-Goals
 
 **Goals:** the two refinements in the proposal. Node heights, row heights and line ends stay as they are.
@@ -50,7 +60,9 @@ Motivation is in proposal.md, and the behaviour in `specs/objectives-graph/spec.
 
 ## Decisions
 
-### D1. Double-click targets
+### D1. Double-click targets (0.7.0; dropped in 0.8.0)
+Dropped after the live check (task 4.2). Live, the double-click was unreliable and sometimes left another objective selected: the first press is the card's select click, and D2 could only undo it by timing. 0.8.0 takes the double-click actions and the unselectable title and note out again, and adds the rename key (D6). D1 and D2 stay below as a record.
+
 - `.ob-title` gets `actions = { dblclick = "ren=<id>" }`, and `.ob-l2` gets `actions = { dblclick = "note=<id>" }`. The card keeps `click = "sel=<id>"`.
 - `ren` calls `rename(cx, o)` and `note` calls `side_note(cx, o)`, so answering and dismissing work as from the ⋯ menu, including the graph's return after the field. A missing objective toasts "That objective no longer exists", as the menu does.
 - Line 2 is a full-width 18 px row even with no note, so an objective without a note can get one this way.
@@ -97,13 +109,23 @@ Alternatives:
 - Copy the linked tabs to the top and keep them below as well: no tab would move, but every linked tab would draw twice and its lines would have two ends.
 - Re-sort the whole column by link count: no divider needed, but tabs would move on every link.
 
-### D5. Release 0.7.0
-A minor version, since behaviour changes. The README's "Using the graph" covers the double-click and the top section, and its screenshot is refreshed only if the change shows in it.
+### D5. Releases: 0.7.0, then 0.8.0
+Minor versions, since behaviour changes. 0.7.0 shipped D1–D4. 0.8.0 drops D1–D2 and adds D6. The README covers the top section and the rename key. Its screenshot shows the graph with nothing selected, so it stays.
+
+### D6. Rename key
+- `window.luau` registers "Objectives: Rename selected objective" (`id = "rename"`, icon `pencil`, group "Objectives") with `keys = { "ctrl+cmd+r" }`. Its action is `plugin.objectives.rename`, so users can rebind it in `settings.json` `keybinds`.
+- Plain `r` is refused, and `shift+r` would take every capital R typed in any pane, since the key runs whatever `available` returns (source record, keys). ⌃⌘R pairs with ⌃⌘O and types nothing anywhere.
+- `available` returns whether an objective is selected and the graph is shown over the current tab (`Surface.here`). It only decides whether the palette lists the row.
+- `run` calls `App.rename_selected(cx)`. With the graph shown here and a selected objective still in the store, it calls `rename(cx, o)`, the ⋯ menu's field, which shows the graph again afterwards. Otherwise an info toast reads "Select an objective in the graph to rename it". The selection is left as it is either way.
+
+Alternatives:
+- Shift+R: free in Tern's keymap, but a plugin key can't be confined to the graph (source record).
+- A key inside the canvas: canvases take no keys (archived `graph-in-any-session` design, "Canvases take no keys").
 
 ## Risks / Trade-offs
 
-- **[The first press sends `sel=`]** (confirmed, task 1.1) → D2 restores the selection. Between the two presses, the right column shows that one click's result: a re-sort, then the old order once the double-click lands, behind the field as it opens. The user accepted that flash. Task 3.1 records what a shot shows.
-- **[A live double-click spaces its presses by more than 700 ms]** → It can't by macOS's default setting (500 ms). A user who set a longer interval in System Settings would see the one-click result kept. The live check (4.2) watches for it.
+- **[A user's own `keybinds` take ⌃⌘R]** → The user layer always wins (SDK "Keymap layering"). The command stays in the palette, and `plugin.objectives.rename` can be bound to another chord.
+- **[⌃⌘R pressed without the graph, or without a selection]** → The command still runs, since a key isn't gated by `available`, and it shows the hint toast.
 - **[The top section scrolled out of view]** → Accepted, with no automatic scrolling (proposal, out of scope). The lines from the selected objective still run up to the section.
 - **[A stale fixed set]** → A pinned tab that closes becomes a ghost in the top section's "Closed tabs". A new tab, which isn't pinned, goes below the divider. Pruning removes closed tabs from both.
 - **[Two passes over the tabs]** → Same node count as today; the render budget isn't affected.

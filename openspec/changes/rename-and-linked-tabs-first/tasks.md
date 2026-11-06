@@ -97,9 +97,43 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
   - The isolated install printed `installed objectives 0.7.0` (`0 blocks, 0 lenses, window ready`). The release commit is `c7ffc3b`, and the tags API lists `v0.7.0` first.
   - The first "live" install landed in `/tmp/tobj/config`, because the shell still held the harness's `TERN_CONFIG_DIR` and `TERN_DAEMON_SOCKET` from an earlier `. env.sh` ("no daemon running"). That stray copy was removed, the variables were unset, and the install was run again.
   - The second install wrote `~/Library/Application Support/Tern/plugins/objectives`. Live `tern plugin list` shows `objectives 0.7.0 … ready`, with `tabnav 0.1.0` untouched.
-- [ ] 4.2 **(live)** With the user:
-  - double-click a title to rename it, and a second line to edit the side note;
-  - a double-click leaves the selection as it was;
+
+  The user's check of 0.7.0 found the double-click unreliable: it sometimes left another objective selected. The user asked to drop it and rename by key, with R as the default if possible (group 5). The live check moved to 5.5.
+
+## 5. Rename key instead of double-click
+
+- [x] 5.1 Spike: which default key a plugin can give the rename command (design D6, "Keys").
+
+  Verify, in the fixtures copy only, with a command whose `available` is true only while the graph has focus:
+  - `keys = { "r" }`: is the bind accepted;
+  - `keys = { "shift+r" }`: does Shift+R in a shell still type "R";
+  - `keys = { "ctrl+cmd+r" }`: does the bind take, and does it run with the graph focused.
+
+  Result (recorded in design.md's key facts):
+  - `r` was refused with `plugin bind left out: the preset binds these keys`, since Tern's defaults bind it to `canvas.tool_rect`, `git.refresh` and `notebook.to_raw`;
+  - `shift+r` bound, but ran with focus in Benchmarks's shell (`focused=12`), and the prompt showed no "R": a plugin key runs whatever `available` returns;
+  - `ctrl+cmd+r` bound with no warning, and ran with the graph focused (`focused=27`).
+
+  So the default is ⌃⌘R, and R isn't possible.
+- [ ] 5.2 Take out design D1–D2: the double-click actions, the press log and the `ren`/`note` actions, and `user-select: none` on titles and notes. Add the rename command (design D6).
+
+  Verify:
+  - `cx.actions:keys()` maps `ctrl+cmd+r` to `plugin.objectives.rename`, and the log holds no `bind left out` for it;
+  - "Rename by key": o1 selected, ⌃⌘R opens the field filled with o1's title; "Fix login timeout" and Enter put it on the node and in the kv dump, and o1 stays selected;
+  - "Nothing selected": with no selection, ⌃⌘R shows the info toast and opens no field;
+  - "Letters still reach the panes": in Benchmarks's shell, typing "r" and "R" shows "rR" at the prompt, with no toast;
+  - `ctl dblclick` on a title opens no field, and the selection changes exactly as two clicks would;
+  - `dragsel` highlights text across a title and a note again, as in 0.6.1, and none on the chips and badge.
+- [ ] 5.3 README: the commands table lists "Objectives: Rename selected objective" with ⌃⌘R, "Using the graph" says to select an objective and press ⌃⌘R, and the double-click sentence goes.
+
+  Verify: `grep` finds "⌃⌘R" in the table and in "Using the graph", and no "Double-click".
+- [ ] 5.4 Version `0.8.0`: an isolated install prints `installed objectives 0.8.0`; commit, push `main`, tag `v0.8.0`; `tern plugin install github.com/JakobMusik/tern-objectives --force` live, from a shell with no harness variables.
+
+  Verify: the tags API lists `v0.8.0`, and live `tern plugin list` shows `objectives 0.8.0` ready.
+- [ ] 5.5 **(live)** With the user:
+  - select an objective and press ⌃⌘R to rename it; without a selection, ⌃⌘R shows the hint;
+  - "r" and "R" still type normally in panes;
+  - double-click no longer renames;
   - selecting an objective brings its tabs to the top under `Linked to “<title>”` and "Other tabs", and a session's heading shows in both sections when it has tabs in both;
   - links made while it stays selected move no tab, and deselecting restores the order.
 
