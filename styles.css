@@ -199,8 +199,6 @@
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
-	/* A double-click renames, so it mustn't highlight a word (design D1). */
-	user-select: none;
 }
 [data-surface='plugin.tern.canvas'] .ob-root .ob-more {
 	flex: none;
@@ -219,8 +217,6 @@
 	white-space: nowrap;
 	color: var(--t3);
 	font-size: 11px;
-	/* A double-click edits the note (design D1). */
-	user-select: none;
 }
 
 /* ---- groups, hint, sessions ---- */
