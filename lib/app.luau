@@ -38,6 +38,33 @@ end
 local origin: number? = nil
 local edges_css = ""
 
+-- The Undo notice after marking done or removing (review-done-objectives, design D6); never stored.
+type Undo = { text: string, saved: Store.Saved, timer: TimerHandle? }
+local undo: Undo? = nil
+local UNDO_MS = 10000
+
+local function drop_undo()
+	if undo ~= nil and undo.timer ~= nil then
+		undo.timer:cancel()
+	end
+	undo = nil
+end
+
+-- Shows the notice for 10 s, or until the next click in the graph.
+local function offer_undo(text: string, saved: Store.Saved)
+	drop_undo()
+	local entry: Undo = { text = text, saved = saved, timer = nil }
+	entry.timer = tern.timer(UNDO_MS, function(cx: WindowCx?)
+		if undo == entry then
+			undo = nil
+			if cx ~= nil then
+				M.render(cx)
+			end
+		end
+	end)
+	undo = entry
+end
+
 local function toast_gone(cx: WindowCx)
 	cx:toast("info", "That objective no longer exists")
 end
@@ -61,6 +88,7 @@ local function build(cx: WindowCx): View.Built
 		details = function(row)
 			return Details.lines(cx, row)
 		end,
+		undo = if undo ~= nil then undo.text else nil,
 	})
 	if built.css ~= edges_css then
 		tern.css("edges", built.css)
@@ -99,6 +127,7 @@ end
 -- origin; `keep_origin` (the reopen after one of the graph's pickers) keeps the one it had.
 function M.open(cx: WindowCx, keep_origin: boolean?)
 	if not keep_origin then
+		drop_undo()
 		local focused = cx.session:focused()
 		if focused ~= nil and focused ~= Surface.find(cx) then
 			origin = focused
@@ -552,17 +581,43 @@ export type Action = { act: string, value: string? }
 
 function M.action(ev: Action, cx: WindowCx)
 	local act, value = ev.act, ev.value or ""
+	-- Any click but Undo drops the Undo notice (review design D6).
+	local had_undo = undo ~= nil
+	if act ~= "undo" then
+		drop_undo()
+	end
 	if act == "sel" then
 		select(if selected == value then nil else value)
 	elseif act == "bg" then
-		if selected == nil then
+		if selected == nil and not had_undo then
 			return
 		end
 		select(nil)
 	elseif act == "done" then
-		if Store.mark_done(value, Dates.today()) == nil and Store.find(Store.read(), value) == nil then
+		local saved = Store.mark_done(value, Dates.today())
+		if saved ~= nil then
+			offer_undo("Marked done “" .. saved.record.title .. "”", saved)
+		elseif Store.find(Store.read(), value) == nil then
 			toast_gone(cx)
 		end
+	elseif act == "rm" then
+		-- A done objective's trash icon: removed at once, with Undo (review design D7).
+		local saved = Store.remove(value)
+		if saved ~= nil then
+			if selected == value then
+				select(nil)
+			end
+			offer_undo("Removed “" .. saved.record.title .. "”", saved)
+		elseif Store.find(Store.read(), value) == nil then
+			toast_gone(cx)
+		end
+	elseif act == "undo" then
+		if undo ~= nil then
+			Store.restore(undo.saved)
+			drop_undo()
+		end
+	elseif act == "noop" then
+		-- A done objective's box: done is final, so the click only drops the notice (design D7).
 	elseif act == "prio" then
 		if not Store.cycle_priority(value) then
 			toast_gone(cx)

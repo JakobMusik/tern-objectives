@@ -7,6 +7,7 @@ local Model = require("./model")
 local Layout = require("./layout")
 local Edges = require("./edges")
 local Dates = require("./dates")
+local Review = require("./review")
 
 local M = {}
 
@@ -23,6 +24,8 @@ export type Ui = {
 	-- Detail lines for an open live pane row: plain {text, class}, or a message {label, text, tail}
 	-- whose text CSS may cut before the tail (design R5).
 	details: (row: Model.Row) -> { { text: string, class: string?, label: string?, tail: string? } },
+	-- The Undo notice's text after marking done or removing, until it is dropped (review design D6).
+	undo: string?,
 }
 
 -- An element as a plain TSP wire node {k, p, c} (tern.d.luau Node), which `cx.canvas:set` takes as
@@ -87,7 +90,20 @@ local function tooltip(o: Store.Objective): string
 	if o.done and o.done_at ~= nil then
 		table.insert(parts, "Done " .. stamp(o.done_at))
 	end
+	if o.done and o.review ~= nil then
+		table.insert(parts, string.format("Reviewed %d× · next %s", o.review.reps, o.review.due))
+	end
 	return table.concat(parts, "\n")
+end
+
+-- A done objective's review chip (review-done-objectives, design D8): due, or in how many days.
+local function review_chip(r: Review.Schedule, today: Dates.Day): Node
+	local d = Dates.parse(r.due)
+	local n = if d ~= nil then Dates.diff(today, d) else 0
+	if n <= 0 then
+		return span("ob-chip ob-review-due", "review due")
+	end
+	return span("ob-chip", string.format("review in %dd", n))
 end
 
 local function objective_node(o: Store.Objective, ui_state: Ui, first: string): Node
@@ -103,28 +119,37 @@ local function objective_node(o: Store.Objective, ui_state: Ui, first: string): 
 	if o.note ~= nil then
 		table.insert(line2, span("ob-note", o.note))
 	end
-	if o.due ~= nil and not o.done then
+	if o.done and o.review ~= nil then
+		table.insert(line2, review_chip(o.review, ui_state.today))
+	elseif o.due ~= nil and not o.done then
 		local text, tone = Dates.chip(o.due, ui_state.today)
 		table.insert(line2, span("ob-chip ob-due ob-due-" .. tone, text))
 	end
 	for _, tag in o.tags do
 		table.insert(line2, span("ob-chip ob-tagchip", "#" .. tag))
 	end
-	return el("div", { class = cls, key = "o:" .. o.id, title = tooltip(o), actions = { click = "sel=" .. o.id } }, {
-		el("div", { class = "ob-l1", key = "l1" }, {
-			span("ob-check" .. (if o.done then " ob-check-on" else ""), if o.done then "✓" else "", {
-				key = "done",
-				title = if o.done then "Reopen" else "Mark done",
-				actions = { click = "done=" .. o.id },
-			}),
-			span("ob-badge ob-p" .. o.priority, "P" .. o.priority, {
-				key = "prio",
-				title = "Priority: click to change",
-				actions = { click = "prio=" .. o.id },
-			}),
-			span("ob-title", o.title, { key = "title" }),
-			span("ob-more", "⋯", { key = "more", title = "Rename, note, due date, tags, delete", actions = { click = "menu=" .. o.id } }),
+	-- Done is final (design D7): a done box has its own no-op click, so it doesn't select the card.
+	local l1: { Node } = {
+		span("ob-check" .. (if o.done then " ob-check-on" else ""), if o.done then "✓" else "", {
+			key = "done",
+			title = if o.done then "Done " .. stamp(o.done_at) else "Mark done",
+			actions = { click = if o.done then "noop=" else "done=" .. o.id },
 		}),
+		span("ob-badge ob-p" .. o.priority, "P" .. o.priority, {
+			key = "prio",
+			title = "Priority: click to change",
+			actions = { click = "prio=" .. o.id },
+		}),
+		span("ob-title", o.title, { key = "title" }),
+	}
+	if o.done then
+		table.insert(l1, el("span", { class = "ob-trash", key = "trash", title = "Remove", actions = { click = "rm=" .. o.id } }, {
+			{ k = "icon", p = { name = "trash" } } :: any,
+		}))
+	end
+	table.insert(l1, span("ob-more", "⋯", { key = "more", title = "Rename, note, due date, tags, delete", actions = { click = "menu=" .. o.id } }))
+	return el("div", { class = cls, key = "o:" .. o.id, title = tooltip(o), actions = { click = "sel=" .. o.id } }, {
+		el("div", { class = "ob-l1", key = "l1" }, l1),
 		el("div", { class = "ob-l2", key = "l2" }, line2),
 	})
 end
@@ -604,6 +629,13 @@ function M.build(state: Store.State, win: Model.Window, ui_state: Ui): Built
 	end
 	table.insert(head, el("div", { class = "ob-ftags", key = "tags" }, tags))
 	table.insert(head, el("div", { class = "ob-spacer", key = "sp" }))
+	if ui_state.undo ~= nil then
+		-- After marking done or removing (review design D6); any other click in the graph drops it.
+		table.insert(head, el("div", { class = "ob-undo", key = "undo" }, {
+			span("ob-undo-text", ui_state.undo .. " ·", { key = "text", title = ui_state.undo }),
+			span("ob-undo-btn", "Undo", { key = "btn", actions = { click = "undo=" } }),
+		}))
+	end
 	if #closed > 0 then
 		table.insert(head, span("ob-btn ob-btn-quiet", "Prune closed tabs", {
 			key = "prune",
