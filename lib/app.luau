@@ -46,6 +46,7 @@ local function build(cx: WindowCx): View.Built
 	local state = Store.read()
 	local win = Model.read(cx, Surface.find(cx))
 	Store.refresh_snapshots(state, win.tabs :: any, win.key)
+	Store.save_sessions(state, {}, win.live)
 	if selected ~= nil and Store.find(state, selected) == nil then
 		select(nil)
 	end

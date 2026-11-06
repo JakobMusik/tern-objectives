@@ -24,6 +24,7 @@ export type Window = {
 	current: number?, -- current session id
 	sessions: { Session },
 	tabs: { [number]: Tab }, -- live tabs by id
+	live: { [number]: boolean }, -- every live pane id, parked ones included
 }
 
 local function leaves(tree: TabTree, out: { number })
@@ -59,7 +60,10 @@ function M.read(cx: WindowCx, skip: number?): Window
 		infos[t.id] = t
 	end
 
-	local win: Window = { key = cx:window_key(), current = nil, sessions = {}, tabs = {} }
+	local win: Window = { key = cx:window_key(), current = nil, sessions = {}, tabs = {}, live = {} }
+	for id in panes do
+		win.live[id] = true
+	end
 	for _, s in cx.session:sessions() do
 		local session: Session = { id = s.id, name = s.name, current = s.current, tabs = {} }
 		if s.current then

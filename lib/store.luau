@@ -42,11 +42,21 @@ export type ViewState = {
 	expanded: { [string]: boolean },
 }
 
+-- A Claude chat's session, saved while it ran so its tab can be resumed after it closes (design D3).
+export type AgentSession = {
+	agent: string, -- "claude"
+	session: string, -- the session id its process was started with
+	cwd: string, -- the chat's folder, as Tern lists it
+	seen: number, -- when it was saved
+}
+
 export type State = {
 	version: number,
 	next_id: number,
 	objectives: { Objective },
 	tabs: { [string]: TabSnap },
+	-- Saved sessions by pane id (design D3).
+	agents: { [string]: AgentSession },
 	view: ViewState,
 }
 
@@ -61,6 +71,7 @@ local function default(): State
 		next_id = 1,
 		objectives = array({}),
 		tabs = {},
+		agents = {},
 		view = { scope = "all", done_open = false, expanded = {} },
 	}
 end
@@ -86,6 +97,8 @@ local function normalize(raw: any): State
 	for _, t in s.tabs do
 		t.panes = array(t.panes or {})
 	end
+	-- Absent before 0.9.0; an older plugin keeps it, since every change writes back the whole state.
+	s.agents = if type(s.agents) == "table" then s.agents else {}
 	-- Rebuilt from the known fields only, so 0.4.0's `collapsed` list goes at the next write (design R3).
 	local v = (s.view or {}) :: any
 	s.view = {
@@ -418,11 +431,68 @@ function M.prune(closed: { number }): number
 			end
 		end
 		for tab in set do
+			local snap = s.tabs[tostring(tab)]
+			if snap ~= nil then
+				-- A pruned tab is closed, so its panes aren't live: their saved sessions go with it.
+				for _, p in snap.panes do
+					s.agents[tostring(p.pane)] = nil
+				end
+			end
 			s.tabs[tostring(tab)] = nil
 		end
 		return true
 	end)
 	return gone
+end
+
+-- ---- saved Claude sessions (design D3) ----
+
+-- Saved sessions whose pane is neither in `live` nor a row of a snapshot: nothing could resume them.
+local function orphan_sessions(s: State, live: { [number]: boolean }): { string }
+	local in_snap: { [string]: boolean } = {}
+	for _, snap in s.tabs do
+		for _, p in snap.panes do
+			in_snap[tostring(p.pane)] = true
+		end
+	end
+	local out = {}
+	for key in s.agents do
+		local pane = tonumber(key)
+		if not in_snap[key] and (pane == nil or not live[pane]) then
+			table.insert(out, key)
+		end
+	end
+	return out
+end
+
+local function same_session(a: AgentSession?, b: AgentSession): boolean
+	return a ~= nil and a.agent == b.agent and a.session == b.session and a.cwd == b.cwd
+end
+
+-- Saves `found` (sessions by pane id) and drops orphans; writes only when something changes.
+-- `s` is the render's or caller's copy, kept in step with what was written.
+function M.save_sessions(s: State, found: { [string]: AgentSession }, live: { [number]: boolean })
+	local changed = #orphan_sessions(s, live) > 0
+	for key, entry in found do
+		if not same_session(s.agents[key], entry) then
+			changed = true
+		end
+	end
+	if not changed then
+		return
+	end
+	local fresh = M.mutate(function(st)
+		for key, entry in found do
+			if not same_session(st.agents[key], entry) then
+				st.agents[key] = entry
+			end
+		end
+		for _, key in orphan_sessions(st, live) do
+			st.agents[key] = nil
+		end
+		return true
+	end)
+	s.agents = fresh.agents
 end
 
 -- ---- view settings ----

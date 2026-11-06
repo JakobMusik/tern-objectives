@@ -25,6 +25,7 @@ See proposal.md, "Why".
 | A resumed chat's process runs `claude --resume=<uuid>`, keeping the same id | spike `ps` after typing `claude --resume a1ac2ce7-…`; the adapter sets `sessionId = creationOpts.resume` (`claude-agent-acp` 0.99.1, `acp-agent.js:8831`, read before the harness upgraded it) |
 | `cx.procs:list({ name = "claude" })` returns each process's pid, parent, `cwd`, `started` and full `command` argv. The name filter is a substring, so it also returns `Claude` and `Claude Helper` | spike helper op `procs`: process 27009, `cwd` `/private/tmp/tobj/w/agentspike`, argv `[…/claude, --resume=a1ac2ce7-…]`; `ProcessQuery` doc (`tern.d.luau:834`) |
 | `cx.procs` reads only this machine | `tern.d.luau:853`: "Desktop window only: the local machine, even while viewing a remote host." |
+| `cx.procs:list` answers with the sampler's latest finished sample and starts a new one. Two calls in a row return the same `sample` number; calls a second or more apart return a new one each time. After a 20 s pause the first answer predates it | task 2.2: back-to-back calls both returned sample 6 (5 ms and 1 ms); calls at +0, +1, +3 and +8 s returned samples 8 to 11. A capture after a quiet spell saved `82ec7f14-…`, the id of a chat closed a minute earlier, instead of the live chat's `43e823b1-…` |
 | `cx.agents:list()` lists a shell-typed chat with `command` null, `program` "claude", and `cwd` `/tmp/…` (no `/private`). Its `model` is the chosen model: "Claude Code" before the first turn, "Opus 5.5" later | spike helper op `agents`, panes 12 and 8 |
 | The 0.8.x graph names such a chat's row "omp · idle" | task 1.1: `ctl tree '.ob-r-8 .ob-rtype'` read `["omp · idle"]` |
 | Sending a message fires one `agent_state` with `old` "idle" and `new` "working" | task 1.1: the helper's event log held `{pane 8, old idle, new working}` |
@@ -58,11 +59,15 @@ An agent is a Claude chat when the base name of its `command` is `claude`, or, w
 Alternative: `model == "Claude Code"`. That field reads as a display name, and its value isn't documented.
 
 ### D2. Capture on a turn's start
-- **Trigger:** the `agent_state` handler in `window.luau` already requests a render. It also calls `Agents.request(cx)` when `ev.new == "working"`.
-- **Timing:** one capture runs 1 s later, and at most one is pending.
-- **Reading:** a capture reads `cx.agents:list()`, then awaits `cx.procs:list({ name = "claude", limit = 100 })`. It keeps processes whose name is exactly `claude` and whose argv holds `--session-id` or `--resume`, in either the `=value` or the separate-argument form, with a UUID value.
+- **Trigger:** the `agent_state` handler in `window.luau` already requests a render. It also calls `Agents.request(cx)` when `ev.new == "working"`. `agent_finished` with result "done" or "failed" calls it too: Tern samples agent states, and in task 2.2 a 1.3 s turn fired no `working` event while the harness clock stood still.
+- **Timing:** one capture starts 0.5 s later, and at most one is under way.
+- **Reading:** a capture reads `cx.agents:list()`, then lists processes with `cx.procs:list({ name = "claude", limit = 500 })`:
+  - a call answers with the sampler's latest finished sample and starts a new one, so after a quiet spell the first answer can be minutes old (source record);
+  - the capture therefore lists once, then again every second, up to three times, until the `sample` number has moved on, and uses that answer;
+  - it keeps processes whose name is exactly `claude` and whose argv holds `--session-id` or `--resume`, in either the `=value` or the separate-argument form, with a UUID value.
 - **Folders:** both sides are normalised: a leading `/private` before `/tmp/`, `/var/` or `/etc/` is dropped.
 - **Matching:** for each Claude chat in a session on a local host, it collects the chats and the processes in its folder. Only a one-to-one pair saves an id.
+- **Turns:** only a chat that has had a turn is saved: one seen working or finishing in this VM, or one with a last reply, which a plugin reload doesn't forget. A Claude process carries its id from the start, so without this rule another chat's turn would save an idle chat's id, and resuming it would find no conversation (source record). Every chat still counts towards its folder, so an idle chat beside a busy one keeps the folder unsure.
 - **Writing:** `Store.mutate` runs only when an entry differs. Each window's VM may capture the same chat and write the same value; read-before-write keeps that harmless.
 
 Why a turn's start: before the first message, no conversation file exists to resume (source record). And a chat moved to a new session is caught at that session's first turn.
@@ -77,8 +82,9 @@ Alternatives:
 - **Why a separate map:** inside `TabSnap.panes`, every `refresh_snapshots` would have to carry it over, and `same` would compare it.
 - **Stored version:** `normalize` fills `agents = {}`, and `VERSION` stays 1. An older plugin keeps the map, because `mutate` writes back the whole state it read.
 - **Removal:**
-  - `drop_orphans` (called on delete and unlink) and `prune` also drop entries whose pane is in no snapshot and not live;
-  - a capture drops such entries too.
+  - the store doesn't know which panes are live, so `Store.save_sessions` drops entries whose pane is neither live nor a row of a snapshot. It runs at every render, with every pane `cx.session:panes()` lists, parked ones included (`Model.Window.live`), and at every capture;
+  - `prune` drops its tabs' entries itself, since a pruned tab is closed;
+  - delete and unlink drop snapshots through `drop_orphans`, and the render that follows drops their entries (task 2.1).
 
 ### D4. The Resume button
 - **Placement:** a `span` in the header's first line (`.ob-th1`), right of the label, with `click = "resume=<tab>"`.
@@ -115,8 +121,8 @@ Alternative: copying the links and keeping the ghost. The objective would then s
 
 - **Two Claude chats in one folder get no saved session** (D2). That's common in one repository. → README known limit. Pairing chats with processes by start time was rejected: [INFERENCE] a chat's process can start again under the same pane, for example when the adapter reopens a session, and that would swap the pairs.
 - **A chat moved to a new session keeps its old id until its next turn.** → Resuming then reopens the previous conversation, which still exists.
-- **Typing before the shell is ready** is untested (D5). → Spike task 1.2.
-- **The cost of `cx.procs:list`** is unmeasured. [INFERENCE] It samples off the UI thread, since it returns an awaitable. → It runs at most once per turn start. Task 2.2 logs its time.
+- **Typing before the shell is ready** worked in task 1.2, with no wait.
+- **The cost of `cx.procs:list`:** each call answered in 1–5 ms, since it hands back a finished sample (source record). A capture took 1190–1389 ms from start to save, almost all of it the one-second wait for a fresh sample (task 2.2 log). It runs once per turn start or end, and at most one is under way.
 - **Process `cwd` may be nil** when the OS can't read it (`tern.d.luau:857`). → No match, nothing saved.
 - **Remote sessions** are untested headless: the harness has no second host. → D5 checks the current host, and D2 skips chats in sessions on remote hosts. The README names the limit.
 - **Claude's own UI with `agents.auto_acp` off** can resume with the same typed command. [INFERENCE] Untested: its process carries no id until it is resumed, so such chats are rarely saved at all.
