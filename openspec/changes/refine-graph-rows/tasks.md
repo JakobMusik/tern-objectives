@@ -115,7 +115,7 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
 
 ## 6. Row clicks
 
-- [ ] 6.1 Drop the ▸/▾ toggle. A click on a live row opens or folds its details, a jump button with Tern's `arrow-right` icon at the row's right end goes to the pane, and ghost rows keep their toast without a button (design R7). Pane rows can't be selected (R6), and the details' indent follows the row.
+- [x] 6.1 Drop the ▸/▾ toggle. A click on a live row opens or folds its details, a jump button with Tern's `arrow-right` icon at the row's right end goes to the pane, and ghost rows keep their toast without a button (design R7). Pane rows can't be selected (R6), and the details' indent follows the row.
 
   Verify:
   - a fresh open shows no `.ob-exp` and no ▸/▾ text;
@@ -125,9 +125,19 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
   - a click on a closed tab's row toasts and changes no focus;
   - a drag from a tab header across a row's type and name leaves no highlight (`seldiff.py`);
   - `edgecheck.py` passes with a row open.
-- [ ] 6.2 README: a row's name opens its details, and its arrow button jumps. Refresh `docs/graph.png`.
+
+  Result, graph opened from web's "Components" (pane 15):
+  - **Rows.** No `.ob-exp`, no ▸/▾ in any row, and 8 `.ob-jump` buttons.
+  - **Name click.** A click on api's `bench` row name (pane 17) opened its details ("no command yet"), and the kv dump read `expanded: {"17": true, "43": true}`. Session web and focus on the canvas (pane 50) were unchanged. A second click folded it, and a click on its type opened it again.
+  - **Jump.** A click on row 17's jump button showed session api with pane 17 focused and no canvas left.
+  - **Layout** (shot `s61`): jump buttons 28 × 22, rows 22, nodes 48; `edgecheck.py` passes with the row open.
+  - **Ghost row.** "misc", linked to o8 and then closed, is a ghost row `shell misc` with no jump button. A click on it showed "That tab is closed" (shot `s61_ghost`) with focus unchanged.
+  - **Drag.** From Components's header across row 15's type and name: "Components" and part of "web" highlight, the row doesn't (mean change: type 0.3, name 0.0; shots `u61_clean`, `u61_drag`).
+- [x] 6.2 README: a row's name opens its details, and its arrow button jumps. Refresh `docs/graph.png`.
 
   Verify: `grep` finds no ▸ or ▾ in the README's rows text; the screenshot shows jump buttons and no toggles.
+
+  Result: the rows text has no ▸ or ▾. It reads "a pane row's → button to jump to that pane" and "click a row's name to open its details and click it again to fold them". `docs/graph.png` is the new `readme_graph` shot: every live row ends in an arrow button, none has a toggle, the omp row is open, and `edgecheck.py` passes. Its alt text names the arrow buttons.
 
 ## 7. Release and live check
 
