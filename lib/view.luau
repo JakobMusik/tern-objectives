@@ -122,10 +122,12 @@ local function objective_node(o: Store.Objective, ui_state: Ui, first: string): 
 				title = "Priority: click to change",
 				actions = { click = "prio=" .. o.id },
 			}),
-			span("ob-title", o.title, { key = "title" }),
+			-- A double-click renames; the card's click still selects (design D1).
+			span("ob-title", o.title, { key = "title", actions = { dblclick = "ren=" .. o.id } }),
 			span("ob-more", "⋯", { key = "more", title = "Rename, note, due date, tags, delete", actions = { click = "menu=" .. o.id } }),
 		}),
-		el("div", { class = "ob-l2", key = "l2" }, line2),
+		-- A double-click anywhere on the second line, chips included, edits the side note (design D1).
+		el("div", { class = "ob-l2", key = "l2", actions = { dblclick = "note=" .. o.id } }, line2),
 	})
 end
 
