@@ -1,7 +1,7 @@
 schema = 1
 id = "objectives"
 name = "Objectives"
-version = "0.7.0"
+version = "0.8.0"
 description = "A global list of objectives linked to tabs, shown as a clickable graph that jumps to tabs and panes."
 icon = "list-checks"
 window = "window.luau"
