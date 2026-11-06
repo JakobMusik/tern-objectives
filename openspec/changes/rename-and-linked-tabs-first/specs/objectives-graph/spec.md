@@ -1,14 +1,14 @@
 ## ADDED Requirements
 
 ### Requirement: Rename key
-"Objectives: Rename selected objective", default key ⌥⌘R, SHALL open the one-line Rename field for the selected objective, filled with its title, while the graph is shown over the current tab. The field SHALL behave as from ⋯ › Rename, and the selection SHALL stay. With no objective selected, or no graph shown over the tab, it SHALL show an info toast saying to select an objective in the graph, and change nothing.
+"Objectives: Rename selected objective", default key ⌥R, SHALL open the one-line Rename field for the selected objective, filled with its title, while the graph is shown over the current tab. The field SHALL behave as from ⋯ › Rename, and the selection SHALL stay. With no objective selected, or no graph shown over the tab, it SHALL show an info toast saying to select an objective in the graph, and change nothing.
 
 #### Scenario: Rename by key
-- **WHEN** the user selects "Fix login bug" in the graph, presses ⌥⌘R and enters "Fix login timeout"
+- **WHEN** the user selects "Fix login bug" in the graph, presses ⌥R and enters "Fix login timeout"
 - **THEN** the node shows "Fix login timeout", the kv dump holds that title, and the objective is still selected
 
 #### Scenario: Nothing selected
-- **WHEN** no objective is selected and the user presses ⌥⌘R in the graph
+- **WHEN** no objective is selected and the user presses ⌥R in the graph
 - **THEN** an info toast says to select an objective, and no field opens
 
 #### Scenario: Letters still reach the panes
