@@ -7,9 +7,15 @@ The plugin SHALL register four palette commands under the group "Objectives":
 - "Objectives: Link this tab…";
 - "Objectives: New objective for this tab…".
 
+The palette SHALL list the rename command only while an objective is selected in a graph shown over the current tab. Its key works either way.
+
 #### Scenario: Commands listed
-- **WHEN** the palette's actions are listed with the query "objectives"
+- **WHEN** an objective is selected in the graph shown over the current tab, and the palette is opened with the query "objectives"
 - **THEN** the four commands appear, "Open graph" with ⌃⌘O and "Rename selected objective" with ⌥R
+
+#### Scenario: Rename hidden without a selection
+- **WHEN** no graph is shown over the current tab, and the palette is opened with the query "objectives"
+- **THEN** "Open graph", "Link this tab…" and "New objective for this tab…" appear, and "Rename selected objective" doesn't
 
 ### Requirement: README
 The README SHALL give:

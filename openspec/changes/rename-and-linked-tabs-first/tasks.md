@@ -222,7 +222,7 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
   Verify: the tags API lists `v0.8.2`, and live `tern plugin list` shows `objectives 0.8.2` ready.
 
   Result: the isolated install printed `installed objectives 0.8.2` (`0 blocks, 0 lenses, window ready`). The release commit is `d3e2454`, and the tags API lists `v0.8.2` first. The live install, run after checking the shell had no harness variables, wrote `~/Library/Application Support/Tern/plugins/objectives`. `tern plugin list` shows `objectives 0.8.2 … ready`, with `tabnav 0.1.0` untouched. The user's `settings.json` still holds Reset's `"alt+cmd+r": []`, which now unbinds nothing, and was left alone.
-- [ ] 7.4 **(live)** With the user:
+- [x] 7.4 **(live)** With the user:
   - select an objective and press ⌥R to rename it; without a selection, ⌥R shows the hint;
   - the command's row is back in Tern's Keyboard settings with ⌥R;
   - ⌃⌘R renames the session, as the user's keybind says;
@@ -232,6 +232,15 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
   - links made while it stays selected move no tab, and deselecting restores the order.
 
   Record the findings here.
+
+  Result (user, 0.8.2): confirmed.
+
+  Found during verify:
+  - the `plugin-package` scenario "Commands listed" said all four commands always appear;
+  - with no graph shown, the palette for "objectives" lists three, since `available` hides the rename row (design D6; shot `pal`);
+  - with X selected in the graph, it lists four, the rename row showing ⌥R (shot `pal2`).
+
+  The delta now says the rename command is listed only while an objective is selected in a shown graph, and adds the scenario "Rename hidden without a selection". The behaviour the user confirmed is unchanged.
 
 ## Workflow follow-up
 
