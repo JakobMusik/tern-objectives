@@ -141,9 +141,11 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
 
 ## 7. Release and live check
 
-- [ ] 7.1 Version `0.6.0`: an isolated install prints `installed objectives 0.6.0`; commit, push `main`, tag `v0.6.0`; `tern plugin install github.com/JakobMusik/tern-objectives --force` live.
+- [x] 7.1 Version `0.6.0`: an isolated install prints `installed objectives 0.6.0`; commit, push `main`, tag `v0.6.0`; `tern plugin install github.com/JakobMusik/tern-objectives --force` live.
 
   Verify: the tags API lists `v0.6.0`, and live `tern plugin list` shows `objectives 0.6.0` ready.
+
+  Result: the isolated install printed `installed objectives 0.6.0` (`0 blocks, 0 lenses, window ready`); release commit `1d85f90`; the tags API lists `v0.6.0` first; live `tern plugin list` shows `objectives 0.6.0 … ready`, with `tabnav 0.1.0` untouched.
 - [ ] 7.2 **(live)** With the user:
   - the graph opened from a later tab lists that tab's session and tab first;
   - unlinked tabs read at full strength;
