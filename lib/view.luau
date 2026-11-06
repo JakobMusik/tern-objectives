@@ -134,7 +134,8 @@ type Shown = { tab: Model.Tab, status: string }
 -- The link bar a tab node shows while an objective is selected (design P6).
 type Link = { unlink: boolean, title: string }
 
-local function tab_node(t: Model.Tab, status: string, first: string, linked_open: boolean, link: Link?, menu: { any }, ui_state: Ui, expanded: { [string]: boolean }): (Node, number)
+-- `resume`: a closed tab with a saved Claude session shows "Resume" (resume-closed-agents, design D4).
+local function tab_node(t: Model.Tab, status: string, first: string, linked_open: boolean, link: Link?, menu: { any }, ui_state: Ui, expanded: { [string]: boolean }, resume: boolean): (Node, number)
 	local cls = "ob-tab ob-t-" .. t.id .. first
 	if status ~= "live" then
 		cls ..= " ob-tab-ghost ob-tab-" .. status
@@ -149,10 +150,17 @@ local function tab_node(t: Model.Tab, status: string, first: string, linked_open
 	elseif status == "elsewhere" then
 		where = if place ~= nil then "other window · " .. place else "other window"
 	end
+	local th1: { Node } = { span("ob-tlabel", t.label, { key = "label" }) }
+	if resume then
+		-- Its own click, so the rest of the header still says the tab is closed.
+		table.insert(th1, span("ob-resume", "Resume", {
+			key = "resume",
+			title = "Reopen this tab's Claude chats in a new tab",
+			actions = { click = "resume=" .. t.id },
+		}))
+	end
 	local head_kids: { Node } = {
-		el("div", { class = "ob-th1", key = "th1" }, {
-			span("ob-tlabel", t.label, { key = "label" }),
-		}),
+		el("div", { class = "ob-th1", key = "th1" }, th1),
 		span("ob-line ob-dim", where, { key = "where" }),
 	}
 	local kids: { Node } = {
@@ -385,7 +393,15 @@ function M.build(state: Store.State, win: Model.Window, ui_state: Ui): Built
 	local function add_tab(t: Model.Tab, status: string)
 		local first = Layout.first(right)
 		local link = link_of(t.id)
-		local node, details = tab_node(t, status, first, linked_open[t.id] == true, link, menu_of(t.id), ui_state, view_state.expanded)
+		local resume = false
+		if status == "closed" then
+			for _, r in t.rows do
+				if state.agents[tostring(r.pane)] ~= nil then
+					resume = true
+				end
+			end
+		end
+		local node, details = tab_node(t, status, first, linked_open[t.id] == true, link, menu_of(t.id), ui_state, view_state.expanded, resume)
 		tab_cy[t.id] = Layout.add_tab(right, #t.rows, details, link ~= nil)
 		table.insert(right_kids, node)
 	end

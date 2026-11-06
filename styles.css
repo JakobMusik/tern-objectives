@@ -298,9 +298,16 @@
 	border-color: rgb(from var(--t1) r g b / 30%);
 	background: linear-gradient(rgb(from var(--t1) r g b / 8%), rgb(from var(--t1) r g b / 8%)), var(--card);
 }
+/* A closed or elsewhere tab, at half strength. The fade sits on its parts, not on the node, so its
+   Resume button can stay an active, full-strength control (resume-closed-agents, design D4). */
 [data-surface='plugin.tern.canvas'] .ob-root .ob-tab-ghost {
 	border-style: dashed;
+	border-color: rgb(from var(--t1) r g b / 9%);
 	background: transparent;
+}
+[data-surface='plugin.tern.canvas'] .ob-root .ob-tab-ghost > :not(.ob-thead),
+[data-surface='plugin.tern.canvas'] .ob-root .ob-tab-ghost .ob-thead > :not(.ob-th1),
+[data-surface='plugin.tern.canvas'] .ob-root .ob-tab-ghost .ob-th1 > :not(.ob-resume) {
 	opacity: 0.5;
 }
 [data-surface='plugin.tern.canvas'] .ob-root .ob-tab-closed .ob-tlabel {
@@ -337,6 +344,28 @@
 	text-overflow: ellipsis;
 	white-space: nowrap;
 	font-weight: 600;
+}
+/* A closed tab's Resume button (resume-closed-agents, design D4): 22 px tall around its 18 px line,
+   inside the header's top padding, and at least 28 px wide. Its text can't be selected. */
+[data-surface='plugin.tern.canvas'] .ob-root .ob-resume {
+	flex: none;
+	box-sizing: border-box;
+	height: 22px;
+	min-width: 28px;
+	margin: -2px 0;
+	padding: 0 8px;
+	border-radius: 6px;
+	line-height: 22px;
+	font-size: 11px;
+	font-weight: 600;
+	color: var(--accent);
+	box-shadow: inset 0 0 0 1px var(--accent);
+	background: rgb(from var(--accent) r g b / 8%);
+	text-decoration: none;
+	user-select: none;
+}
+[data-surface='plugin.tern.canvas'] .ob-root .ob-resume:hover {
+	background: rgb(from var(--accent) r g b / 16%);
 }
 /* The link bar at a tab node's foot while an objective is selected (design P6). Its height comes
    from the layout sheet (link_h), so the lines below it stay on their nodes. Its text can't be
