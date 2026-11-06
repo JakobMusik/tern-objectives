@@ -46,13 +46,28 @@ export type ViewState = {
 	expanded: { [string]: boolean },
 }
 
--- A Claude chat's session, saved while it ran so its tab can be resumed after it closes (design D3).
+-- An omp chat, saved while it ran so its tab can be resumed after it closes (resume-omp-chats,
+-- design D3).
 export type AgentSession = {
-	agent: string, -- "claude"
-	session: string, -- the session id its process was started with
+	agent: string, -- "omp"
+	session: string, -- the chat's file
 	cwd: string, -- the chat's folder, as Tern lists it
 	seen: number, -- when it was saved
 }
+
+-- Whether `s` is an omp chat file the plugin may save and type into a shell (design D3): an
+-- absolute path to a `.jsonl` directly in a folder under a `sessions` folder, where subagents'
+-- files sit a level deeper, with no control characters.
+function M.is_chat_file(s: any): boolean
+	if type(s) ~= "string" or string.sub(s, 1, 1) ~= "/" or string.find(s, "%c") ~= nil then
+		return false
+	end
+	return string.match(s, "/sessions/[^/]+/[^/]+%.jsonl$") ~= nil
+end
+
+local function valid_session(a: any): boolean
+	return type(a) == "table" and a.agent == "omp" and M.is_chat_file(a.session) and type(a.cwd) == "string"
+end
 
 export type State = {
 	version: number,
@@ -109,7 +124,16 @@ local function normalize(raw: any): State
 		t.panes = array(t.panes or {})
 	end
 	-- Absent before 0.9.0; an older plugin keeps it, since every change writes back the whole state.
-	s.agents = if type(s.agents) == "table" then s.agents else {}
+	-- Only omp chats: Claude sessions saved by 0.9.0 to 0.10.0 go at the next write (design D3).
+	local agents: { [string]: AgentSession } = {}
+	if type(s.agents) == "table" then
+		for key, a in s.agents do
+			if valid_session(a) then
+				agents[key] = a
+			end
+		end
+	end
+	s.agents = agents
 	-- Rebuilt from the known fields only, so 0.4.0's `collapsed` list goes at the next write (design R3).
 	local v = (s.view or {}) :: any
 	s.view = {
@@ -577,7 +601,7 @@ function M.prune(closed: { number }): number
 	return gone
 end
 
--- ---- saved Claude sessions (design D3) ----
+-- ---- saved omp chats (resume-closed-agents D3, resume-omp-chats D3) ----
 
 -- A session saved this recently is kept even when its pane is neither live nor in a snapshot yet:
 -- a resumed chat's new pane is listed only after the call that opened it (design D6).

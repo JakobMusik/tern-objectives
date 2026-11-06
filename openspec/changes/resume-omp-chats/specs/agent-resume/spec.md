@@ -4,8 +4,8 @@
 For each omp chat in a pane of this window on this machine, the plugin SHALL save, under that pane's id in its store: the agent "omp", the chat's file and its folder. The file SHALL be the omp session file the chat's process holds open, else the session file its command line resumes or restores. A chat with neither SHALL save nothing. A different file found later for the same pane SHALL replace the saved one.
 
 #### Scenario: First message saves the chat
-- **WHEN** the user types `omp` in a shell in folder F and sends the chat one message
-- **THEN** within 3 seconds the kv dump holds, under that pane's id, agent "omp", folder F and the path of the `.jsonl` session file the chat's omp process holds open
+- **WHEN** the user types `omp` in a shell in folder F and sends the chat one message, and the reply ends
+- **THEN** within 3 seconds of the reply ending, the kv dump holds, under that pane's id, agent "omp", folder F and the path of the `.jsonl` session file the chat's omp process holds open
 
 #### Scenario: Two chats in one folder
 - **WHEN** two omp chats run in folder F, in different panes, and each is sent one message

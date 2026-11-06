@@ -32,17 +32,27 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
 
 ## 2. Saving omp chats
 
-- [ ] 2.1 Capture (design D1, D2): rewrite `lib/agents.luau` around the one-process script and its parser. Remove the Claude matching (`folder`, `session_of`, `is_session_id`, `pair`, the `cx.procs` sampling, `turned`), keep `is_claude` and `base_name`, and add `is_chat_file`. Request a capture from the startup timer in `window.luau` and from `App.open`.
+- [x] 2.1 Capture (design D1, D2): rewrite `lib/agents.luau` around the one-process script and its parser. Remove the Claude matching (`folder`, `session_of`, `is_session_id`, `pair`, the `cx.procs` sampling, `turned`), keep `is_claude` and `base_name`, and add `is_chat_file` (in `lib/store.luau`, which `normalize` needs and `agents.luau` already requires). Request a capture from the startup timer in `window.luau` and from `App.open`.
 
   Verify with kv dumps:
-  - one message in an omp chat in `/tmp/tobj/w/ompA` saves agent "omp", folder `/tmp/tobj/w/ompA` and its open file, within 3 s of the turn;
+  - one message in an omp chat in `/tmp/tobj/w/ompA` saves agent "omp", folder `/tmp/tobj/w/ompA` and its open file, within 3 s of the reply ending (omp creates the file only then, design source record);
   - two chats in `/tmp/tobj/w/ompB`, one message each, save two different files, each matching its pid's open file in `proc_run`;
   - `omp --resume '<file>'` in a new shell, no message, then opening the graph, saves that file;
   - a chat with no message, then opening the graph, saves nothing;
   - deleting a saved entry from `kv.json` and reloading the plugin saves it again within 3 s.
-- [ ] 2.2 Migration (design D3): `normalize` keeps only valid omp entries.
+
+  Result (harness, 2026-11-07):
+  - pane 106 in `ompA` was saved with its open file, folder `/tmp/tobj/w/ompA`, after its reply. A longer first turn (pane 140, 46 s) showed omp creates the file only as the first reply ends: the turn-start capture found nothing, and the turn-end one saved it about 1 s after. The artifacts were updated for this (spec scenario, design source record, D2, risks);
+  - panes 180 and 214 in `ompB` saved two different files, each the one its pid (77473, 78114) holds open in `proc_run`;
+  - pane 254, running `omp --resume '<pane 140's file>'` with no message, had no entry until the graph opened, then that file;
+  - pane 275, `omp` with no message: no entry after the graph opened, while that capture saved 5 others;
+  - pane 214's entry, deleted from `kv.json`, was back 1.2 s after the plugin reloaded;
+  - captures took 189 to 234 ms (log `chat capture`).
+- [x] 2.2 Migration (design D3): `normalize` keeps only valid omp entries.
 
   Verify: write a Claude entry (`agent` "claude", a UUID `session`) into `kv.json` under a closed linked tab's agent pane, open the graph, then change a priority. The tab shows no Resume, its row starts with "agent" (`ctl tree '.ob-rtype'`), and the kv dump afterwards has no entry under that pane.
+
+  Result (harness): tab 276 (pane 275, an omp agent row) was linked to o1, snapshotted and closed. With a Claude entry written under pane 275 and the plugin reloaded, the graph showed no `.ob-resume` in `.ob-t-276`, and its row's type read "agent". Opening the graph wrote nothing, so the entry stayed in the file; clicking o1's priority badge wrote the store, and the kv dump then held no entry under 275.
 
 ## 3. Resume and rows
 
