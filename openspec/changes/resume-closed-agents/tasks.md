@@ -141,7 +141,9 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
 
 ## 5. Release 0.9.0
 
-- [ ] 5.1 Version `0.9.0` in `plugin.toml`. Verify an isolated `tern plugin install` of the repo folder prints `installed objectives 0.9.0`, then commit, push `main` and tag `v0.9.0`.
+- [x] 5.1 Version `0.9.0` in `plugin.toml`. Verify an isolated `tern plugin install` of the repo folder prints `installed objectives 0.9.0`, then commit, push `main` and tag `v0.9.0`.
+
+  Result: the isolated install (`/tmp/tobj-rel`) printed `installed objectives 0.9.0`, and `tern plugin list` showed `objectives 0.9.0 … 0 blocks, 0 lenses, window ready`.
 - [ ] 5.2 **(live)** `tern plugin install github.com/JakobMusik/tern-objectives --force`, from a shell with no harness variables. Verify `tern plugin list` shows `objectives 0.9.0 … ready`, with `tabnav 0.1.0` untouched.
 - [ ] 5.3 **(live)** With the user:
   - a Claude chat in a linked tab, sent one message, then its tab closed: the closed tab shows Resume, and its row reads "claude";
