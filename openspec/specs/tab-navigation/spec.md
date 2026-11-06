@@ -1,7 +1,7 @@
 # tab-navigation Specification
 
 ## Purpose
-Turns the graph into a switchboard: one click on a tab or pane node takes the user there, in whatever session it lives. Tabs that cannot be reached say why instead of failing silently.
+Turns the graph into a switchboard: one click on a tab's header or on a pane row's jump button takes the user there, in whatever session it lives. Tabs that cannot be reached say why instead of failing silently.
 
 ## Requirements
 
