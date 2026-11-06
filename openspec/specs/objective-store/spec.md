@@ -11,13 +11,14 @@ Each objective SHALL have:
 - a done flag;
 - a priority from P0 (most urgent) to P3;
 - a created time and a done time;
-- an optional side note, due date and tag list.
+- an optional side note, due date and tag list;
+- once done, a review schedule: its next review date, interval in days, ease in percent and review count.
 
-A new objective SHALL start not done, at P2, with the current time as its created time, and with no note, due date, tags or links.
+A new objective SHALL start not done, at P2, with the current time as its created time, and with no note, due date, tags, links or review schedule.
 
 #### Scenario: Creating an objective
 - **WHEN** the user creates an objective titled "  Fix login bug  "
-- **THEN** the stored record has title "Fix login bug", done false, priority P2, a created time, and no note, due date, tags or links
+- **THEN** the stored record has title "Fix login bug", done false, priority P2, a created time, and no note, due date, tags, links or review schedule
 
 #### Scenario: Blank title
 - **WHEN** the user submits a title that is empty or only spaces
@@ -47,13 +48,6 @@ Every change SHALL re-read the stored state immediately before applying itself, 
 #### Scenario: Another window's objective survives
 - **WHEN** an objective is added to `kv.json` from outside this window, and the user then renames a different objective in this window's graph
 - **THEN** `kv.json` contains both the outside objective and the renamed one
-
-### Requirement: Done state
-Marking an objective done SHALL record the done time. Reopening it SHALL clear the done time. Neither SHALL change its links.
-
-#### Scenario: Done then reopened
-- **WHEN** the user marks a linked objective done and then reopens it
-- **THEN** the record's done time is set after the first step and cleared after the second, and its tab links are identical throughout
 
 ### Requirement: Side note
 A side note SHALL be a single line of at most 200 characters. Line breaks that reach the plugin SHALL become spaces, and longer input SHALL be cut to 200 characters. Saving an empty note SHALL remove it. (Tern's one-line field itself joins pasted lines, without a space, before the plugin sees them.)
@@ -89,7 +83,7 @@ A tag SHALL be stored in lowercase, trimmed, with runs of spaces replaced by one
 - **THEN** "api" no longer appears in the tag picker or the tag filter
 
 ### Requirement: Deleting an objective
-Deleting SHALL ask for confirmation. On confirmation it SHALL remove the objective and its links. On cancel it SHALL change nothing.
+Deleting from the ⋯ menu SHALL ask for confirmation. On confirmation it SHALL remove the objective and its links. On cancel it SHALL change nothing. A done objective's trash icon SHALL remove it without asking.
 
 #### Scenario: Confirmed delete
 - **WHEN** the user chooses Delete for an objective and confirms
@@ -98,6 +92,10 @@ Deleting SHALL ask for confirmation. On confirmation it SHALL remove the objecti
 #### Scenario: Cancelled delete
 - **WHEN** the user chooses Delete and then cancels
 - **THEN** `kv.json` is unchanged
+
+#### Scenario: Trash icon on a done objective
+- **WHEN** the user clicks a done objective's trash icon
+- **THEN** no confirmation appears, and the objective and its links are gone from `kv.json`
 
 ### Requirement: Tab snapshots
 For every linked tab the window currently holds, the store SHALL keep a snapshot so the tab can still be shown after it closes. The snapshot SHALL hold:
@@ -141,3 +139,10 @@ Objectives, links and snapshots SHALL survive a plugin reload, a Tern restart an
 #### Scenario: Plugin reload
 - **WHEN** the plugin is reloaded after objectives and links were made
 - **THEN** the graph shows the same objectives with the same links
+
+### Requirement: Final done state
+Marking an objective done SHALL record the done time and start its review schedule. Done SHALL be final: nothing SHALL make a done objective open again, except Undo right after it was marked done. Neither SHALL change its links.
+
+#### Scenario: Done stays done
+- **WHEN** the user marks a linked objective done, waits for the Undo notice to go, then clicks its done box in the Done group
+- **THEN** the record is still done with the same done time, and its tab links are identical throughout

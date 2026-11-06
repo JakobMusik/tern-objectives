@@ -57,14 +57,18 @@ Open objectives SHALL be ordered:
 
 ### Requirement: Objective node content
 Each objective node SHALL show, on fixed single lines:
-- a done box, a priority badge, the title and a ⋯ button;
-- below them, the side note (dimmed), a due chip and tag chips.
+- a done box, a priority badge, the title and a ⋯ button, with a trash icon before the ⋯ on done objectives;
+- below them, the side note (dimmed), a due chip on open objectives or a review chip on done ones, and tag chips.
 
-Text that doesn't fit SHALL end in "…". Hovering the node SHALL show the full title, the full note and the created and done times.
+Text that doesn't fit SHALL end in "…". Hovering the node SHALL show the full title, the full note and the created and done times, and for a done objective its review count and next review date.
 
 #### Scenario: Long note
 - **WHEN** an objective has a 200-character side note
 - **THEN** its node stays the same height, the note is cut with "…", and the node's tooltip holds the whole note
+
+#### Scenario: Done node
+- **WHEN** the user marks an objective with a due date done and opens the Done group
+- **THEN** its node shows a trash icon, a "review in 1d" chip and no due chip, and its tooltip gives 0 reviews and tomorrow's date as the next review
 
 ### Requirement: Priority badge
 Clicking the priority badge SHALL step the priority P0 → P1 → P2 → P3 → P0. Badge colours SHALL be: P0 red, P1 orange, P2 blue, P3 grey.
@@ -72,20 +76,6 @@ Clicking the priority badge SHALL step the priority P0 → P1 → P2 → P3 → 
 #### Scenario: Cycle wraps
 - **WHEN** the user clicks the badge of a P3 objective
 - **THEN** the objective becomes P0 and its badge turns red
-
-### Requirement: Done group
-Clicking the done box SHALL toggle done. Done objectives SHALL leave the open list and gather in a "Done (n)" group at the bottom of the left column:
-- the group is collapsed by default and opens or closes on click;
-- inside it, the most recently done objective comes first;
-- done objectives draw no lines.
-
-#### Scenario: Marking done
-- **WHEN** the user clicks the done box of a linked open objective
-- **THEN** it moves into the Done group, the count goes up by one, and its lines are gone
-
-#### Scenario: Reopening
-- **WHEN** the user opens the Done group and clicks a done objective's box
-- **THEN** it returns to the open list in its sort position, and its lines are drawn again
 
 ### Requirement: Objective menu
 The ⋯ button SHALL open a picker with Rename, Side note, Due date, Tags and Delete.
@@ -158,7 +148,7 @@ A tab with no link to an open objective SHALL be drawn with a light grey fill an
 - **THEN** the node changes from the grey fill with a dashed border to the card with a solid border, and its label's text colour is the same before and after
 
 ### Requirement: Link lines
-For each link between an open objective and a tab shown in the right column, a line SHALL join the two nodes:
+For each link between an open objective, or an objective listed in review mode, and a tab shown in the right column, a line SHALL join the two nodes:
 - coloured by the objective's priority;
 - drawn dashed when the tab is closed or elsewhere;
 - ending at the nodes' edges, at any graph width from 360 to 1600 pixels.
@@ -166,6 +156,10 @@ For each link between an open objective and a tab shown in the right column, a l
 #### Scenario: Alignment at two widths
 - **WHEN** the graph is captured at 1400 and 460 pixels wide
 - **THEN** in both captures, each line's ends sit within 2 pixels of the vertical centres of its objective node and tab header
+
+#### Scenario: Lines in review mode
+- **WHEN** review mode lists a done objective linked to a live tab
+- **THEN** a line joins its node to that tab's header, ending within 2 pixels of both vertical centres
 
 ### Requirement: Selection
 Clicking an objective's title SHALL select it:
@@ -248,11 +242,15 @@ The pane that has focus when the graph opens SHALL be the graph's origin. While 
 - **THEN** only the new pane's tab node and row are marked
 
 ### Requirement: Larger hit areas
-The done box and the ⋯ button SHALL each take clicks over at least 22 px of width and the full 18 px height of their line in objective nodes. A pane row's jump button SHALL take clicks over at least 28 px of width and the row's full 22 px height. Objective nodes SHALL stay 48 px tall and pane rows 22 px.
+The done box, the ⋯ button and the trash icon SHALL each take clicks over at least 22 px of width and the full 18 px height of their line in objective nodes. A pane row's jump button SHALL take clicks over at least 28 px of width and the row's full 22 px height. The Hard, Good and Easy buttons SHALL each be at least 22 px tall. Objective nodes SHALL stay 48 px tall outside review mode, and pane rows 22 px.
 
 #### Scenario: Measured hit areas
-- **WHEN** a screenshot's layout data is read
-- **THEN** every done box and ⋯ button is at least 22 × 18 px, every jump button at least 28 × 22 px, objective nodes are 48 px tall, and pane rows are 22 px tall
+- **WHEN** a screenshot's layout data is read outside review mode
+- **THEN** every done box, trash icon and ⋯ button is at least 22 × 18 px, every jump button at least 28 × 22 px, objective nodes are 48 px tall, and pane rows are 22 px tall
+
+#### Scenario: Review nodes
+- **WHEN** a screenshot's layout data is read in review mode
+- **THEN** every Hard, Good and Easy button is at least 22 px tall, and every listed node has the same height
 
 ### Requirement: Graph in any session
 "Objectives: Open graph" SHALL show the graph as a canvas, Tern's built-in block filled from window Lua, in every session the window shows, on this machine or another. Nothing SHALL need installing on another machine, and the plugin SHALL define no block of its own. If a session's machine can't show a canvas, an error toast SHALL say so and nothing SHALL open.
@@ -270,7 +268,7 @@ The done box and the ⋯ button SHALL each take clicks over at least 22 px of wi
 - **THEN** the block is gone and the canvas is shown
 
 ### Requirement: Controls don't select text
-Dragging across a tag chip, a due chip, a P0–P3 badge, the header's "All" and "This session" buttons, "Prune closed tabs", "＋ New objective", or a pane row's type, name or jump button SHALL NOT select its text.
+Dragging across a tag chip, a due chip, a P0–P3 badge, the header's "All" and "This session" buttons, "Prune closed tabs", "＋ New objective", or a pane row's type, name or jump button SHALL NOT select its text. Neither dragging across nor double-clicking a group or session heading SHALL select its text: "Done (n)", "Closed tabs", "Other windows", a session heading, the `Linked to` heading or the `Other tabs` divider.
 
 #### Scenario: Drag across the header
 - **WHEN** the user presses in the header's empty space, drags across "＋ New objective", the tag filter chips and "All" / "This session", and releases in empty space
@@ -283,6 +281,18 @@ Dragging across a tag chip, a due chip, a P0–P3 badge, the header's "All" and 
 #### Scenario: Drag along a pane row
 - **WHEN** the user drags from a tab's header across a pane row's type and name
 - **THEN** the screenshot shows no text highlight on the row
+
+#### Scenario: Double-click on the Done header
+- **WHEN** the left column holds done objectives, and the user double-clicks the word "Done" in the "Done (n)" header
+- **THEN** the screenshot shows no text highlight on the header
+
+#### Scenario: Double-click on a session heading
+- **WHEN** the user double-clicks a session's name in the right column
+- **THEN** the screenshot shows no text highlight on the heading
+
+#### Scenario: Titles stay selectable
+- **WHEN** the user double-clicks a word in an objective's title
+- **THEN** the word is highlighted, as before
 
 ### Requirement: Rename key
 "Objectives: Rename selected objective", default key ⌥R, SHALL open the one-line Rename field for the selected objective, filled with its title, while the graph is shown over the current tab. The field SHALL behave as from ⋯ › Rename, and the selection SHALL stay. With no objective selected, or no graph shown over the tab, it SHALL show an info toast saying to select an objective in the graph, and change nothing.
@@ -325,3 +335,19 @@ While an objective is selected, the right column SHALL start with a section head
 #### Scenario: This session
 - **WHEN** the scope is "This session", X is linked to tabs in the current session and in another, and the user selects X
 - **THEN** the top section holds only the current session's linked tabs
+
+### Requirement: Done objectives group
+Clicking an open objective's done box SHALL mark it done. Done objectives SHALL leave the open list and gather in a "Done (n)" group at the bottom of the left column:
+- the group is collapsed by default and opens or closes on click;
+- inside it, the most recently done objective comes first;
+- done objectives draw no lines outside review mode.
+
+A done objective's box SHALL do nothing.
+
+#### Scenario: Marking done
+- **WHEN** the user clicks the done box of a linked open objective
+- **THEN** it moves into the Done group, the count goes up by one, and its lines are gone
+
+#### Scenario: Box of a done objective
+- **WHEN** the user opens the Done group and clicks a done objective's box
+- **THEN** it stays in the Done group, the count is unchanged, and the kv dump shows it still done
