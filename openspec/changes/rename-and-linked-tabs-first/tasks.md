@@ -115,15 +115,24 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
   - `ctrl+cmd+r` bound with no warning, and ran with the graph focused (`focused=27`).
 
   So the default is ⌃⌘R, and R isn't possible.
-- [ ] 5.2 Take out design D1–D2: the double-click actions, the press log and the `ren`/`note` actions, and `user-select: none` on titles and notes. Add the rename command (design D6).
+- [x] 5.2 Take out design D1–D2: the double-click actions, the press log and the `ren`/`note` actions, and `user-select: none` on titles and notes. Add the rename command (design D6).
 
   Verify:
   - `cx.actions:keys()` maps `ctrl+cmd+r` to `plugin.objectives.rename`, and the log holds no `bind left out` for it;
   - "Rename by key": o1 selected, ⌃⌘R opens the field filled with o1's title; "Fix login timeout" and Enter put it on the node and in the kv dump, and o1 stays selected;
   - "Nothing selected": with no selection, ⌃⌘R shows the info toast and opens no field;
   - "Letters still reach the panes": in Benchmarks's shell, typing "r" and "R" shows "rR" at the prompt, with no toast;
-  - `ctl dblclick` on a title opens no field, and the selection changes exactly as two clicks would;
+  - `ctl dblclick` on a title opens no field, and the selection changes once, as a single click does: only the first press sends the card's click (task 1.1), as in 0.6.1;
   - `dragsel` highlights text across a title and a note again, as in 0.6.1, and none on the chips and badge.
+
+  Result:
+  - **Code:** `lib/view.luau` and `styles.css` match the group 2 commit `fab3508` again. `lib/app.luau` keeps D3 and adds `M.rename_selected` and `M.can_rename`. `window.luau` registers `rename` on `ctrl+cmd+r`.
+  - **Keymap:** `ctrl+cmd+r` maps to `plugin.objectives.rename`, `shift+r` is free again, and `r` is Tern's own (`canvas.tool_rect`, `git.refresh`, `notebook.to_raw`). The load logged no warning.
+  - **Rename by key:** with o1 ("Fix login timeout", left by task 3.1) selected, ⌃⌘R opened the field filled with "Fix login timeout". "Fix login bug" and Enter put the original title back on the node and in the kv dump. o1 stayed selected, and the graph came back after the field.
+  - **Nothing selected:** ⌃⌘R opened no field, and the shot `k_none` shows the info toast "Select an objective in the graph to rename it".
+  - **Letters:** with the graph closed and Benchmarks's shell focused, `r` then Shift+R showed `rR` at the prompt (shot `k_letters`), with no toast. Both characters were then deleted with Backspace.
+  - **Double-click:** on o3's title, it opened no field and selected o3 once.
+  - **`dragsel`:** o1's note and title change (mean 9.7 and 3.4), and the crop shows a text highlight on each. The chips, badge and header controls stay at 0.0.
 - [ ] 5.3 README: the commands table lists "Objectives: Rename selected objective" with ⌃⌘R, "Using the graph" says to select an objective and press ⌃⌘R, and the double-click sentence goes.
 
   Verify: `grep` finds "⌃⌘R" in the table and in "Using the graph", and no "Double-click".

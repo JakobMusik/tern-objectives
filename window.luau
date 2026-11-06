@@ -30,6 +30,18 @@ tern.command({
 	run = App.toggle,
 })
 
+-- ⌃⌘R, the partner of ⌃⌘O. Tern keeps plain R for itself, and a plugin's Shift+R would take every
+-- capital R typed in any pane: a plugin key runs whatever `available` says (design D6).
+tern.command({
+	id = "rename",
+	title = "Objectives: Rename selected objective",
+	icon = "pencil",
+	group = "Objectives",
+	keys = { "ctrl+cmd+r" },
+	available = App.can_rename,
+	run = App.rename_selected,
+})
+
 tern.command({
 	id = "link_tab",
 	title = "Objectives: Link this tab…",
