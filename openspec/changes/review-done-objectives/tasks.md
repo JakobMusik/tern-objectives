@@ -114,12 +114,14 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
 - [x] 4.2 **(live)** `tern plugin install github.com/JakobMusik/tern-objectives --force`, from a shell with no harness variables. Verify `tern plugin list` shows `objectives 0.10.0 … ready`, with `tabnav 0.1.0` untouched.
 
   Result: `installed objectives 0.10.0 → ~/Library/Application Support/Tern/plugins/objectives`; `tern plugin list` shows `objectives 0.10.0 … ready` and `tabnav 0.1.0 … ready`. The tag is `v0.10.0` (`a5abdc1`).
-- [ ] 4.3 **(live)** With the user:
+- [x] 4.3 **(live)** With the user:
   - marking done offers Undo, which works;
   - a done objective's box does nothing, and its trash icon removes it with Undo;
   - the next day, "Review (n)" lists it with its lines, and a rating moves it out.
 
   Record the result here.
+
+  Result (user, 0.10.0): confirmed.
 
 ## Workflow follow-up
 

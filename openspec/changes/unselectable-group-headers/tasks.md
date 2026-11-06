@@ -34,7 +34,9 @@ No design.md: one CSS rule, no decision left open.
 - [x] 2.2 **(live)** `tern plugin install github.com/JakobMusik/tern-objectives --force`, from a shell with no harness variables. Verify `tern plugin list` shows `objectives 0.8.3 … ready`, with `tabnav 0.1.0` untouched.
 
   Result: `installed objectives 0.8.3 → ~/Library/Application Support/Tern/plugins/objectives`; `tern plugin list` shows `objectives 0.8.3 … ready` and `tabnav 0.1.0 … ready`. The tag is `v0.8.3` (`71850fb`), with the message "v0.8.3" instead of the usual "objectives 0.8.3"; it was left, since a published tag isn't moved.
-- [ ] 2.3 **(live)** With the user: double-clicking "Done (n)" or a session name highlights nothing, and titles still select. Record the result here.
+- [x] 2.3 **(live)** With the user: double-clicking "Done (n)" or a session name highlights nothing, and titles still select. Record the result here.
+
+  Result (user, checked on 0.10.0, which includes this change): confirmed.
 
 ## Workflow follow-up
 
