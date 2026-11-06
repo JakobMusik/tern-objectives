@@ -8,7 +8,7 @@ No design.md: one CSS rule, no decision left open.
 
 ## 1. Headings
 
-- [ ] 1.1 Add `user-select: none` to `.ob-group` and `.ob-session` in `styles.css`.
+- [x] 1.1 Add `user-select: none` to `.ob-group` and `.ob-session` in `styles.css`.
 
   Verify, after `/tmp/tobj/bin/sync` and `ctl plugins fixtures`, with o3 and o5 marked done and the Done group open:
   - `ctl dblclick '.ob-donegrp .ob-gtext'`: the heading's crop shows no highlight ("Double-click on the Done header");
@@ -16,6 +16,15 @@ No design.md: one CSS rule, no decision left open.
   - `/tmp/tobj/bin/dragsel` across "Done (n)", a session heading and "Closed tabs": no highlight;
   - the three drag checks of "Controls don't select text" still show no highlight;
   - `ctl dblclick` on o1's title: the word is highlighted ("Titles stay selectable").
+
+  Result (harness, 2026-11-06). `hl.py` gives each element's mean pixel change against the shot before; 0.00 is no change:
+  - double-click on "Done (3)" with the group open: 0.00;
+  - double-click on the "Default" session name: 0.00 on the heading and the name;
+  - drags across "Done (3)", the session heading and "Closed tabs": 0.05, 0.00 and 0.00. The 0.05 is the caret: the drag's press and release toggled the group. Its crop shows no highlight;
+  - `dragsel`/`seldiff.py`: Prune, New objective, the tag filters, All / This session, the due chip, the tag chip and the badge all 0.0. o1's side note (10.1) and title (4.0) still select;
+  - double-click on o1's title highlighted "build".
+
+  `.ob-linkhead` and `.ob-divider` dropped their own `user-select` line, which `.ob-group` now covers.
 
 ## 2. Release 0.8.3
 
