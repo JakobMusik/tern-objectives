@@ -64,16 +64,28 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
 
 ## 3. Double-click to edit
 
-- [ ] 3.1 Double-click targets (design D1), the selection undo if 1.1 keeps D2 (design D2), and unselectable titles and notes.
+- [x] 3.1 Double-click targets (design D1), the selection undo if 1.1 keeps D2 (design D2), and unselectable titles and notes.
 
   Verify:
   - `ctl dblclick` on o1's title, `ctl type` "Fix login timeout", then Enter: the node and the kv dump hold the new title ("Rename by double-click");
   - `ctl dblclick` on the second line of an objective with no note, `ctl type` "waiting on CI", then Enter: the node and the kv dump hold the note ("Side note by double-click");
   - with X selected, `ctl dblclick` on another objective's title, then Enter: X is still selected, `order` is unchanged, and the other title is unchanged ("Selection kept");
   - a shot taken right after a double-click shows no highlighted word, and `dragsel` across a title and a note shows no highlight ("Drag across a node's badge and chips").
-- [ ] 3.2 README, "Using the graph": a double-click on a title renames it and one on the second line edits the side note; selecting an objective brings its tabs to the top under `Linked to “<title>”` until it's deselected, and links made meanwhile move nothing.
+
+  Result (the fixtures reload cleared the selection, a known limit, and the graph was reopened from Benchmarks; `ctl type` needs its text quoted for the protocol, `'"…"'`):
+  - **Rename:** a double-click on o1's title opened the field filled with "Fix login bug". "Fix login timeout" then shows on the node and is in the kv dump. Nothing was selected before or after; without D2, o1 would have been left selected.
+  - **Side note:** a double-click on "Write slides"'s empty second line opened the field empty. "waiting on CI" then shows on the line and is in the kv dump.
+  - **Selection kept** (helper `dblren`: double-click, then Enter without a change; a real `sleep 1` before each double-click, since `ctl wait` runs on the harness clock):
+    - (a) with X selected, a double-click on o3's title left X selected, `order2` identical before and after, and o3's title unchanged;
+    - (b) with Components linked to X while X stayed selected, a double-click on X's own title left X selected and Components still below the divider, so the undo restored the old fixed set instead of recomputing it;
+    - (c) after a single click on o3 and a pause of over 700 ms, a double-click on o3's title left o3 selected.
+  - **No highlight:** a shot taken while the field was open shows o1's title unchanged (mean pixel change 0.0 against the shot before). Every `dragsel` drag shows 0.0 change on every control, including o1's side note and title, which used to be selectable.
+  - **Flash:** the double-click's two acts arrive 4–7 ms apart in the harness, so the one-click re-sort shows for a frame at most, and shots taken after it show the restored order. The live check watches the real interval.
+- [x] 3.2 README, "Using the graph": a double-click on a title renames it and one on the second line edits the side note; selecting an objective brings its tabs to the top under `Linked to “<title>”` until it's deselected, and links made meanwhile move nothing.
 
   Verify: `grep` finds "Double-click", "Linked to" and "Other tabs". Refresh `docs/graph.png` only if the shot it was taken from changed.
+
+  Result: the README has "Double-click", `Linked to “` and "Other tabs" once each. The "Click an objective" bullet describes the top section, its divider, the repeated headings and the fixed order, and the priority bullet the two double-clicks. `docs/graph.png` shows the graph with nothing selected, which this change doesn't alter, so it stays.
 
 ## 4. Release and live check
 

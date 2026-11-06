@@ -33,6 +33,38 @@ local function select(id: string?)
 	end
 end
 
+-- A double-click's first press also sends the card's `sel=` (task 1.1). Each press is remembered
+-- with the selection it replaced, so the double-click can put that selection back (design D2).
+local DOUBLE_CLICK_MS = 700
+type Press = { id: string, at: number, selected: string?, pinned: { [number]: boolean }? }
+local presses: { Press } = {}
+
+local function remember_press(id: string)
+	table.insert(presses, { id = id, at = tern.now(), selected = selected, pinned = pinned })
+	if #presses > 4 then
+		table.remove(presses, 1)
+	end
+end
+
+-- Undoes the presses on objective `id` of the last DOUBLE_CLICK_MS, newest back to oldest, stopping
+-- at a press on another objective or an older one.
+local function undo_presses(id: string)
+	local now = tern.now()
+	local first: Press? = nil
+	for i = #presses, 1, -1 do
+		local p = presses[i]
+		if p.id ~= id or now - p.at > DOUBLE_CLICK_MS then
+			break
+		end
+		first = p
+	end
+	if first ~= nil then
+		selected = first.selected
+		pinned = first.pinned
+	end
+	table.clear(presses)
+end
+
 -- The pane that had focus when the graph was last opened fresh (design P5); never stored.
 local origin: number? = nil
 local edges_css = ""
@@ -465,6 +497,7 @@ export type Action = { act: string, value: string? }
 function M.action(ev: Action, cx: WindowCx)
 	local act, value = ev.act, ev.value or ""
 	if act == "sel" then
+		remember_press(value)
 		select(if selected == value then nil else value)
 	elseif act == "bg" then
 		if selected == nil then
@@ -481,6 +514,20 @@ function M.action(ev: Action, cx: WindowCx)
 		end
 	elseif act == "menu" then
 		menu(cx, value)
+		return
+	elseif act == "ren" or act == "note" then
+		-- A double-click: the selection goes back to what it was, then the same field as from the ⋯
+		-- menu opens (design D1, D2).
+		undo_presses(value)
+		M.render(cx)
+		local o = Store.find(Store.read(), value)
+		if o == nil then
+			toast_gone(cx)
+		elseif act == "ren" then
+			rename(cx, o)
+		else
+			side_note(cx, o)
+		end
 		return
 	elseif act == "new" then
 		new_objective(cx, nil, nil, "", true)
