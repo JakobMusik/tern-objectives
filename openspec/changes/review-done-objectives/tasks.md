@@ -111,7 +111,9 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
 - [x] 4.1 Version `0.10.0` in `plugin.toml`. Verify an isolated `tern plugin install` of the repo folder prints `installed objectives 0.10.0`, then commit, push `main` and tag `v0.10.0`.
 
   Result: the isolated install (`/tmp/tobj-rel`) printed `installed objectives 0.10.0`, and `tern plugin list` showed `objectives 0.10.0 … 0 blocks, 0 lenses, window ready`.
-- [ ] 4.2 **(live)** `tern plugin install github.com/JakobMusik/tern-objectives --force`, from a shell with no harness variables. Verify `tern plugin list` shows `objectives 0.10.0 … ready`, with `tabnav 0.1.0` untouched.
+- [x] 4.2 **(live)** `tern plugin install github.com/JakobMusik/tern-objectives --force`, from a shell with no harness variables. Verify `tern plugin list` shows `objectives 0.10.0 … ready`, with `tabnav 0.1.0` untouched.
+
+  Result: `installed objectives 0.10.0 → ~/Library/Application Support/Tern/plugins/objectives`; `tern plugin list` shows `objectives 0.10.0 … ready` and `tabnav 0.1.0 … ready`. The tag is `v0.10.0` (`a5abdc1`).
 - [ ] 4.3 **(live)** With the user:
   - marking done offers Undo, which works;
   - a done objective's box does nothing, and its trash icon removes it with Undo;
