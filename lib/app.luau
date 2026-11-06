@@ -500,7 +500,7 @@ local function jump_pane(cx: WindowCx, pane: number)
 	cx.layout:focus(pane)
 end
 
--- ---- resuming a closed tab's Claude chats (resume-closed-agents, design D5, D6) ----
+-- ---- resuming a closed tab's omp chats (resume-closed-agents D5, D6; resume-omp-chats D5) ----
 
 local function resume(cx: WindowCx, tab: number)
 	if cx.hosts:current().kind ~= "local" then
@@ -517,13 +517,14 @@ local function resume(cx: WindowCx, tab: number)
 	local chats: { Store.AgentSession } = {}
 	for _, p in snap.panes do
 		local s = if p.kind == "agent" then state.agents[tostring(p.pane)] else nil
-		-- Only an agent row's session, and only a session id, is ever typed into the shell.
-		if s ~= nil and Store.is_chat_file(s.session) then
+		-- Only an agent row's chat, and only a chat file that is still there, is ever typed into
+		-- the shell; the store holds no other kind of entry (design D3).
+		if s ~= nil and Store.is_chat_file(s.session) and tern.fs.exists(s.session) then
 			table.insert(chats, s)
 		end
 	end
 	if #chats == 0 then
-		cx:toast("info", "That tab has no saved Claude chat to resume")
+		cx:toast("info", "That tab has no omp chat left to resume")
 		return
 	end
 	Surface.close(cx)
@@ -538,7 +539,7 @@ local function resume(cx: WindowCx, tab: number)
 		if pane == nil then
 			break
 		end
-		cx:run(pane, "claude --resume " .. s.session .. "\r")
+		cx:run(pane, "omp --resume " .. Agents.quote(s.session) .. "\r")
 		moved[tostring(pane)] = { agent = s.agent, session = s.session, cwd = s.cwd, seen = os.time() }
 		first = first or pane
 		previous = pane
@@ -550,7 +551,7 @@ local function resume(cx: WindowCx, tab: number)
 	end
 	Store.adopt(tab, new_tab, moved)
 	-- The window lists the new tab only after this call: store its snapshot once it does. Its panes
-	-- are still shells starting claude, so the resumed ones are stored as agents, as they will be.
+	-- are still shells starting omp, so the resumed ones are stored as agents, as they will be.
 	tern.timer(250, function(cx2: WindowCx?)
 		if cx2 == nil then
 			return

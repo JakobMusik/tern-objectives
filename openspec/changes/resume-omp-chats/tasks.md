@@ -56,15 +56,22 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
 
 ## 3. Resume and rows
 
-- [ ] 3.1 Button and rows (design D4): the button needs a valid entry whose file exists, and its tooltip names omp. Closed rows take their name from valid entries only.
+- [x] 3.1 Button and rows (design D4): the button needs a valid entry whose file exists, and its tooltip names omp. Closed rows take their name from valid entries only.
 
   Verify: with an omp chat tab and a shell-only tab, both linked and closed, a shot shows "Resume" on the first only, and `ctl tree '.ob-rtype'` reads "omp" for the chat's row. After the chat file is moved aside and the graph redraws (`.ob-segb` click), the button is gone. Move the file back afterwards.
-- [ ] 3.2 Resume action (design D5): type `omp --resume '<file>'`, quoted, in the new tab and its splits; toast when no chat is left.
+
+  Result (harness): tab 215 (pane 214, chat "b2" in `ompB`) and shell tab 333, linked to o1 and closed. `.ob-resume` count: 1 in `.ob-t-215`, 0 in `.ob-t-333`; its title "Reopen this tab's omp chats in a new tab"; row types `["omp","shell"]`. Shot `s31_resume` shows "Resume" on "b2", whose row reads "omp b2". With the chat file renamed aside and "All" clicked, the count in `.ob-t-215` was 0 (row still "omp"); with it back, 1.
+- [x] 3.2 Resume action (design D5): type `omp --resume '<file>'`, quoted, in the new tab and its splits; toast when no chat is left.
 
   Verify:
   - clicking Resume on the closed omp chat tab opens a new tab whose omp chat shows the earlier message (shot), with no shell pane;
   - the kv dump shows the tab's objectives linked to the new tab, the old snapshot gone, and the new pane saved with the same file;
   - a closed tab with two omp chats comes back as two panes side by side, in row order (shot).
+
+  Result (harness):
+  - Resume on tab 215 opened tab 359, holding only pane 358, an omp chat in `ompB` whose shot (`s32_resumed`) shows the earlier "Reply with exactly: b2";
+  - the kv dump: o1's tabs went from `[8,276,215,333]` to `[8,276,359,333]`; no snapshot for 215; pane 358 saved with 214's file; 214's entry gone;
+  - tab 377, holding two chats split side by side (panes 376 "e1" and 380 "e2"), linked and closed, showed one Resume with rows `["omp","omp"]`. Resume opened tab 453: panes 452 and 454, side by side, "e1" left and "e2" right (shot `s32_two`), each saved with its old pane's file; o1's 377 became 453.
 
 ## 4. README
 
