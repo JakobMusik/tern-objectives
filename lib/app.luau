@@ -2,6 +2,7 @@
 -- The graph's behaviour: rendering, the click verbs (design D5, P4), the objective menu and the
 -- palette commands. Selection lives in this VM only (design D6).
 
+local Agents = require("./agents")
 local Store = require("./store")
 local Model = require("./model")
 local View = require("./view")
@@ -459,6 +460,74 @@ local function jump_pane(cx: WindowCx, pane: number)
 	cx.layout:focus(pane)
 end
 
+-- ---- resuming a closed tab's Claude chats (resume-closed-agents, design D5, D6) ----
+
+local function resume(cx: WindowCx, tab: number)
+	if cx.hosts:current().kind ~= "local" then
+		cx:toast("info", "Resume works in a session on this Mac")
+		return
+	end
+	local state = Store.read()
+	local win = Model.read(cx, Surface.find(cx))
+	local snap = state.tabs[tostring(tab)]
+	if win.tabs[tab] ~= nil or snap == nil then
+		cx:toast("info", "That tab is no longer closed")
+		return
+	end
+	local chats: { Store.AgentSession } = {}
+	for _, p in snap.panes do
+		local s = if p.kind == "agent" then state.agents[tostring(p.pane)] else nil
+		-- Only an agent row's session, and only a session id, is ever typed into the shell.
+		if s ~= nil and Agents.is_session_id(s.session) then
+			table.insert(chats, s)
+		end
+	end
+	if #chats == 0 then
+		cx:toast("info", "That tab has no saved Claude chat to resume")
+		return
+	end
+	Surface.close(cx)
+	-- `new_tab` and `split` return the new shell pane; typing into it at once works (task 1.2).
+	local moved: { [string]: Store.AgentSession } = {}
+	local first: number? = nil
+	local previous: number? = nil
+	for _, s in chats do
+		local pane = if previous == nil
+			then cx.layout:new_tab({ cwd = s.cwd })
+			else cx.layout:split(previous, "right", { cwd = s.cwd }, { focus = false })
+		if pane == nil then
+			break
+		end
+		cx:run(pane, "claude --resume " .. s.session .. "\r")
+		moved[tostring(pane)] = { agent = s.agent, session = s.session, cwd = s.cwd, seen = os.time() }
+		first = first or pane
+		previous = pane
+	end
+	local new_tab = if first ~= nil then cx.session:tab_of(first) else nil
+	if new_tab == nil then
+		cx:toast("error", "Objectives: could not open a tab to resume in")
+		return
+	end
+	Store.adopt(tab, new_tab, moved)
+	-- The window lists the new tab only after this call: store its snapshot once it does. Its panes
+	-- are still shells starting claude, so the resumed ones are stored as agents, as they will be.
+	tern.timer(250, function(cx2: WindowCx?)
+		if cx2 == nil then
+			return
+		end
+		local w = Model.read(cx2, Surface.find(cx2))
+		local t = w.tabs[new_tab]
+		if t ~= nil then
+			for _, r in t.rows do
+				if moved[tostring(r.pane)] ~= nil then
+					r.kind = "agent"
+				end
+			end
+		end
+		Store.refresh_snapshots(Store.read(), w.tabs :: any, w.key)
+	end)
+end
+
 -- ---- the rename key (design D6) ----
 
 -- ⌥R: the Rename field for the selected objective, while the graph is shown over this tab. A plugin
@@ -528,6 +597,12 @@ function M.action(ev: Action, cx: WindowCx)
 		local tab = tonumber(value)
 		if tab ~= nil then
 			jump_tab(cx, tab)
+		end
+		return
+	elseif act == "resume" then
+		local tab = tonumber(value)
+		if tab ~= nil then
+			resume(cx, tab)
 		end
 		return
 	elseif act == "pane" then

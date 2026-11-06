@@ -109,11 +109,22 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
   - a drag from the label across the button: 0.00 change on the button (`hl.py`), and nothing opened;
   - "Header click still toasts": a click on tab 117's label showed the toast "That tab is closed" (shot `r_toast`), and focus stayed on the graph;
   - the first shot (`r_resume_btn`) showed the button greyed out like the rest of the closed tab, so the fade moved onto the node's parts (design D4, "Strength").
-- [ ] 4.2 Resume action in `lib/app.luau`, plus `Store.adopt` (design D5, D6).
+- [x] 4.2 Resume action in `lib/app.luau`, plus `Store.adopt` (design D5, D6).
 
   Verify:
   - "One chat comes back": `ctl click '.ob-resume'` on a closed tab with a chat and a shell. Then `op agents` shows a chat running `claude --resume <id>` in the saved folder, a shot shows its earlier message, and the new tab has no shell pane;
   - "Links move to the new tab": the kv dump has X and Y linked to the new tab id, the old id is in no objective, and its snapshot is gone. A reopened graph's shot shows the new tab linked, with no ghost.
+
+  Result (harness restarted after the omp crashes; checks clicked a forced redraw first, since a closed pane redraws the graph only through a timer):
+  - "One chat comes back": closed tab 5, with chat 4 (session `bbb06fa6-…`) and a shell, linked to o2 and o1. Resume closed the graph and focused pane 34 in new tab 35, running `claude --resume bbb06fa6-…` in chatA. Tab 35 held only that pane. Shot `r_resumed` showed "Reply with exactly: resume-me" and "resume-me";
+  - "Links move to the new tab": o1 became `[35]` and o2 `[117,139,35]`, tab 5 was in no objective, its snapshot was gone, and the session moved to pane 34. After two more rounds (66, then 75), shot `r_links_moved` showed tab 75 live under Default, linked to o1 and o2, with no ghost of 66. The only ghosts were the unrelated closed tabs 117 and 139;
+  - two chats: closed tab 82, holding chats in chatB (`c3de0d85-…`) and chatD (`45462eaf-…`) side by side and linked to o3, came back as tab 109. Pane 108 resumed chatB's chat, its right split 110 resumed chatD's, and shot `r_split_resumed` showed both earlier exchanges. o3 became `[109]`;
+  - resumed again before a turn: tab 66 was closed right after its resume and still showed "claude" and Resume, since the resume timer stores the new panes as agents.
+
+  Found and fixed on the way (design D3, D4, D6):
+  - a session left from before the harness restart named pane 6, which was now a shell. Only rows stored as agents count now;
+  - the new tab's snapshot was first written while its pane was still a shell (`kind` "terminal"), and snapshots used to be refreshed only when the graph drew. Captures now refresh linked tabs' snapshots, and the resume timer stores resumed panes as agents;
+  - the sweep keeps sessions saved in the last 10 s, so a render before the new tab is listed can't drop them.
 - [ ] 4.3 README: "Using the graph" describes Resume. "Known limits" adds:
   - Claude chats only;
   - two chats in one folder;

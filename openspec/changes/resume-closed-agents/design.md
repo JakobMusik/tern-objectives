@@ -84,14 +84,16 @@ Alternatives:
 - **Removal:**
   - the store doesn't know which panes are live, so `Store.save_sessions` drops entries whose pane is neither live nor a row of a snapshot. It runs at every render, with every pane `cx.session:panes()` lists, parked ones included (`Model.Window.live`), and at every capture;
   - `prune` drops its tabs' entries itself, since a pruned tab is closed;
-  - delete and unlink drop snapshots through `drop_orphans`, and the render that follows drops their entries (task 2.1).
+  - delete and unlink drop snapshots through `drop_orphans`, and the render that follows drops their entries (task 2.1);
+  - an entry saved in the last 10 s is kept anyway: a resumed chat's new pane is neither listed nor in a snapshot until the call that opened it has returned (D6).
 
 ### D4. The Resume button
 - **Placement:** a `span` in the header's first line (`.ob-th1`), right of the label, with `click = "resume=<tab>"`.
 - **Clicks:** the inner node's action wins over the header's `tab=` (source record), so the rest of the header still toasts.
 - **Size:** 28 × 22 px, like the jump button, with `user-select: none`. It fits the 38 px header, so `lib/layout.luau` doesn't change.
 - **Strength:** a ghost used to fade as a whole node (`opacity: 0.5`), which also greyed the button out. The fade now sits on the node's parts other than the button (`:not()`, SDK "Pseudo-classes"), and the dashed border's colour carries the other half: 9% ink instead of 18% (task 4.1).
-- **When it shows:** `View.build` gets `state.agents`. A ghost with status "closed" shows the button when one of its rows' panes has an entry.
+- **When it shows:** `View.build` gets `state.agents`. A ghost with status "closed" shows the button when one of its rows is stored as an agent and its pane has an entry. Only agent rows count, so a session saved under a pane id that another pane later holds can't turn a shell into a chat. Pane ids started again after the harness Tern restarted (task 4.2).
+- **Agent rows stay current:** snapshots used to be refreshed only when the graph drew. Each capture now refreshes the linked tabs' snapshots too, so a chat started in a linked shell tab is stored as an agent by its first turn, even if the graph is never opened before the tab closes (task 4.2).
 
 ### D5. Resume steps
 1. Check the host: if `cx.hosts:current().kind ~= "local"`, toast "Resume works in a session on this Mac" and stop.
@@ -111,7 +113,7 @@ Notes:
 - removes `old`'s snapshot and its saved sessions;
 - saves each resumed chat's session under its new pane, so the new tab can be resumed again before its next turn.
 
-The new tab's snapshot is written by `refresh_snapshots` once the window lists the tab. Tern lists it only after the call that opened it (source record). So the resume step also starts a 250 ms `tern.timer` that reads the window and refreshes the snapshots, whether or not the graph is shown.
+The new tab's snapshot is written by `refresh_snapshots` once the window lists the tab. Tern lists it only after the call that opened it (source record). So the resume step also starts a 250 ms `tern.timer` that reads the window and refreshes the snapshots, whether or not the graph is shown. The resumed panes are still shells starting claude at that point, so they are stored as agents, which they are about to be. `cx.layout:split` on a pane opened in the same call works (task 4.2).
 
 Alternative: copying the links and keeping the ghost. The objective would then show the same work twice until a prune.
 
