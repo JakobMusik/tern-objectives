@@ -158,28 +158,27 @@ local function tab_node(t: Model.Tab, status: string, first: string, linked_open
 	local detail_lines = 0
 	local holds_origin = false
 	for _, r in t.rows do
-		local open = status == "live" and expanded[tostring(r.pane)] == true
-		local row_kids: { Node } = {}
-		if status == "live" then
-			table.insert(row_kids, span("ob-exp" .. (if open then " ob-exp-open" else ""), if open then "▾" else "▸", {
-				key = "exp",
-				title = if open then "Hide details" else "Show details",
-				actions = { click = "exp=" .. r.pane },
+		local live = status == "live"
+		local open = live and expanded[tostring(r.pane)] == true
+		local kind, kind_cls = ui_state.kind(r)
+		local row_kids: { Node } = {
+			span("ob-rtype" .. (if kind_cls ~= nil then " " .. kind_cls else ""), kind, { key = "type" }),
+			span("ob-rlabel", r.title, { key = "label", title = r.title }),
+		}
+		if live then
+			-- The row's only jump; a click anywhere else on the row opens or folds its details (design R7).
+			table.insert(row_kids, el("span", { class = "ob-jump", key = "jump", title = "Go to this pane", actions = { click = "pane=" .. r.pane } }, {
+				{ k = "icon", p = { name = "arrow-right" } } :: any,
 			}))
 		end
-		local kind, kind_cls = ui_state.kind(r)
-		table.insert(row_kids, span("ob-rtype" .. (if kind_cls ~= nil then " " .. kind_cls else ""), kind, { key = "type" }))
-		table.insert(row_kids, span("ob-rlabel", r.title, {
-			key = "label",
-			title = r.title,
-			actions = { click = if status == "live" then "pane=" .. r.pane else "tab=" .. t.id },
-		}))
 		local row_cls = "ob-row ob-r-" .. r.pane
-		if status == "live" and r.pane == ui_state.origin then
+		if live and r.pane == ui_state.origin then
 			row_cls ..= " ob-row-origin"
 			holds_origin = true
 		end
-		table.insert(kids, el("div", { class = row_cls, key = "r:" .. r.pane }, row_kids))
+		-- A ghost row has no details; its click says why the tab can't be reached.
+		local row_click = if live then "exp=" .. r.pane else "tab=" .. t.id
+		table.insert(kids, el("div", { class = row_cls, key = "r:" .. r.pane, actions = { click = row_click } }, row_kids))
 		if open then
 			for i, d in ui_state.details(r) do
 				detail_lines += 1

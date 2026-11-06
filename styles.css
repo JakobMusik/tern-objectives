@@ -342,40 +342,36 @@
 	box-shadow: inset 0 0 0 1px var(--l2);
 	background: transparent;
 }
+/* A pane row: its type and name open or fold its details, the jump button at its end goes to the
+   pane, and none of it selects text (design R6, R7). */
 [data-surface='plugin.tern.canvas'] .ob-root .ob-row {
 	box-sizing: border-box;
 	display: flex;
 	flex-direction: row;
 	align-items: center;
-	gap: 4px;
+	gap: 6px;
 	overflow: hidden;
-	padding: 0 8px 0 6px;
+	padding: 0 0 0 10px;
 	white-space: nowrap;
 	color: var(--t2);
+	user-select: none;
 }
-/* ▸/▾: 28 px wide and the row's full height, can't be selected or copied (design R3). The font's
-   ▸ is a small triangle at any size, so the text stays for its meaning but is hidden, and the arrow
-   is drawn instead: an 8 × 10 px triangle pointing right, or 10 × 8 px pointing down when open. */
-[data-surface='plugin.tern.canvas'] .ob-root .ob-exp {
+[data-surface='plugin.tern.canvas'] .ob-root .ob-row:not(.ob-row-origin):hover {
+	background: rgb(from var(--t1) r g b / 5%);
+}
+/* 28 px wide and the row's full height, around Tern's arrow-right icon. */
+[data-surface='plugin.tern.canvas'] .ob-root .ob-jump {
 	flex: none;
 	align-self: stretch;
 	display: flex;
 	align-items: center;
 	justify-content: center;
 	width: 28px;
-	font-size: 0;
-	color: transparent;
-	user-select: none;
+	color: var(--t3);
 }
-[data-surface='plugin.tern.canvas'] .ob-root .ob-exp::before {
-	content: "";
-	border-style: solid;
-	border-color: transparent transparent transparent var(--t3);
-	border-width: 5px 0 5px 8px;
-}
-[data-surface='plugin.tern.canvas'] .ob-root .ob-exp.ob-exp-open::before {
-	border-color: var(--t3) transparent transparent transparent;
-	border-width: 8px 5px 0 5px;
+[data-surface='plugin.tern.canvas'] .ob-root .ob-jump:hover {
+	color: var(--accent);
+	background: rgb(from var(--accent) r g b / 12%);
 }
 /* A row's pane type, and an agent's state after its name (design R4). */
 [data-surface='plugin.tern.canvas'] .ob-root .ob-rtype {
@@ -394,7 +390,7 @@
 	box-sizing: border-box;
 	display: block;
 	overflow: hidden;
-	padding: 0 8px 0 38px;
+	padding: 0 8px 0 22px;
 	white-space: nowrap;
 	text-overflow: ellipsis;
 	color: var(--t3);
