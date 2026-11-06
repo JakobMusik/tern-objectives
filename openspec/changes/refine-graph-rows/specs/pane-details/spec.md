@@ -32,15 +32,15 @@ For omp agents, an open row SHALL also show the user's latest message as one lin
 ## ADDED Requirements
 
 ### Requirement: Folded pane rows
-Each pane row in a live tab SHALL start folded, with a ▸ toggle. Clicking ▸ SHALL show the row's details under it and turn the toggle into ▾; clicking ▾ SHALL fold them again. Clicking the toggle SHALL NOT jump to the pane. Opened rows SHALL be remembered between opens of the graph.
+Each pane row in a live tab SHALL start folded and SHALL show no arrow. Clicking the row's type or name SHALL show the row's details under it, and clicking it again SHALL fold them. That click SHALL NOT jump to the pane. Opened rows SHALL be remembered between opens of the graph.
 
 #### Scenario: Folded by default
 - **WHEN** the graph opens on a tab with two panes whose rows were never opened
-- **THEN** neither row shows details, and each has a ▸ toggle
+- **THEN** neither row shows details, and neither shows a ▸ or ▾ arrow
 
 #### Scenario: Expand and collapse
-- **WHEN** the user clicks ▸ on a pane row and then clicks ▾
-- **THEN** the details are there after the first click and gone after the second, and focus stays on the graph
+- **WHEN** the user clicks a pane row's name and then clicks it again
+- **THEN** the details are there after the first click and gone after the second, focus stays on the graph, and the shown tab is unchanged
 
 #### Scenario: Opened rows remembered
 - **WHEN** the user opens a row's details, closes the graph and opens it again

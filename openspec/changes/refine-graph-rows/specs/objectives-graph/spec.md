@@ -32,21 +32,25 @@ Lines, badges, chips and the unlinked-tab fill SHALL stay distinguishable in bot
 - **THEN** both captures show every line, every badge colour, and unlinked tabs filled differently from linked ones
 
 ### Requirement: Larger hit areas
-The done box and the ⋯ button SHALL each take clicks over at least 22 px of width and the full 18 px height of their line in objective nodes. The ▸/▾ toggle SHALL take clicks over at least 28 px of width and the full 22 px height of its pane row, with an arrow at least 8 px across. Objective nodes SHALL stay 48 px tall and pane rows 22 px.
+The done box and the ⋯ button SHALL each take clicks over at least 22 px of width and the full 18 px height of their line in objective nodes. A pane row's jump button SHALL take clicks over at least 28 px of width and the row's full 22 px height. Objective nodes SHALL stay 48 px tall and pane rows 22 px.
 
 #### Scenario: Measured hit areas
 - **WHEN** a screenshot's layout data is read
-- **THEN** every done box and ⋯ button is at least 22 × 18 px, every ▸/▾ toggle at least 28 × 22 px, objective nodes are 48 px tall, and pane rows are 22 px tall
+- **THEN** every done box and ⋯ button is at least 22 × 18 px, every jump button at least 28 × 22 px, objective nodes are 48 px tall, and pane rows are 22 px tall
 
 ## ADDED Requirements
 
 ### Requirement: Controls don't select text
-Dragging across a tag chip, a due chip, a P0–P3 badge, the header's "All" and "This session" buttons, "Prune closed tabs", "＋ New objective" or a ▸/▾ toggle SHALL NOT select its text.
+Dragging across a tag chip, a due chip, a P0–P3 badge, the header's "All" and "This session" buttons, "Prune closed tabs", "＋ New objective", or a pane row's type, name or jump button SHALL NOT select its text.
 
 #### Scenario: Drag across the header
 - **WHEN** the user presses in the header's empty space, drags across "＋ New objective", the tag filter chips and "All" / "This session", and releases in empty space
 - **THEN** the screenshot shows no text highlight on any of them
 
 #### Scenario: Drag across a node's badge and chips
-- **WHEN** the user drags from an objective's side note across its due chip and tag chip, then up across its P0–P3 badge
+- **WHEN** the user drags from an objective's side note across its due chip and tag chip, and from its title across its P0–P3 badge
 - **THEN** the screenshot shows no text highlight on the badge or the chips, and the objective's priority is unchanged
+
+#### Scenario: Drag along a pane row
+- **WHEN** the user drags from a tab's header across a pane row's type and name
+- **THEN** the screenshot shows no text highlight on the row

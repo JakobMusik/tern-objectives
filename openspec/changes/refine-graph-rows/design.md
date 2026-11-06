@@ -49,11 +49,12 @@ The first try, a 5 % ink layer over the page, failed in the dark appearance. The
 
 Ghost tabs (closed or elsewhere) keep their 0.5 opacity: they are history, not unlinked tabs.
 
-### R3. Toggle and fold state
-- `.ob-exp` becomes 28 px wide and full row height, with `user-select: none`. Rows stay 22 px (`Layout.px.row_h`), so line ends don't move.
-- The arrow is drawn, not typed. Geist's ▸ stays a small triangle even at 20 px (shot `exp20`), so the ▸/▾ text stays for meaning and the tree checks but is hidden (`font-size: 0; color: transparent`). A `::before` border triangle draws the arrow: 8 × 10 px pointing right, or 10 × 8 px pointing down when the toggle has `ob-exp-open` (SDK "Supported CSS": `::before` with `content`, per-side `border-width` and `border-color`). `font-size: 0` alone left a speck of the glyph, hence the transparent colour.
-- `view.expanded` (`{[pane] = true}`) replaces `view.collapsed`: a live row is open only when its pane is in `expanded`, and the `exp` action toggles that.
+### R3. Fold state
+- `view.expanded` (`{[pane] = true}`) replaces `view.collapsed`: a live row is open only when its pane is in `expanded`, and the `exp` action toggles that. 0.1.x stored `expanded` in the same shape (`v0.1.2:lib/store.luau` L41), so such a map reopens its rows that are still live.
 - `Store.read` no longer reads `collapsed`, so the next write drops it. Rows folded under 0.4.0 start folded, which is what the user folded them for.
+- Rows stay 22 px (`Layout.px.row_h`), so line ends don't move.
+
+**History (0.5.0):** the ▸/▾ toggle was a 28 px span. Its arrow was drawn as a `::before` border triangle, because Geist's ▸ stays a small triangle even at 20 px (shot `exp20`). R7 replaces the toggle with a click on the row.
 
 ### R4. Pane type
 `Details.type(row)` returns the label at the start of each row:
@@ -82,7 +83,18 @@ Both text spans use `white-space: pre`, so a space at the split survives. When t
 **Tried first, and dropped:** Tern's `text` node with `truncate = "middle"` (SDK "Building Views › `text`"). In the canvas it did cut the middle, but its fit kept about four characters too many. The node then clipped its own end, so "…participate." showed as "…particip" (task 3.3, shots `s33_msg`, `s33_msg2`; again after a resize refit, and with `system-ui` instead of Geist, which rules out a web-font measuring gap). The end of the message is the point of the change, so the line is split in CSS instead.
 
 ### R6. Unselectable controls
-`user-select: none` on `.ob-chip` (tag and due chips, the header's tag filters), `.ob-badge`, `.ob-segb`, `.ob-btn` and `.ob-exp`. This is the same property the link bar uses since 0.2.1.
+`user-select: none` on `.ob-chip` (tag and due chips, the header's tag filters), `.ob-badge`, `.ob-segb`, `.ob-btn` and `.ob-row` (a pane row's type, name and jump button). This is the same property the link bar uses since 0.2.1. A row's details stay selectable, so a message can still be copied.
+
+### R7. Row clicks and the jump button
+A live row's `div.ob-row` carries `actions = {click = "exp=<pane>"}`, so a click on its type, its name or the space between opens or folds its details. No arrow is drawn, and `.ob-exp` and its triangle rules go.
+
+The row ends in `span.ob-jump` (`flex: none`, 28 px wide, full row height, the icon centred) with `actions = {click = "pane=<pane>"}` and the title "Go to this pane". It holds Tern's `arrow-right` icon (`{k = "icon", p = {name = "arrow-right"}}`, SDK "Building Views › `icon`": a 16 × 16 box drawn in the current text colour). It is `--t3` at rest, and `--accent` on a light accent fill under the pointer (`:hover`, SDK "Supported CSS › Pseudo-classes").
+
+The innermost node with a click action handles a click: a title click inside the root's `bg=` click already selects (tasks 3.1, 4.1 of this change), so the button's `pane=` wins over the row's `exp=`. Task 6.1 checks it.
+
+Rows of closed and other-window tabs keep `click = "tab=<id>"`, which toasts why the tab can't be reached (tab-navigation "Closed tabs don't jump"). They get no jump button, having nothing to open.
+
+The detail lines' left padding drops from 38 px (after the toggle) to 22 px: the row's 10 px left padding plus a 12 px indent.
 
 ## Risks / Trade-offs
 
@@ -93,4 +105,4 @@ Both text spans use `white-space: pre`, so a space at the split survives. When t
 
 ## Migration Plan
 
-Release 0.5.0: tag `v0.5.0`, then `tern plugin install … --force` live. `view.collapsed` disappears from `kv.json` on the next write; objectives, links and snapshots are unchanged. Rollback is a reinstall of `v0.4.0`, where every row starts open again (its `collapsed` list is gone).
+Release 0.5.0, then 0.6.0: tag each, then `tern plugin install … --force` live. `view.collapsed` disappears from `kv.json` on the next write; objectives, links and snapshots are unchanged. Rollback is a reinstall of `v0.5.0` (toggle rows) or `v0.4.0`, where every row starts open again (its `collapsed` list is gone).

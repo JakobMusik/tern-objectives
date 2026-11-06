@@ -110,13 +110,37 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
   - a regression pass first (link bar on and off, pane-row jump, reopen order, ⌃⌘O close) all held;
   - the isolated install printed `installed objectives 0.5.0` (`0 blocks, 0 lenses, window ready`); release commit `bea43bf`;
   - the tags API lists `v0.5.0` first; live `tern plugin list` shows `objectives 0.5.0 … ready`, with `tabnav 0.1.0` untouched.
-- [ ] 5.3 **(live)** With the user:
+
+  The user's check of 0.5.0 turned into the row-click request; it moved to 7.2, covering 0.6.0.
+
+## 6. Row clicks
+
+- [ ] 6.1 Drop the ▸/▾ toggle. A click on a live row opens or folds its details, a jump button with Tern's `arrow-right` icon at the row's right end goes to the pane, and ghost rows keep their toast without a button (design R7). Pane rows can't be selected (R6), and the details' indent follows the row.
+
+  Verify:
+  - a fresh open shows no `.ob-exp` and no ▸/▾ text;
+  - a click on a row's name in another session's tab opens its details, the kv dump lists the pane in `view.expanded`, and the shown session and focus are unchanged; a second click folds them;
+  - a click on that row's jump button shows the pane's session and tab with that pane focused and no graph left;
+  - the jump button measures at least 28 × 22;
+  - a click on a closed tab's row toasts and changes no focus;
+  - a drag from a tab header across a row's type and name leaves no highlight (`seldiff.py`);
+  - `edgecheck.py` passes with a row open.
+- [ ] 6.2 README: a row's name opens its details, and its arrow button jumps. Refresh `docs/graph.png`.
+
+  Verify: `grep` finds no ▸ or ▾ in the README's rows text; the screenshot shows jump buttons and no toggles.
+
+## 7. Release and live check
+
+- [ ] 7.1 Version `0.6.0`: an isolated install prints `installed objectives 0.6.0`; commit, push `main`, tag `v0.6.0`; `tern plugin install github.com/JakobMusik/tern-objectives --force` live.
+
+  Verify: the tags API lists `v0.6.0`, and live `tern plugin list` shows `objectives 0.6.0` ready.
+- [ ] 7.2 **(live)** With the user:
   - the graph opened from a later tab lists that tab's session and tab first;
   - unlinked tabs read at full strength;
-  - rows start folded and the toggle is easy to hit;
+  - rows start folded, a click on a row's name opens it, and its arrow button jumps;
   - a note's row starts with "note";
   - an omp row reads "omp · <state>", with "you:" / "omp:" lines cut in the middle;
-  - dragging across chips, badges and header buttons selects nothing.
+  - dragging across chips, badges, header buttons and rows selects nothing.
 
   Record the findings here.
 
