@@ -177,9 +177,11 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
   - **Nothing selected:** ⌥⌘R opened no field, and the shot `k2_none` shows the toast "Select an objective in the graph to rename it".
   - **Letters:** with the graph closed, `r` then Shift+R in Benchmarks's shell showed `rR` (shot `k2_letters`), with no toast. Both characters were then deleted.
   - **README:** ⌥⌘R in the table row and in "Using the graph". The only other key mentions are in `window.luau`'s comment naming ⌘⇧R and ⌃⌘R as taken.
-- [ ] 6.3 Version `0.8.1`: an isolated install prints `installed objectives 0.8.1`; commit, push `main`, tag `v0.8.1`; `tern plugin install github.com/JakobMusik/tern-objectives --force` live, from a shell with no harness variables.
+- [x] 6.3 Version `0.8.1`: an isolated install prints `installed objectives 0.8.1`; commit, push `main`, tag `v0.8.1`; `tern plugin install github.com/JakobMusik/tern-objectives --force` live, from a shell with no harness variables.
 
   Verify: the tags API lists `v0.8.1`, and live `tern plugin list` shows `objectives 0.8.1` ready.
+
+  Result: the isolated install printed `installed objectives 0.8.1` (`0 blocks, 0 lenses, window ready`). The release commit is `956f620`, and the tags API lists `v0.8.1` first. The live install, run after checking the shell had no harness variables, wrote `~/Library/Application Support/Tern/plugins/objectives`. `tern plugin list` shows `objectives 0.8.1 … ready`, with `tabnav 0.1.0` untouched.
 - [ ] 6.4 **(live)** With the user:
   - select an objective and press ⌥⌘R to rename it; without a selection, ⌥⌘R shows the hint;
   - ⌃⌘R renames the session again, as the user's keybind says;
