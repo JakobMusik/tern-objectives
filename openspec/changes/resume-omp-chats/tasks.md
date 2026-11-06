@@ -1,0 +1,67 @@
+# Tasks
+
+Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
+- **Harness setup:**
+  - start the serve as a named service (`/tmp/tobj/bin/serve`, ready on "serving"), then `ctl plugins fixtures`;
+  - copy the repo into the fixtures with `/tmp/tobj/bin/sync` after each edit, and reload with `ctl plugins fixtures`;
+  - omp chats run in folders under `/tmp/tobj/w/`, typed into harness shells; each check sends one short message, such as "Reply with exactly: ok";
+  - the test Tern's clock moves only on `ctl wait`, and plugin timers fire only with window activity: use `/tmp/tobj/bin/pump`.
+- **Helper ops** (`/tmp/tobj/bin/op`): `agents`, `panes`, `run`, `close`, `new_tab`, `tab_type`, `read`, and `proc_run` (its result in the helper's kv as `proc`).
+- **Kv dump** reads `/tmp/tobj/config/plugin-data/objectives/kv.json`.
+- **After the checks**, delete `~/.omp/agent/sessions/-private-tmp-tobj-*`.
+
+## 1. Spike
+
+- [ ] 1.1 Check D1 and D5's assumptions on a harness omp chat, with the 0.10.0 plugin.
+
+  Type `omp` in a shell tab in `/tmp/tobj/w/ompA` and send one message. Verify, and record in design.md's source record:
+  - `proc_run` of D1's script shows that chat's pid with `TERN_WINDOW_PANE` equal to its pane id, and its open `.jsonl` under `sessions/-private-tmp-tobj-w-ompA/`;
+  - `cx.agents:list()` (op `agents`) lists the pane;
+  - after the tab is closed, `omp --resume '<file>'` typed at once into a new shell tab in the same folder shows the earlier message (shot), and op `agents` lists the new pane;
+  - `proc_run` then shows the resumed process holding the same file.
+
+  If any differs, stop and update the artifacts before group 2.
+
+## 2. Saving omp chats
+
+- [ ] 2.1 Capture (design D1, D2): rewrite `lib/agents.luau` around the one-process script and its parser. Remove the Claude matching (`folder`, `session_of`, `is_session_id`, `pair`, the `cx.procs` sampling, `turned`), keep `is_claude` and `base_name`, and add `is_chat_file`. Request a capture from the startup timer in `window.luau` and from `App.open`.
+
+  Verify with kv dumps:
+  - one message in an omp chat in `/tmp/tobj/w/ompA` saves agent "omp", folder `/tmp/tobj/w/ompA` and its open file, within 3 s of the turn;
+  - two chats in `/tmp/tobj/w/ompB`, one message each, save two different files, each matching its pid's open file in `proc_run`;
+  - `omp --resume '<file>'` in a new shell, no message, then opening the graph, saves that file;
+  - a chat with no message, then opening the graph, saves nothing;
+  - deleting a saved entry from `kv.json` and reloading the plugin saves it again within 3 s.
+- [ ] 2.2 Migration (design D3): `normalize` keeps only valid omp entries.
+
+  Verify: write a Claude entry (`agent` "claude", a UUID `session`) into `kv.json` under a closed linked tab's agent pane, open the graph, then change a priority. The tab shows no Resume, its row starts with "agent" (`ctl tree '.ob-rtype'`), and the kv dump afterwards has no entry under that pane.
+
+## 3. Resume and rows
+
+- [ ] 3.1 Button and rows (design D4): the button needs a valid entry whose file exists, and its tooltip names omp. Closed rows take their name from valid entries only.
+
+  Verify: with an omp chat tab and a shell-only tab, both linked and closed, a shot shows "Resume" on the first only, and `ctl tree '.ob-rtype'` reads "omp" for the chat's row. After the chat file is moved aside and the graph redraws (`.ob-segb` click), the button is gone. Move the file back afterwards.
+- [ ] 3.2 Resume action (design D5): type `omp --resume '<file>'`, quoted, in the new tab and its splits; toast when no chat is left.
+
+  Verify:
+  - clicking Resume on the closed omp chat tab opens a new tab whose omp chat shows the earlier message (shot), with no shell pane;
+  - the kv dump shows the tab's objectives linked to the new tab, the old snapshot gone, and the new pane saved with the same file;
+  - a closed tab with two omp chats comes back as two panes side by side, in row order (shot).
+
+## 4. README
+
+- [ ] 4.1 Update "Using the graph" (Resume brings back omp chats) and "Known limits": omp only, Claude and Codex chats are not resumed (and Claude Resume from 0.9.0 to 0.10.0 is gone), a chat needs one message or a file it was started from, this Mac only, and an omp that holds no file and was switched with `/new` may reopen the earlier chat.
+
+  Verify by reading the rendered sections against specs/agent-resume.
+
+## 5. Release 0.11.0
+
+- [ ] 5.1 Version `0.11.0` in `plugin.toml`. Verify an isolated `tern plugin install` of the repo folder prints `installed objectives 0.11.0`, then commit, push `main` and tag `v0.11.0` (annotated, message "objectives 0.11.0").
+- [ ] 5.2 **(live)** After the push has finished, `tern plugin install github.com/JakobMusik/tern-objectives --force`, from a shell with no harness variables. Verify `tern plugin list` shows `objectives 0.11.0 … ready`, with `tabnav 0.1.0` untouched.
+- [ ] 5.3 **(live)** With the user: a linked tab with an omp chat, closed, shows Resume, and its row reads "omp"; Resume brings the chat back with its messages in a new tab that takes the objective's link. Record the result here.
+
+## Workflow follow-up
+
+- Archive the change (`openspec archive resume-omp-chats --yes`). Then edit the Purpose of `openspec/specs/agent-resume/spec.md`, which still says "Claude chats", run `openspec validate --specs --strict`, commit and push.
+- Delete `~/.omp/agent/sessions/-private-tmp-tobj-*` and stop the harness service.
+- Next change: "Close linked tabs" for done objectives, which captures omp chats just before closing.
