@@ -44,7 +44,7 @@ Motivation is in proposal.md, and the behaviour in `specs/objectives-graph/spec.
 | Fact | Source |
 |---|---|
 | A plugin command's `keys` are chords spelled as in `settings.json` `keybinds`. A plugin bind is left out, with a warning, when Tern's defaults or preset already bind those keys | SDK "Commands, Keys, and Overrides › Keymap layering" (book L4337–4372) |
-| Tern's defaults bind plain `r` to `canvas.tool_rect`, `git.refresh` and `notebook.to_raw`. `shift+r`, `ctrl+cmd+r` and `cmd+shift+r` are free, and `cmd+r` is taken by four `sqlite.*` actions | `cx.actions:keys()` (`tern.d.luau` L879–880), read through the test helper's `keys` op |
+| Tern's defaults bind plain `r` to `canvas.tool_rect`, `git.refresh` and `notebook.to_raw`, `cmd+r` to four `sqlite.*` actions, and `shift+cmd+r` to `rename_tab`. Those are its only R chords. `cx.actions:keys()` spells modifiers in a fixed order (`alt`, `ctrl`, `shift`, `cmd`), so looking up `cmd+shift+r` finds nothing; the full dump has to be read | `cx.actions:keys()` (`tern.d.luau` L879–880), the test helper's `keys_all` op (task 6.2) |
 | `keys = { "r" }` is refused: `plugin bind left out: the preset binds these keys keys="r"` | test copy of `window.luau`, harness log |
 | A plugin command's key runs wherever focus is, whatever `available` returns. With `keys = { "shift+r" }` and `available` true only while the graph had focus, Shift+R in Benchmarks's shell still ran the command (`focused=12`), and the prompt showed no "R". `available` only hides the palette row | harness log `SPIKE rename key ran, focused=12`, shot `k_term` |
 | `ctrl+cmd+r` binds without a warning (`cx.actions:keys()` lists `plugin.objectives.rename`) and runs with the graph focused (`focused=27`) | harness log |
@@ -52,7 +52,7 @@ Motivation is in proposal.md, and the behaviour in `specs/objectives-graph/spec.
 | `available` never gates a plugin's key: a `shift+r` command whose `available` always returns false still ran with the graph focused (`focused=30`) | harness log `SPIKE probe_false ran, focused=30` (task 6.1) |
 | A canvas has no key handler: a button's `keys` are drawn only ("your program handles the key"), and only blocks get `key(state, key, cx)`. Input and editor nodes are rejected because canvases take no keys | SDK `button` (L14879), `menu` (L11150), "Canvas cx" (L32343); `tern.d.luau` L438–440 |
 | Tern's own R action for canvas panes can't be overridden: `tern.override("canvas.tool_rect", …)` raises ``unknown command `canvas.tool_rect` ``. Only palette commands can be overridden | harness log (task 6.1); SDK "Overrides" (L4399–4411) |
-| `cmd+shift+r` is free in Tern's defaults and in the user's `keybinds`, as are `cmd+alt+r` and `cmd+shift+e`. `ctrl+cmd+n` is taken by `add_remote_host` | `cx.actions:keys()` in the harness; live `settings.json` (task 6.1) |
+| `alt+cmd+r` is free in Tern's defaults and in the user's `keybinds`, binds without a warning, and shows in `cx.actions:keys()` as `plugin.objectives.rename`. `cmd+shift+r` is refused (`the preset binds these keys`), being Tern's `rename_tab`. That corrects task 6.1, which read `cmd+shift+r` as free because of the spelling above | harness log and `keys_all` dump (task 6.2); live `settings.json` |
 
 ## Goals / Non-Goals
 
@@ -115,11 +115,11 @@ Alternatives:
 - Re-sort the whole column by link count: no divider needed, but tabs would move on every link.
 
 ### D5. Releases: 0.7.0, 0.8.0, then 0.8.1
-0.7.0 and 0.8.0 are minor versions, since behaviour changes. 0.7.0 shipped D1–D4. 0.8.0 dropped D1–D2 and added D6 on ⌃⌘R. 0.8.1, a patch, moves D6's key to ⌘⇧R, because 0.8.0's never reached the plugin in the user's Tern. The README covers the top section and the rename key. Its screenshot shows the graph with nothing selected, so it stays.
+0.7.0 and 0.8.0 are minor versions, since behaviour changes. 0.7.0 shipped D1–D4. 0.8.0 dropped D1–D2 and added D6 on ⌃⌘R. 0.8.1, a patch, moves D6's key to ⌥⌘R, because 0.8.0's never reached the plugin in the user's Tern. The README covers the top section and the rename key. Its screenshot shows the graph with nothing selected, so it stays.
 
 ### D6. Rename key
-- `window.luau` registers "Objectives: Rename selected objective" (`id = "rename"`, icon `pencil`, group "Objectives") with `keys = { "cmd+shift+r" }`. Its action is `plugin.objectives.rename`, so users can rebind it in `settings.json` `keybinds`.
-- 0.8.0 used `ctrl+cmd+r`, the partner of ⌃⌘O, but the user's `keybinds` map it to `rename_session` (source record). 0.8.1 uses ⌘⇧R, which is free in Tern's defaults and the user's keybinds, keeps the R, and types nothing anywhere, as a ⌘ chord.
+- `window.luau` registers "Objectives: Rename selected objective" (`id = "rename"`, icon `pencil`, group "Objectives") with `keys = { "alt+cmd+r" }`. Its action is `plugin.objectives.rename`, so users can rebind it in `settings.json` `keybinds`.
+- 0.8.0 used `ctrl+cmd+r`, the partner of ⌃⌘O, but the user's `keybinds` map it to `rename_session` (source record). ⌘⇧R is Tern's own `rename_tab`. 0.8.1 uses ⌥⌘R, which is free in Tern's defaults and the user's keybinds, keeps the R, and types nothing anywhere, as a ⌘ chord.
 - R, even scoped to the open graph with an objective selected, isn't possible in Tern 0.9.11. A canvas gets no keys of its own, a plugin can't bind plain `r`, a plugin key runs in every pane whatever `available` says, and the canvas panes' own R action can't be overridden (source record).
 - `available` returns whether an objective is selected and the graph is shown over the current tab (`Surface.here`). It only decides whether the palette lists the row.
 - `run` calls `App.rename_selected(cx)`. With the graph shown here and a selected objective still in the store, it calls `rename(cx, o)`, the ⋯ menu's field, which shows the graph again afterwards. Otherwise an info toast reads "Select an objective in the graph to rename it". The selection is left as it is either way.
@@ -131,8 +131,8 @@ Alternatives:
 
 ## Risks / Trade-offs
 
-- **[A user's own `keybinds` take ⌘⇧R]** → The user layer always wins (SDK "Keymap layering"). The command stays in the palette, and `plugin.objectives.rename` can be bound to another chord. ⌃⌘R in 0.8.0 hit exactly this.
-- **[⌘⇧R pressed without the graph, or without a selection]** → The command still runs, since a key isn't gated by `available`, and it shows the hint toast.
+- **[A user's own `keybinds` take ⌥⌘R]** → The user layer always wins (SDK "Keymap layering"). The command stays in the palette, and `plugin.objectives.rename` can be bound to another chord. ⌃⌘R in 0.8.0 hit exactly this.
+- **[⌥⌘R pressed without the graph, or without a selection]** → The command still runs, since a key isn't gated by `available`, and it shows the hint toast.
 - **[The top section scrolled out of view]** → Accepted, with no automatic scrolling (proposal, out of scope). The lines from the selected objective still run up to the section.
 - **[A stale fixed set]** → A pinned tab that closes becomes a ghost in the top section's "Closed tabs". A new tab, which isn't pinned, goes below the divider. Pruning removes closed tabs from both.
 - **[Two passes over the tabs]** → Same node count as today; the render budget isn't affected.
