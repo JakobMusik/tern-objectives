@@ -153,6 +153,8 @@ function M.open(cx: WindowCx, keep_origin: boolean?)
 	end
 	Refresh.rendered(cx)
 	Refresh.start()
+	-- Restored chats nobody has written to are saved only from here or the plugin's start (D2).
+	Agents.request()
 end
 
 -- ⌃⌘O: closes the graph shown over this tab, else opens it here.
@@ -516,7 +518,7 @@ local function resume(cx: WindowCx, tab: number)
 	for _, p in snap.panes do
 		local s = if p.kind == "agent" then state.agents[tostring(p.pane)] else nil
 		-- Only an agent row's session, and only a session id, is ever typed into the shell.
-		if s ~= nil and Agents.is_session_id(s.session) then
+		if s ~= nil and Store.is_chat_file(s.session) then
 			table.insert(chats, s)
 		end
 	end

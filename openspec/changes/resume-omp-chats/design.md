@@ -32,6 +32,7 @@ All on 2026-11-07, on the user's Mac (read-only `ps` and `lsof` of their own pro
 | A shell-typed omp in the harness is an agent block, and D1's script pairs it with its pane and file | task 1.1: pane 16, `program` "omp"; pid 72648 with `TERN_WINDOW_PANE=16` held its `.jsonl` open; the script took 198 ms |
 | `omp --resume '<file>'` typed at once into a new shell tab brings the chat back, and keeps writing to the same file | task 1.1: shot `s11_resumed` showed the earlier message; pid 73544 named the file on its command line, then held that same file after its next message |
 | omp names the folder of a chat outside home with `--` around it | task 1.1: `sessions/--private-tmp-tobj-w-ompA--/` |
+| omp creates a chat's file, and starts holding it, when the first reply ends, not when the message is sent | task 2.1: during the 46 s first turn of pane 140, `sessions/--private-tmp-tobj-w-ompC--/` stayed empty and its omp held no `.jsonl`; the file and its lock appeared as the turn ended. The capture at the turn's start saved nothing for it; the one at its end saved it about 1 s later (`seen` 1793992562, lock written at 1793992561) |
 
 ## Goals / Non-Goals
 
@@ -65,7 +66,7 @@ Alternatives:
 - **`~/.omp/run/session-owners/<id>.lock`:** these are empty flock files, held only by chats that have written; `lsof` already shows the chat file itself.
 
 ### D2. When captures run
-- **Turns:** unchanged triggers: `agent_state` to "working", and `agent_finished` with "done" or "failed".
+- **Turns:** unchanged triggers: `agent_state` to "working", and `agent_finished` with "done" or "failed". A chat's first turn is saved by the capture at its end, since omp creates the file only then (source record). Later turns are saved at their start as well.
 - **Plugin start:** the startup `tern.timer(0, …)` in `window.luau` also requests a capture. This saves chats that were running before this version was installed, and chats Tern restored after a restart.
 - **Graph open:** `App.open` requests a capture. If it saves something new, the `Refresh` cycle redraws, and the closed tabs gain their buttons. It covers a restored chat no one has written to.
 - **One at a time:** as now, a request 0.5 s ahead, and at most one under way. The `turned` set, the sample waits and the retries go: a chat with no message has no file to find (source record).
@@ -73,7 +74,7 @@ Alternatives:
 
 ### D3. What is stored
 `AgentSession` keeps its shape: `{ agent = "omp", session = <absolute file path>, cwd = <the agent's cwd>, seen }`.
-- **Valid entry:** `agent == "omp"`, and `session` an absolute path ending in `.jsonl`, two levels under a `sessions` folder, with no control characters. `Agents.is_chat_file` checks this.
+- **Valid entry:** `agent == "omp"`, and `session` an absolute path ending in `.jsonl`, two levels under a `sessions` folder, with no control characters. `Store.is_chat_file` checks this; it lives in the store because `normalize` needs it, and `agents.luau` already requires the store.
 - **Migration:** `normalize` (`lib/store.luau:112`) keeps only valid entries. Claude sessions from 0.9.0 to 0.10.0 are therefore gone from every read, and from the file at the next write. `VERSION` stays 1.
 - **Rollback:** an older plugin reads omp entries as sessions. Its Resume would toast "no saved Claude chat", since a path isn't a UUID (`is_session_id`), and it would type nothing.
 
@@ -96,6 +97,7 @@ As in 0.9.0 (`resume-closed-agents` D5, D6), with three changes:
 - **`TERN_PANE` is not in `tern.d.luau` or the SDK book.** Tern sets it for its shells, and a later Tern could drop it. → Nothing is saved then, and nothing wrong is resumed. The harness name, `TERN_WINDOW_PANE`, is read as well.
 - **omp's file handling may change** with an omp update, for example not holding the file open. → The command-line fallback covers restored chats. Otherwise nothing is saved, with no wrong resume.
 - **A chat switched to a new chat (`/new`) with no message since** holds no file; its command line still names the old one. → Resume reopens the earlier chat, which still exists.
+- **A tab closed during its chat's first reply** has nothing saved: omp hasn't created the file yet. → No Resume for that tab; the README names the limit.
 - **Process cost:** about 134 ms of child processes per capture, off the UI thread except for the spawn. It runs at turns, which are seconds apart, at plugin start and at graph open.
 - **`lsof` and `ps -E` see only the user's own processes.** omp runs as the user.
 - **Remote sessions** are untested headless, as in 0.9.0. → Panes in sessions on remote hosts are skipped, and Resume refuses while the current session is remote.
