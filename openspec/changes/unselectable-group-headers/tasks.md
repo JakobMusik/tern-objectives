@@ -31,7 +31,9 @@ No design.md: one CSS rule, no decision left open.
 - [x] 2.1 Version `0.8.3` in `plugin.toml`. Verify an isolated `tern plugin install` of the repo folder prints `installed objectives 0.8.3`, then commit, push `main` and tag `v0.8.3`.
 
   Result: the isolated install (`/tmp/tobj-rel`) printed `installed objectives 0.8.3`, and `tern plugin list` showed `objectives 0.8.3 … 0 blocks, 0 lenses, window ready`.
-- [ ] 2.2 **(live)** `tern plugin install github.com/JakobMusik/tern-objectives --force`, from a shell with no harness variables. Verify `tern plugin list` shows `objectives 0.8.3 … ready`, with `tabnav 0.1.0` untouched.
+- [x] 2.2 **(live)** `tern plugin install github.com/JakobMusik/tern-objectives --force`, from a shell with no harness variables. Verify `tern plugin list` shows `objectives 0.8.3 … ready`, with `tabnav 0.1.0` untouched.
+
+  Result: `installed objectives 0.8.3 → ~/Library/Application Support/Tern/plugins/objectives`; `tern plugin list` shows `objectives 0.8.3 … ready` and `tabnav 0.1.0 … ready`. The tag is `v0.8.3` (`71850fb`), with the message "v0.8.3" instead of the usual "objectives 0.8.3"; it was left, since a published tag isn't moved.
 - [ ] 2.3 **(live)** With the user: double-clicking "Done (n)" or a session name highlights nothing, and titles still select. Record the result here.
 
 ## Workflow follow-up
