@@ -125,7 +125,7 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
   - a session left from before the harness restart named pane 6, which was now a shell. Only rows stored as agents count now;
   - the new tab's snapshot was first written while its pane was still a shell (`kind` "terminal"), and snapshots used to be refreshed only when the graph drew. Captures now refresh linked tabs' snapshots, and the resume timer stores resumed panes as agents;
   - the sweep keeps sessions saved in the last 10 s, so a render before the new tab is listed can't drop them.
-- [ ] 4.3 README: "Using the graph" describes Resume. "Known limits" adds:
+- [x] 4.3 README: "Using the graph" describes Resume. "Known limits" adds:
   - Claude chats only;
   - two chats in one folder;
   - a chat needs one message before it can be resumed;
@@ -133,6 +133,11 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
   - other panes aren't recreated.
 
   Verify by reading the README.
+
+  Result:
+  - "Using the graph" has a Resume bullet: it opens a tab in the current session, runs `claude --resume` in each chat's folder with one split per further chat, the new tab takes the closed tab's links, and other panes aren't recreated;
+  - "Known limits" names `agents.auto_acp` and Claude only, one message and one chat per folder (and nothing for tabs closed before 0.9.0), and this Mac only;
+  - the closed-rows limit now says a noted Claude chat reads `claude`.
 
 ## 5. Release 0.9.0
 
