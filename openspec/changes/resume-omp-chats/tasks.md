@@ -83,8 +83,12 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
 
 ## 5. Release 0.11.0
 
-- [ ] 5.1 Version `0.11.0` in `plugin.toml`. Verify an isolated `tern plugin install` of the repo folder prints `installed objectives 0.11.0`, then commit, push `main` and tag `v0.11.0` (annotated, message "objectives 0.11.0").
-- [ ] 5.2 **(live)** After the push has finished, `tern plugin install github.com/JakobMusik/tern-objectives --force`, from a shell with no harness variables. Verify `tern plugin list` shows `objectives 0.11.0 … ready`, with `tabnav 0.1.0` untouched.
+- [x] 5.1 Version `0.11.0` in `plugin.toml`. Verify an isolated `tern plugin install` of the repo folder prints `installed objectives 0.11.0`, then commit, push `main` and tag `v0.11.0` (annotated, message "objectives 0.11.0").
+
+  Result: the isolated install (`/tmp/tobj-rel`) printed `installed objectives 0.11.0`, and `tern plugin list` showed `objectives 0.11.0 … 0 blocks, 0 lenses, window ready`. The release commit `f686e07` went out without this box ticked (an edit lost to a race with the commit); it is ticked here instead, and the tag `v0.11.0` stays on `f686e07`.
+- [x] 5.2 **(live)** After the push has finished, `tern plugin install github.com/JakobMusik/tern-objectives --force`, from a shell with no harness variables. Verify `tern plugin list` shows `objectives 0.11.0 … ready`, with `tabnav 0.1.0` untouched.
+
+  Result: `installed objectives 0.11.0 → ~/Library/Application Support/Tern/plugins/objectives`; `tern plugin list` shows `objectives 0.11.0 … ready`, `omp-narration 0.1.0 … ready` and `tabnav 0.1.0 … ready`. Read-only afterwards: the live `kv.json` held 17 saved omp chats, among them pane `100000000001` of the linked tab "QA: Summarize the release checklist" with its `-Documents-Projects-demo/2026-10-29T08-14-15-789Z_….jsonl`. Every saved chat whose omp process was running matched the file that process holds or names (16 of 16).
 - [ ] 5.3 **(live)** With the user: a linked tab with an omp chat, closed, shows Resume, and its row reads "omp"; Resume brings the chat back with its messages in a new tab that takes the objective's link. Record the result here.
 
 ## Workflow follow-up
