@@ -28,7 +28,7 @@ local STATE_TEXT: { [string]: string } = {
 
 -- Agents of the current render, by pane.
 local agents: { [number]: AgentBlock } = {}
--- Saved Claude sessions by pane id, which name closed tabs' chats.
+-- Saved omp chats by pane id, which name closed tabs' chats.
 local saved: { [string]: Store.AgentSession } = {}
 
 -- Transcript cache: the user's last message per agent pane, valid while `key` matches.
@@ -105,7 +105,7 @@ function M.type(row: Model.Row): (string, string?)
 	if a ~= nil then
 		return agent_name(a, if info ~= nil then info.program else nil) .. " · " .. (STATE_TEXT[a.state] or a.state), "ob-d-" .. a.state
 	elseif kind == "agent" then
-		-- A closed tab's chat: its saved session names it (resume-closed-agents, design D1).
+		-- A closed tab's chat: its saved omp chat names it (resume-omp-chats, design D4).
 		local s = saved[tostring(row.pane)]
 		return if s ~= nil then s.agent else agent_name(nil, nil), nil
 	elseif kind == "terminal" then

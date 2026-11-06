@@ -179,7 +179,7 @@ type Shown = { tab: Model.Tab, status: string }
 -- The link bar a tab node shows while an objective is selected (design P6).
 type Link = { unlink: boolean, title: string }
 
--- `resume`: a closed tab with a saved Claude session shows "Resume" (resume-closed-agents, design D4).
+-- `resume`: a closed tab with a saved omp chat shows "Resume" (resume-omp-chats, design D4).
 local function tab_node(t: Model.Tab, status: string, first: string, linked_open: boolean, link: Link?, menu: { any }, ui_state: Ui, expanded: { [string]: boolean }, resume: boolean): (Node, number)
 	local cls = "ob-tab ob-t-" .. t.id .. first
 	if status ~= "live" then
@@ -200,7 +200,7 @@ local function tab_node(t: Model.Tab, status: string, first: string, linked_open
 		-- Its own click, so the rest of the header still says the tab is closed.
 		table.insert(th1, span("ob-resume", "Resume", {
 			key = "resume",
-			title = "Reopen this tab's Claude chats in a new tab",
+			title = "Reopen this tab's omp chats in a new tab",
 			actions = { click = "resume=" .. t.id },
 		}))
 	end
@@ -472,9 +472,10 @@ function M.build(state: Store.State, win: Model.Window, ui_state: Ui): Built
 		local resume = false
 		if status == "closed" then
 			for _, r in t.rows do
-				-- Only a row stored as an agent: a session saved under a pane id another pane now holds
-				-- must not turn a shell into a chat.
-				if r.kind == "agent" and state.agents[tostring(r.pane)] ~= nil then
+				-- Only a row stored as an agent: a chat saved under a pane id another pane now holds
+				-- must not turn a shell into a chat. Its file must still be there (design D4).
+				local s = if r.kind == "agent" then state.agents[tostring(r.pane)] else nil
+				if s ~= nil and tern.fs.exists(s.session) then
 					resume = true
 				end
 			end
