@@ -99,7 +99,9 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
 
 ## 3. Release 0.14.1
 
-- [ ] 3.1 Version `0.14.1` in `plugin.toml`. Verify an isolated `tern plugin install` of the repo folder prints `installed objectives 0.14.1`. Tick this box, then commit, push `main` and tag `v0.14.1` (annotated, message "objectives 0.14.1").
+- [x] 3.1 Version `0.14.1` in `plugin.toml`. Verify an isolated `tern plugin install` of the repo folder prints `installed objectives 0.14.1`. Tick this box, then commit, push `main` and tag `v0.14.1` (annotated, message "objectives 0.14.1").
+
+  Result: the install into `/tmp/tobj-inst141/config` printed `installed objectives 0.14.1 → /tmp/tobj-inst141/config/plugins/objectives`.
 - [ ] 3.2 **(live)** After the push has finished, run `tern plugin install github.com/JakobMusik/tern-objectives --force` from a shell with no harness variables.
 
   Verify `tern plugin list` shows `objectives 0.14.1 … ready`, with `tabnav 0.1.0` and `omp-narration 0.1.0` untouched.
