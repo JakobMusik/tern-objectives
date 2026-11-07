@@ -6,7 +6,7 @@ Lets a closed tab's omp chats come back from the graph: the plugin saves each ch
 ## Requirements
 
 ### Requirement: Saved sessions follow their tabs
-A saved session SHALL be removed once its pane is neither live in the window nor a row of a stored tab snapshot, for example after "Prune closed tabs" removes the closed tab that held it.
+A saved omp chat SHALL be removed once its pane is neither live in the window nor a row of a stored tab snapshot, for example after "Prune closed tabs" removes the closed tab that held it.
 
 #### Scenario: Pruned with its tab
 - **WHEN** a linked tab holding an omp chat with a saved chat file is closed, and the user confirms "Prune closed tabs"
@@ -72,7 +72,7 @@ Saved entries that are not omp chats, such as Claude sessions saved by versions 
 - **THEN** the closed tab shows no Resume, P's row starts with "agent", and the kv dump afterwards holds no saved entry under P
 
 ### Requirement: Where a chat resumes
-The new tab SHALL open in the closed tab's session: the session with the id stored with the closed tab, else one with its stored name. It SHALL take the position the closed tab had there, or the last when the session has fewer tabs, and Tern SHALL show that session. With no such session, it SHALL open as the current session's last tab, and a toast SHALL name the missing session. If that session is on another machine, Resume SHALL refuse with a toast.
+The new tab SHALL open in the closed tab's session: the session with the id stored with the closed tab, else one with its stored name, matched exactly, else ignoring case. It SHALL take the position the closed tab had there, or the last when the session has fewer tabs, and Tern SHALL show that session. With no such session, it SHALL open as the current session's last tab, and a toast SHALL name the missing session. If that session is on another machine, Resume SHALL refuse with a toast.
 
 #### Scenario: Back in its own session
 - **WHEN** a linked tab that was tab 2 of session "work", which has three tabs, is closed, the user switches to session "home", opens the graph and clicks the tab's "Resume"
@@ -85,6 +85,10 @@ The new tab SHALL open in the closed tab's session: the session with the id stor
 #### Scenario: Found by name
 - **WHEN** session "work" was closed after the tab, a new session named "work" was created, and the user clicks "Resume"
 - **THEN** the new tab opens in the new "work" session
+
+#### Scenario: Found by name in another case
+- **WHEN** session "work" was closed after the tab, a new session named "Work" was created, and the user clicks "Resume"
+- **THEN** the new tab opens in "Work"
 
 #### Scenario: Fewer tabs now
 - **WHEN** the closed tab was tab 3 of "work", which now holds one tab, and the user clicks "Resume"

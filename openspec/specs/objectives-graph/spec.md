@@ -39,11 +39,15 @@ The graph SHALL show objectives in a left column, tabs in a right column, and li
 - **THEN** a screenshot shows two objective nodes on the left, three tab nodes on the right, and the header above them
 
 ### Requirement: Empty state
-With no objectives, the left column SHALL show a hint pointing at "＋ New objective".
+With no objectives, the left column SHALL show a hint pointing at "＋ New objective". When objectives exist but the filters leave none to list, it SHALL show "No objectives match this filter." instead.
 
 #### Scenario: First open
 - **WHEN** the graph opens with an empty store
 - **THEN** the left column shows the hint, and the right column still lists the window's tabs
+
+#### Scenario: Nothing matches
+- **WHEN** the store holds objectives, none of them linked to a tab in the current session, and the user clicks "This session"
+- **THEN** the left column shows only "No objectives match this filter."
 
 ### Requirement: Objective ordering
 Open objectives SHALL be ordered:
@@ -139,7 +143,7 @@ The right column SHALL group tabs under session headings, with the current sessi
 ### Requirement: Tab node content
 Each tab node SHALL show:
 - its label: the tab's name if the user set one, else the title of its first pane;
-- a dimmed line "<session> · tab <n>";
+- a dimmed line "<session> · tab <n>", which a closed tab starts with "closed · " and another window's tab with "other window · ";
 - one row per pane in the tab, floating panes included.
 
 Parked panes and the graph's own pane SHALL NOT be listed.
@@ -148,15 +152,19 @@ Parked panes and the graph's own pane SHALL NOT be listed.
 - **WHEN** an unnamed tab holds two tiled panes and one floating pane
 - **THEN** its label is the first tiled pane's title, and it lists three pane rows
 
+#### Scenario: Closed tab's line
+- **WHEN** a linked tab that was tab 2 of session "web" is closed
+- **THEN** its node's dimmed line reads "closed · web · tab 2"
+
 ### Requirement: Unlinked tabs look different
-A tab with no link to an open objective SHALL be drawn with a light grey fill and a dashed border, and a linked tab as a card with a solid border. Both SHALL draw their text at full strength.
+A live tab with no link to an open objective SHALL be drawn with a light grey fill and a dashed border, and a linked live tab as a card with a solid border. Both SHALL draw their text at full strength.
 
 #### Scenario: Linking removes the fade
 - **WHEN** the user links an unlinked tab to an objective
 - **THEN** the node changes from the grey fill with a dashed border to the card with a solid border, and its label's text colour is the same before and after
 
 ### Requirement: Link lines
-For each link between an open objective and a tab shown in the right column, a line SHALL join the two nodes. A done objective's links SHALL get lines only while it is selected, in review mode too. Each line SHALL be:
+For each link between a shown open objective and a tab shown in the right column, a line SHALL join the two nodes. A done objective's links SHALL get lines only while it is selected, in review mode too. Each line SHALL be:
 - coloured by the objective's priority, or green (`#30a46c`) for a done objective;
 - drawn dashed when the tab is closed or elsewhere;
 - ending at the nodes' edges, at any graph width from 360 to 1600 pixels.
@@ -176,6 +184,10 @@ For each link between an open objective and a tab shown in the right column, a l
 #### Scenario: Lines in review mode
 - **WHEN** review mode lists a done objective linked to a live tab
 - **THEN** no line shows until the user selects that objective; then a green line joins its node to that tab's header, ending within 2 pixels of both vertical centres
+
+#### Scenario: Filtered out
+- **WHEN** open objective Y links a live tab and the tag filter hides Y
+- **THEN** no line ends at that tab's header
 
 ### Requirement: Selection
 Clicking an objective's title SHALL select it:
@@ -203,11 +215,15 @@ The header SHALL offer [All | This session].
 - **THEN** the graph shows X and not Y, and only the tabs of "web"
 
 ### Requirement: Tag filter
-The header SHALL show a chip for each existing tag. Clicking a chip SHALL show only objectives holding that tag; clicking it again SHALL clear the filter. At most one tag filter SHALL be active at a time.
+The header SHALL show a chip for each existing tag. Clicking a chip SHALL show only objectives holding that tag; clicking it again SHALL clear the filter. At most one tag filter SHALL be active at a time. When no objective holds the filtered tag any more, the filter SHALL be dropped and every objective shown again.
 
 #### Scenario: Filter by tag
 - **WHEN** the user clicks the "#api" chip
 - **THEN** only objectives tagged "api" are listed, and the chip is drawn active
+
+#### Scenario: Filtered tag removed
+- **WHEN** the "#api" filter is active and the user removes the tag "api" from the last objective holding it
+- **THEN** the "#api" chip is gone, every objective is listed again, and the kv dump's view settings hold no tag filter
 
 ### Requirement: New objective button
 "＋ New objective" in the header SHALL ask for a title, create the objective at P2 with no links, and select it.
@@ -350,7 +366,7 @@ A done objective's box SHALL do nothing.
 - **THEN** it stays in the Done group, the count is unchanged, and the kv dump shows it still done
 
 ### Requirement: Closing a done objective's tabs
-Choosing "Close linked tabs" SHALL ask for confirmation, naming how many tabs it will close and how many linked tabs stay open because an open objective links them. On confirmation it SHALL save the omp chats in those tabs as it does at a turn, then close every pane of each of them, and change no links. If the chats can't be saved, it SHALL close nothing and say so. Cancelling SHALL change nothing.
+Choosing "Close linked tabs" SHALL ask for confirmation, naming how many tabs it will close and how many linked tabs stay open because an open objective links them. On confirmation it SHALL save the omp chats in those tabs as it does at a turn, then close every pane of each of them, and change no links. A graph sitting in one of them SHALL close first and show again after. If the chats can't be saved, it SHALL close nothing and say so. Cancelling SHALL change nothing.
 
 #### Scenario: Close two, keep one
 - **WHEN** done objective X links open tabs A, B and C, open objective Y also links C, and the user picks "Close linked tabs" in X's menu
@@ -363,6 +379,10 @@ Choosing "Close linked tabs" SHALL ask for confirmation, naming how many tabs it
 #### Scenario: Cancelled
 - **WHEN** the user picks "Close linked tabs" and cancels the confirmation
 - **THEN** A, B and C are all still open, and `kv.json` is unchanged
+
+#### Scenario: The graph's own tab
+- **WHEN** done objective X links only tab D, the graph was opened over D, and the user confirms "Close linked tabs"
+- **THEN** D is gone, no tab is left holding only the graph, and the graph is shown again
 
 ### Requirement: Closing tabs from the done notice
 When an objective is marked done in the graph and has tabs "Close linked tabs" would close, its "Marked done" notice SHALL also offer "Close <n> tabs" after Undo. Clicking it SHALL ask the same confirmation as the menu row. Confirming SHALL close the tabs and end the notice; cancelling SHALL leave the notice and its Undo as they were. Marking done SHALL NOT close any tab by itself.
@@ -399,7 +419,7 @@ A closed tab that only done objectives link SHALL NOT show in the right column, 
 - **THEN** it shows under "Closed tabs"
 
 ### Requirement: Linked tabs section
-While an objective is selected, the right column SHALL start with a section headed `Linked to “<title>”`: the shown tabs linked to it. The "Other tabs" divider and every other shown tab SHALL follow, each part ordered as "Tab column" says. Linking or unlinking a tab SHALL move it across the divider at once. Deselecting SHALL restore the normal order. With no such tab, neither heading nor divider SHALL show.
+While an objective is selected, the right column SHALL start with a section headed `Linked to “<title>”`: the shown tabs linked to it. When other tabs are shown, the "Other tabs" divider and those tabs SHALL follow, each part ordered as "Tab column" says. Linking or unlinking a tab SHALL move it across the divider at once. Deselecting SHALL restore the normal order. With no linked tab shown, neither heading nor divider SHALL show.
 
 #### Scenario: Linked tabs on top
 - **WHEN** the window holds sessions "web" (tabs "App build" and "Components") and "api" (tabs "Server" and "Benchmarks"), objective X is linked to "Components" and "Benchmarks", the graph was opened from "Server", and the user selects X
@@ -437,6 +457,10 @@ While an objective is selected, the right column SHALL start with a section head
 - **WHEN** the scope is "This session", X is linked to tabs in the current session and in another, and the user selects X
 - **THEN** the top section holds only the current session's linked tabs
 
+#### Scenario: Every shown tab linked
+- **WHEN** the scope is "This session", every tab of the current session is linked to X, and the user selects X
+- **THEN** the column shows the `Linked to` heading and those tabs, and no divider
+
 ### Requirement: Other tabs divider
 The divider between the `Linked to` section and the other tabs SHALL be a 3 px accent-coloured bar across the right column, with "Other tabs" on an accent-outlined pill in its middle. Its row SHALL be 32 px tall, and the lines SHALL stay on their nodes.
 
@@ -462,3 +486,17 @@ Each objective node SHALL show its creation time after the title, dimmed, as `MM
 #### Scenario: Done and review nodes
 - **WHEN** the user opens the Done group, and later lists a due objective in review mode
 - **THEN** each done node and each review node shows its creation time after the title
+
+### Requirement: Order of closed and other-window tabs
+Inside the "Closed tabs" and "Other windows" groups, tabs SHALL be ordered by the session name stored with them, then by the position they had in it. Tabs with no stored snapshot SHALL come first, in the order they were created.
+
+#### Scenario: Two sessions' closed tabs
+- **WHEN** objective X links closed tabs "web · tab 2", "api · tab 3" and "api · tab 1", and the user selects X
+- **THEN** under "Closed tabs" they read in the order "api · tab 1", "api · tab 3", "web · tab 2"
+
+### Requirement: Ghost tabs look different
+A closed or other-window tab SHALL be drawn with a faint dashed border and no fill, with everything but its "Resume" button at half strength, so it reads as gone; a closed tab's label SHALL be struck through. Linking it to an open objective SHALL NOT change that.
+
+#### Scenario: Closed tab linked to an open objective
+- **WHEN** a tab linked to open objective Y is closed
+- **THEN** a screenshot shows its node with a faint dashed border, no fill, half-strength text and a struck-through label, unlike Y's live tabs

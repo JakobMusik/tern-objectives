@@ -14,7 +14,7 @@ Each objective SHALL have:
 - an optional side note, due date and tag list;
 - once done, a review schedule: its next review date, interval in days, ease in percent and review count.
 
-A new objective SHALL start not done, at P2, with the current time as its created time, and with no note, due date, tags, links or review schedule.
+A new objective SHALL start not done, at P2, with the current time as its created time, with no note, due date, tags or review schedule, and no links unless made for a tab.
 
 #### Scenario: Creating an objective
 - **WHEN** the user creates an objective titled "  Fix login bug  "
@@ -27,6 +27,10 @@ A new objective SHALL start not done, at P2, with the current time as its create
 #### Scenario: Over-long title
 - **WHEN** the user submits a title longer than 120 characters
 - **THEN** the stored title is cut to its first 120 characters
+
+#### Scenario: Made for a tab
+- **WHEN** the user runs "Objectives: New objective for this tab…" in tab A and enters a title
+- **THEN** the stored record is linked to A and to no other tab
 
 ### Requirement: One global list
 Objectives SHALL NOT belong to a session, tab or window. Every window of the machine SHALL read and change the same list.
@@ -145,7 +149,7 @@ Objectives, links and snapshots SHALL survive a plugin reload, a Tern restart an
 - **THEN** the graph shows the same objectives with the same links
 
 ### Requirement: Final done state
-Marking an objective done SHALL record the done time and start its review schedule. Done SHALL be final: nothing SHALL make a done objective open again, except Undo right after it was marked done. Neither SHALL change its links.
+Marking an objective done SHALL record the done time and start its review schedule. Done SHALL be final: nothing SHALL make a done objective open again, except Undo right after it was marked done. Neither marking done nor that Undo SHALL change its links.
 
 #### Scenario: Done stays done
 - **WHEN** the user marks a linked objective done, waits for the Undo notice to go, then clicks its done box in the Done group

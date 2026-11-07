@@ -20,11 +20,15 @@ An open agent row SHALL show the agent's latest reply as one line "<agent>: <rep
 - **THEN** the line starts with "omp: " and the reply's first words, then shows "…", and ends with the reply's last words
 
 ### Requirement: Agent last user message
-For omp agents, an open row SHALL also show the user's latest message as one line "you: <message>" above the reply line, following the same rule. Agents without a readable omp chat SHALL show the reply line only. Until the message has been read, the line SHALL read "you: …".
+For omp agents, an open row SHALL also show the user's latest message as one line "you: <message>" above the reply line, following the same rule. Until that message has been read, the line SHALL read "you: …". Agents without a readable omp chat SHALL show the reply line only, never a "you:" line.
 
 #### Scenario: omp exchange
-- **WHEN** the user sent "Explain __shfl_down_sync" to an omp agent and opens its row
-- **THEN** the details show "you: Explain __shfl_down_sync" above the "omp: " reply line
+- **WHEN** the user sent "Explain caching" to an omp agent and opens its row
+- **THEN** the details show "you: Explain caching" above the "omp: " reply line
+
+#### Scenario: Another agent
+- **WHEN** an agent other than omp has replied and the user opens its row
+- **THEN** the details show its reply line and no "you:" line, from the first render on
 
 ### Requirement: Terminal last command
 An expanded row of a terminal pane SHALL show one of:

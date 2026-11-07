@@ -70,7 +70,7 @@ Clicking "Review (n)" SHALL draw the button active and list in the left column o
 - **THEN** after "Review (1)", that tab shows under "Closed tabs" with "Resume" and no line; after selecting, a dashed green line joins it to the objective, and no tab node has a link bar
 
 ### Requirement: Leaving review mode
-Review mode SHALL end when its list becomes empty, when the active "Review (n)" button is clicked, or when the graph closes. It SHALL NOT be remembered across opens of the graph.
+Review mode SHALL end when its list becomes empty, when the active "Review (n)" button is clicked, or when the graph closes, except when one of the graph's own pickers closed it and it is shown again. It SHALL NOT be remembered across opens of the graph.
 
 #### Scenario: Last one rated
 - **WHEN** review mode lists one objective and the user clicks Easy
@@ -80,6 +80,10 @@ Review mode SHALL end when its list becomes empty, when the active "Review (n)" 
 - **WHEN** review mode lists two objectives and the user clicks the active "Review (2)"
 - **THEN** the left column shows the open objectives and the Done group, and the header still shows "Review (2)"
 
+#### Scenario: Picker from review mode
+- **WHEN** review mode lists two objectives, the user opens one's ⋯ menu and dismisses it with Esc
+- **THEN** the graph is shown again, still in review mode with the same two objectives
+
 ### Requirement: One-click remove
 A done objective's node SHALL show a trash icon. Clicking it SHALL remove the objective and its links at once, without asking, and offer Undo.
 
@@ -88,7 +92,7 @@ A done objective's node SHALL show a trash icon. Clicking it SHALL remove the ob
 - **THEN** the objective and its links are gone from the kv dump, and the header shows "Removed “<title>” · Undo"
 
 ### Requirement: Undo after done or remove
-After an objective is marked done or removed in the graph, the header SHALL show "Marked done “<title>” · Undo" or "Removed “<title>” · Undo". The notice SHALL stay until the next click elsewhere in the graph, the graph closing, or 10 seconds. Clicking Undo SHALL restore the objective as it was before: its fields, links, place in the list, and the tab snapshots removed with it.
+After an objective is marked done or removed in the graph, the header SHALL show "Marked done “<title>” · Undo" or "Removed “<title>” · Undo". The notice SHALL stay until the next click elsewhere in the graph, the graph closing (unless one of its own pickers closed it and it is shown again), or 10 seconds. Clicking Undo SHALL restore the objective as it was before: its fields, links, place in the list, and the tab snapshots removed with it.
 
 #### Scenario: Undo marking done
 - **WHEN** the user marks a linked objective done and clicks Undo
