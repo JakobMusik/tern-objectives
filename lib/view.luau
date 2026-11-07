@@ -13,9 +13,6 @@ local M = {}
 
 export type Ui = {
 	selected: string?,
-	-- The tabs the selection was linked to when it was made; they stay first in the right column until
-	-- the selection changes (design D3).
-	pinned: { [number]: boolean }?,
 	-- The pane the graph was opened from (design P5).
 	origin: number?,
 	today: Dates.Day,
@@ -612,13 +609,12 @@ function M.build(state: Store.State, win: Model.Window, ui_state: Ui): Built
 		ghost_group("Closed tabs", prefix .. "closedgrp", kept(closed), "closed")
 		ghost_group("Other windows", prefix .. "elsegrp", kept(elsewhere), "elsewhere")
 	end
-	-- While an objective is selected, the shown tabs it was linked to when it was selected come first
-	-- under a heading, and a divider leads to the rest (design D4).
-	local pinned = if sel_obj ~= nil then ui_state.pinned else nil
+	-- While an objective is selected, the shown tabs it links now come first under a heading, and a
+	-- divider leads to the rest; a link change moves its tab on the next render (linked-section D1).
 	local n_top, n_rest = 0, 0
-	if pinned ~= nil then
+	if sel_obj ~= nil then
 		local function count(tab: number)
-			if pinned[tab] == true then
+			if sel_tabs[tab] == true then
 				n_top += 1
 			else
 				n_rest += 1
@@ -636,8 +632,7 @@ function M.build(state: Store.State, win: Model.Window, ui_state: Ui): Built
 			count(tab)
 		end
 	end
-	if sel_obj ~= nil and pinned ~= nil and n_top > 0 then
-		local top = pinned
+	if sel_obj ~= nil and n_top > 0 then
 		local heading = "Linked to “" .. sel_obj.title .. "”"
 		local first = Layout.first(right)
 		Layout.add_group(right)
@@ -645,15 +640,17 @@ function M.build(state: Store.State, win: Model.Window, ui_state: Ui): Built
 			span("ob-gtext", heading, { key = "text" }),
 		}))
 		place(function(tab)
-			return top[tab] == true
+			return sel_tabs[tab] == true
 		end, "l")
 		if n_rest > 0 then
-			Layout.add_group(right)
-			table.insert(right_kids, el("div", { class = "ob-group ob-divider", key = "divider" }, {
-				span("ob-gtext", "Other tabs", { key = "text" }),
+			Layout.add_divider(right)
+			table.insert(right_kids, el("div", { class = "ob-divider", key = "divider" }, {
+				el("div", { class = "ob-drule", key = "a" }),
+				span("ob-dpill", "Other tabs", { key = "text" }),
+				el("div", { class = "ob-drule", key = "b" }),
 			}))
 			place(function(tab)
-				return top[tab] ~= true
+				return sel_tabs[tab] ~= true
 			end, "")
 		end
 	else

@@ -8,7 +8,7 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
 
 ## 1. Linked section and divider
 
-- [ ] 1.1 The top section from the current links (D1): remove `pinned` and `select` from `lib/app.luau` and `pinned` from `View.Ui`; the section and its counts use `sel_tabs`.
+- [x] 1.1 The top section from the current links (D1): remove `pinned` and `select` from `lib/app.luau` and `pinned` from `View.Ui`; the section and its counts use `sel_tabs`.
 
   Verify each scenario of "Linked tabs section" with `order` and `ctl tree` after each click, and the kv dump after each link change:
   - linked tabs on top, and the linked closed tab under "Closed tabs" in the top section only;
@@ -17,7 +17,19 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
   - deselect restores the normal order, and selecting again gives the same section;
   - "This session" keeps only the current session's linked tabs;
   - a link made from a tab's right-click menu while X is selected moves the tab too.
-- [ ] 1.2 The divider (D2): `divider_h`, `Layout.add_divider`, the `.ob-divider` markup and its rules in `styles.css`.
+
+  Result (harness; demo rebuilt as web 6 with "App build" 8 and "Components" 12, api 15 with "Server" 17 and "Benchmarks" 21; X = o2 "Write release notes" linked to 12 and 21 in a clean `kv.json`; graph opened from api's pane 16; orders from `/tmp/tobj/bin/order2`, which adds `{heading}` texts):
+  - **Selected:** `{Linked to “Write release notes”} [api] Benchmarks [web] Components {Other tabs} [api] Server [web] App build`; bars `× Unlink` ×2, `＋ Link` ×2.
+  - **"＋ Link" on App build:** `{Linked to …} [api] Benchmarks [web] App build Components {Other tabs} [api] Server` at once; its bar `× Unlink`; kv `[12, 21, 8]`.
+  - **"× Unlink" on Benchmarks:** `{Linked to …} [web] App build Components {Other tabs} [api] Server Benchmarks`; its bar `＋ Link`; kv `[12, 8]`.
+  - **Linked closed tab:** spare tab 39 "extra", linked by its bar and then closed: `… Components {Closed tabs} extra {Other tabs} [api] Server Benchmarks`.
+  - **Deselect:** `[api] Server Benchmarks [web] App build Components {Closed tabs} extra`, no bars. **Selected again:** the same column as before deselecting.
+  - **Last link removed:** with only App build left, its "× Unlink" gave the normal order with no heading or divider, four `＋ Link` bars, kv `[]`.
+  - **Nothing linked / First link:** "Write slides" (o34), created with "＋ New objective" and selected: normal order, no heading; "＋ Link" on Components gave `{Linked to “Write slides”} [web] Components {Other tabs} [api] Server Benchmarks [web] App build`.
+  - **This session:** X linked to Benchmarks and Components: `{Linked to …} [api] Benchmarks {Other tabs} [api] Server`; "All" again shows both sessions.
+  - **Right-click menu:** with X selected, `menulink` on Server's header choosing "Write release notes" gave `{Linked to …} [api] Server Benchmarks [web] Components {Other tabs} [web] App build`; kv `[21, 12, 17]`.
+  - **Log:** renders 1.5–2.1 ms, no errors.
+- [x] 1.2 The divider (D2): `divider_h`, `Layout.add_divider`, the `.ob-divider` markup and its rules in `styles.css`.
 
   Verify "Other tabs divider":
   - shots in light and dark (`ctl appearance`), cropped to the divider, show the 3 px accent bar on both sides of the "Other tabs" pill, centred in the row;
@@ -25,7 +37,15 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
   - `edgecheck.py` passes at 1400 and 460 px wide with X selected.
 
   If the bar or the pill doesn't draw as D2 says, stop and update D2 first.
-- [ ] 1.3 README: the "Click an objective" bullet says linked tabs move up and unlinked ones down at once, and describes the divider. Verify by reading the rendered bullet against "Linked tabs section".
+
+  Result (harness, X selected, graph reopened from Server):
+  - **Layout** (`ctl tree`): `.ob-divider` 32.0 px tall; both `.ob-drule` 3.0 px tall, 227.6 px wide each at window 1280; `.ob-dpill` "Other tabs" 18.0 px. Bar and pill centres both at y 575.7, the row's middle.
+  - **Shots** `d12_light` and `d12_dark`, cropped: the bars and the outlined pill draw in the accent colour, a muted teal in the harness's light theme and bright blue in dark, with the pill between the two bars.
+  - **`edgecheck.py`:** PASS at 1400 px (shot `e12_1400`) and 460 px (`e12_460`). With o1 also linked to App build, below the divider: PASS again (`e12b_1400`, `e12b_460`), 3 left and 4 right ends within 0.6 px, App build's at y 669.8 and 696.8.
+  - `/tmp/tobj/bin/order2` now prints the pill as `{Other tabs}`.
+- [x] 1.3 README: the "Click an objective" bullet says linked tabs move up and unlinked ones down at once, and describes the divider. Verify by reading the rendered bullet against "Linked tabs section".
+
+  Result: the bullet now names the bold accent bar labelled **Other tabs**, says a linked tab moves up at once and an unlinked one down, and keeps the deselect sentence. Nothing in the README still says tabs stay put. The screenshot shows an unselected graph, so it stays.
 
 ## 2. Done objectives
 

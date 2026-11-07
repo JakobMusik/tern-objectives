@@ -11,6 +11,7 @@ M.px = {
 	review_h = 30, -- review mode's button row under an objective node: 8 px gap and 22 px buttons
 	group_h = 24, -- "Done (n)", "Closed tabs", "Other windows"
 	group_m = 14,
+	divider_h = 32, -- "Other tabs" divider after the selected objective's tabs (linked-section D2)
 	hint_h = 48, -- empty-state hint
 	hint_m = 8,
 	session_h = 22, -- session heading
@@ -41,6 +42,7 @@ function M.css(): string
 		string.format("%s .ob-obj { height: %dpx; margin-top: %dpx; }", SCOPE, p.obj_h, p.obj_m),
 		string.format("%s .ob-obj.ob-review { height: %dpx; }", SCOPE, p.obj_h + p.review_h),
 		string.format("%s .ob-group { height: %dpx; line-height: %dpx; margin-top: %dpx; }", SCOPE, p.group_h, p.group_h, p.group_m),
+		string.format("%s .ob-divider { height: %dpx; margin-top: %dpx; }", SCOPE, p.divider_h, p.group_m),
 		string.format("%s .ob-hint { height: %dpx; margin-top: %dpx; }", SCOPE, p.hint_h, p.hint_m),
 		string.format("%s .ob-session { height: %dpx; line-height: %dpx; margin-top: %dpx; }", SCOPE, p.session_h, p.session_h, p.session_m),
 		string.format("%s .ob-tab { margin-top: %dpx; border-width: %dpx; padding-bottom: %dpx; }", SCOPE, p.tab_m, p.tab_border, p.tab_pad),
@@ -84,6 +86,10 @@ end
 
 function M.add_group(s: Stack)
 	add(s, M.px.group_m, M.px.group_h)
+end
+
+function M.add_divider(s: Stack)
+	add(s, M.px.group_m, M.px.divider_h)
 end
 
 function M.add_hint(s: Stack)

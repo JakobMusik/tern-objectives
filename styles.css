@@ -329,8 +329,9 @@
 	font-weight: 600;
 	user-select: none;
 }
-/* The selected objective's tabs, first in the right column, and the divider before the rest
-   (design D4). The divider's rule is a shadow, so the row keeps the group height the lines assume. */
+/* The selected objective's tabs, first in the right column (design D4), and the divider before the
+   rest: a 3 px accent bar on both sides of an "Other tabs" pill (linked-section D2). Its height comes
+   from the layout sheet (divider_h), so the lines below it stay on their nodes. */
 [data-surface='plugin.tern.canvas'] .ob-root .ob-linkhead {
 	color: var(--accent);
 }
@@ -340,7 +341,31 @@
 	text-overflow: ellipsis;
 }
 [data-surface='plugin.tern.canvas'] .ob-root .ob-divider {
-	box-shadow: inset 0 1px 0 var(--l2);
+	flex: none;
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	gap: 6px;
+	user-select: none;
+}
+[data-surface='plugin.tern.canvas'] .ob-root .ob-drule {
+	flex: 1 1 0;
+	height: 3px;
+	border-radius: 2px;
+	background: var(--accent);
+}
+[data-surface='plugin.tern.canvas'] .ob-root .ob-dpill {
+	flex: none;
+	height: 18px;
+	padding: 0 8px;
+	border-radius: 9px;
+	line-height: 18px;
+	white-space: nowrap;
+	font-size: 11px;
+	font-weight: 600;
+	color: var(--accent);
+	box-shadow: inset 0 0 0 1px var(--accent);
+	background: rgb(from var(--accent) r g b / 8%);
 }
 [data-surface='plugin.tern.canvas'] .ob-root .ob-hint {
 	box-sizing: border-box;
