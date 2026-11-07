@@ -13,7 +13,7 @@ An objective SHALL be linkable to any number of tabs, and a tab to any number of
 - **THEN** both objectives list that tab, and the graph draws two lines into its node
 
 ### Requirement: Linking from the graph
-While an objective is selected, every tab node SHALL show a full-width link bar at its foot: "＋ Link" when the tab is not linked to the selected objective, "× Unlink" when it is. Clicking the bar SHALL add or remove that one link, SHALL keep the selection, and SHALL NOT jump to the tab. The bar's text SHALL NOT be selectable, so a press that drifts a little before release still counts as a click.
+While an open objective is selected, every tab node SHALL show a full-width link bar at its foot: "＋ Link" when the tab is not linked to the selected objective, "× Unlink" when it is. Clicking the bar SHALL add or remove that one link, SHALL keep the selection, and SHALL NOT jump to the tab. The bar's text SHALL NOT be selectable, so a press that drifts a little before release still counts as a click.
 
 #### Scenario: Add then remove a link
 - **WHEN** the user selects an objective, clicks "＋ Link" on a tab node, then clicks "× Unlink" on the same node
@@ -94,3 +94,10 @@ Right-clicking a tab node SHALL open a menu with one row per open objective, in 
 #### Scenario: No objectives yet
 - **WHEN** the store holds no open objectives and the user right-clicks a tab node
 - **THEN** the menu's only row of its own is a disabled one saying there are no objectives yet, choosing it does nothing, and `kv.json` is unchanged
+
+### Requirement: Done objectives' links are fixed
+A done objective's links SHALL NOT change. Selecting it SHALL show no link bar on any tab node, and the plugin SHALL refuse a link change to it from any path, such as a click on a link bar drawn before it was marked done in another window.
+
+#### Scenario: Done objective selected
+- **WHEN** the user opens the Done group, selects a done objective and clicks where a tab node's link bar would be
+- **THEN** no tab node shows a link bar, and the done objective's links in `kv.json` are unchanged
