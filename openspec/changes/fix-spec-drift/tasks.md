@@ -107,11 +107,13 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
   Verify `tern plugin list` shows `objectives 0.14.1 … ready`, with `tabnav 0.1.0` and `omp-narration 0.1.0` untouched.
 
   Result: `installed objectives 0.14.1 → ~/Library/Application Support/Tern/plugins/objectives`; `tern plugin list` shows `objectives 0.14.1 … ready`, `omp-narration 0.1.0 … ready` and `tabnav 0.1.0 … ready`. The tag is `v0.14.1` (`04bb790`), signed.
-- [ ] 3.3 **(live)** With the user:
+- [x] 3.3 **(live)** With the user:
   - a tag filter whose tag is removed from its last objective clears itself;
   - the "Link this tab" picker and the graph list objectives in the same order.
 
   Record the result here.
+
+  Result (user, 0.14.1): "it works", after checking the self-clearing tag filter and the picker's order against the graph.
 
 ## Workflow follow-up
 
