@@ -11,6 +11,7 @@ export type Edge = {
 	from: number, -- objective centre y
 	to: number, -- tab header centre y
 	priority: number, -- 0..3
+	done: boolean, -- a done objective's line, drawn in Layout.done_color (linked-section D4)
 	dashed: boolean, -- closed or elsewhere tab
 	selected: boolean, -- belongs to the selected objective
 }
@@ -30,7 +31,7 @@ local STUB = 4
 
 local function path(e: Edge, w: number, stroke: number): string
 	local a, b, mid = STUB, w - STUB, w / 2
-	local color = Layout.palette[e.priority + 1]
+	local color = if e.done then Layout.done_color else Layout.palette[e.priority + 1]
 	return string.format(
 		"<path d='M%d %.1f C%.1f %.1f %.1f %.1f %d %.1f' stroke='%s' stroke-width='%g'%s/>"
 			.. "<path d='M0 %.1f H%d M%d %.1f H%d' stroke='%s' stroke-width='%g'/>",

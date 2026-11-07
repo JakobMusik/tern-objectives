@@ -516,10 +516,15 @@ end
 -- ---- tab links and pruning ----
 
 -- Links `id` to `tab` when it isn't, unlinks it when it is; records the tab's snapshot on linking.
--- Returns "linked", "unlinked" or nil when the objective is gone.
+-- A done objective's links are fixed (linked-section D3). Returns "linked", "unlinked", "done" when
+-- nothing changed because it is done, or nil when the objective is gone.
 function M.toggle_link(id: string, tab: number, facts: TabFacts?, window: string): string?
 	local result: string? = nil
 	change(id, function(o, s)
+		if o.done then
+			result = "done"
+			return false
+		end
 		local idx = table.find(o.tabs, tab)
 		if idx ~= nil then
 			table.remove(o.tabs, idx)

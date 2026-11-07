@@ -266,6 +266,9 @@ function M.link_tab(cx: WindowCx)
 			cx2:toast("success", "Linked to " .. item.label)
 		elseif result == "unlinked" then
 			cx2:toast("info", "Unlinked from " .. item.label)
+		elseif result == "done" then
+			-- Marked done in another window while the picker was open (linked-section D3).
+			cx2:toast("info", "“" .. item.label .. "” is done; its links can't change")
 		end
 		M.render(cx2)
 	end)
