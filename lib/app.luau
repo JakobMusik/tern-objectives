@@ -571,23 +571,25 @@ end
 
 -- ---- pruning ----
 
+-- Prunes the shown closed tabs an open objective links (close-linked-tabs D6, D7): their open
+-- objectives' links go; done objectives keep theirs, for review.
 local function prune(cx: WindowCx)
-	local closed = build(cx).closed
-	local n = #closed
+	local tabs = build(cx).prunable
+	local n = #tabs
 	if n == 0 then
 		return
 	end
 	local what = string.format("%d closed tab%s", n, if n == 1 then "" else "s")
 	cx:pick({
 		items = {
-			{ label = "Prune " .. what, detail = "removes their links and saved rows", op = "prune", icon = "trash" },
+			{ label = "Prune " .. what, detail = "removes their links to open objectives; done objectives keep theirs", op = "prune", icon = "trash" },
 			{ label = "Cancel", op = "cancel" },
 		},
 		placeholder = "Remove the links of " .. what .. "?",
 		icon = "trash",
 	}):next(function(item, _err, cx2)
 		if item ~= nil and item.op == "prune" then
-			Store.prune(closed)
+			Store.prune(tabs)
 		end
 		finish(cx2, true)
 	end)

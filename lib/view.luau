@@ -300,7 +300,8 @@ end
 export type Built = {
 	view: Node,
 	css: string,
-	closed: { number }, -- linked closed tabs shown (for prune)
+	closed: { number }, -- linked closed tabs shown
+	prunable: { number }, -- the shown closed tabs an open objective links, which Prune touches
 	due: number, -- done objectives due for review under the filters; 0 ends review mode
 }
 
@@ -518,11 +519,30 @@ function M.build(state: Store.State, win: Model.Window, ui_state: Ui): Built
 			end
 		end
 	end
+	-- A closed tab only done objectives link shows only for the selected objective, or for those
+	-- review mode lists (close-linked-tabs D6).
+	local kept_closed: { [number]: boolean } = {}
+	if sel_obj ~= nil then
+		for _, tab in sel_obj.tabs do
+			kept_closed[tab] = true
+		end
+	end
+	if reviewing then
+		for _, o in due_list do
+			for _, tab in o.tabs do
+				kept_closed[tab] = true
+			end
+		end
+	end
 	local closed: { number } = {}
+	local prunable: { number } = {}
 	local elsewhere: { number } = {}
 	for tab, st in status_of do
-		if st == "closed" and (view_state.scope == "all" or in_session[tab]) then
+		if st == "closed" and (view_state.scope == "all" or in_session[tab]) and (linked_open[tab] or kept_closed[tab]) then
 			table.insert(closed, tab)
+			if linked_open[tab] then
+				table.insert(prunable, tab)
+			end
 		elseif st == "elsewhere" and view_state.scope == "all" then
 			table.insert(elsewhere, tab)
 		end
@@ -710,10 +730,10 @@ function M.build(state: Store.State, win: Model.Window, ui_state: Ui): Built
 			actions = { click = "rev=" },
 		}))
 	end
-	if #closed > 0 then
+	if #prunable > 0 then
 		table.insert(head, span("ob-btn ob-btn-quiet", "Prune closed tabs", {
 			key = "prune",
-			title = string.format("Remove the links of %d closed tab%s", #closed, if #closed == 1 then "" else "s"),
+			title = string.format("Remove the links of %d closed tab%s", #prunable, if #prunable == 1 then "" else "s"),
 			actions = { click = "prune=" },
 		}))
 	end
@@ -727,7 +747,7 @@ function M.build(state: Store.State, win: Model.Window, ui_state: Ui): Built
 			el("div", { class = "ob-col ob-col-r", key = "r" }, right_kids),
 		}),
 	})
-	return { view = view, css = css, closed = closed, due = #due_list }
+	return { view = view, css = css, closed = closed, prunable = prunable, due = #due_list }
 end
 
 return M

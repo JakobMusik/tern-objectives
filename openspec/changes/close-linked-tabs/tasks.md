@@ -57,12 +57,20 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
 
 ## 3. Closed tabs and Prune
 
-- [ ] 3.1 The view (D6): `closed` keeps only tabs an open objective, the selected objective or a listed review objective links; `Built.prunable` and the Prune button follow it.
+- [x] 3.1 The view (D6): `closed` keeps only tabs an open objective, the selected objective or a listed review objective links; `Built.prunable` and the Prune button follow it.
 
   Verify each scenario of "Done objectives' closed tabs", "Prune button visibility" and review mode's "Closed tab in review", with `ctl tree` counts of `.ob-t-<tab>` and the header button, and a shot of review mode showing the dashed line and "Resume".
-- [ ] 3.2 Prune (D7): open objectives' links only; snapshots and saved chats only when no done objective links the tab.
+
+  Result (harness; closed tabs 38, 81, 100 linked to done X only, 113 and 116 to done o5 only, the only open link o1 → live 83):
+  - out of the way: with nothing selected, `.ob-t-38/81/100/113/116` counted 0, there was no "Closed tabs" group and no "Prune closed tabs";
+  - shown with its objective: selecting X showed 38, 81 and 100 (not 113, 116) under "Closed tabs" in the `Linked to “Write release notes”` section, still with no Prune button (the "Only done objectives' tabs" scenario);
+  - also linked to an open objective / button appears: closing 83 (open o1, done X and Z) showed it under "Closed tabs" with nothing selected, and "Prune closed tabs" appeared, titled "Remove the links of 1 closed tab", while X's tabs stayed hidden;
+  - closed tab in review: an omp chat "h1" in tab 145, linked to done o7 and closed with its "Close linked tabs", was hidden after closing; with o7 due, "Review (3)" listed it, and tab 145 showed under "Closed tabs" with "Resume", joined to o7 by a dashed line (shot `s31_review`).
+- [x] 3.2 Prune (D7): open objectives' links only; snapshots and saved chats only when no done objective links the tab.
 
   Verify "Prune after closing a tab" and "Done objective's link kept" with kv dumps before and after confirming.
+
+  Result (harness): with closed 83 (open o1, done X and Z) and closed 187 (open o8 only), the button read "Remove the links of 2 closed tabs" and the confirmation "Prune 2 closed tabs · removes their links to open objectives; done objectives keep theirs". After confirming: o1 `[]`, o8 `[]`, X `[38,81,83,100]` and Z `[83]` unchanged; 83's snapshot kept, 187's gone. 83 was then hidden and the Prune button gone.
 
 ## 4. README
 
