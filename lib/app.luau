@@ -66,6 +66,19 @@ local function build(cx: WindowCx): View.Built
 	if selected ~= nil and Store.find(state, selected) == nil then
 		selected = nil
 	end
+	-- A filter on a tag no objective holds any more has no chip left to clear it: drop it here, which
+	-- covers every way a tag can go, other windows' changes included (fix-spec-drift D1).
+	local tag = state.view.tag
+	if tag ~= nil and table.find(Store.all_tags(state), tag) == nil then
+		Store.set_view(function(v)
+			if v.tag ~= tag then
+				return false
+			end
+			v.tag = nil
+			return true
+		end)
+		state.view.tag = nil
+	end
 	Details.begin(cx, state.agents)
 	local built = View.build(state, win, {
 		selected = selected,
@@ -213,6 +226,7 @@ end
 
 -- ---- linking from the palette ----
 
+-- The open objectives in graph order, the graph's own sort included (fix-spec-drift D3).
 local function sorted_open(state: Store.State): { Store.Objective }
 	local list = {}
 	for _, o in state.objectives do
@@ -220,20 +234,7 @@ local function sorted_open(state: Store.State): { Store.Objective }
 			table.insert(list, o)
 		end
 	end
-	table.sort(list, function(a, b)
-		if a.priority ~= b.priority then
-			return a.priority < b.priority
-		end
-		if a.due ~= b.due then
-			if a.due == nil then
-				return false
-			elseif b.due == nil then
-				return true
-			end
-			return (a.due :: string) < (b.due :: string)
-		end
-		return a.created < b.created
-	end)
+	View.sort_open(list)
 	return list
 end
 

@@ -48,8 +48,9 @@ local function span(class: string, text: string, extra: { [string]: any }?): Nod
 	return el("span", props)
 end
 
--- Open objectives: priority, then due date (none last), then created; done ones most recent first.
-local function sort_open(list: { Store.Objective })
+-- Open objectives in graph order: priority, then due date (none last), then created, then id. The
+-- "Link this tab" picker uses it too (fix-spec-drift D3).
+function M.sort_open(list: { Store.Objective })
 	table.sort(list, function(a, b)
 		if a.priority ~= b.priority then
 			return a.priority < b.priority
@@ -361,7 +362,7 @@ function M.build(state: Store.State, win: Model.Window, ui_state: Ui): Built
 			table.insert(if o.done then done_list else open_list, o)
 		end
 	end
-	sort_open(open_list)
+	M.sort_open(open_list)
 	sort_done(done_list)
 
 	-- Review mode's list (review-done-objectives, design D4): the done objectives the filters show whose
@@ -464,7 +465,7 @@ function M.build(state: Store.State, win: Model.Window, ui_state: Ui): Built
 			table.insert(menu_objs, o)
 		end
 	end
-	sort_open(menu_objs)
+	M.sort_open(menu_objs)
 	-- Each row's label carries the creation time; a menu row's `detail` is only a tooltip
 	-- (creation-time-suffix D3). Formatted once, not once per tab.
 	local menu_labels: { [string]: string } = {}

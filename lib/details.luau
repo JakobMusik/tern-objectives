@@ -118,25 +118,29 @@ function M.type(row: Model.Row): (string, string?)
 end
 
 -- "you: …" and "<agent>: …", each kept whole up to SQUEEZE characters and split before its last
--- TAIL characters for the view's middle cut.
+-- TAIL characters for the view's middle cut. Only omp has a chat to read "you:" from, so other agents
+-- get the reply line alone and no transcript read (fix-spec-drift D2).
 local function agent_lines(row: Model.Row, a: AgentBlock): { Line }
 	local out: { Line } = {}
-	local key = agent_key(a)
-	local entry = cache[row.pane]
-	if entry == nil or entry.key ~= key then
-		stale[row.pane] = true
-	end
-	if entry == nil or not entry.read then
-		table.insert(out, { label = "you:", text = "…", class = "ob-d-wait" })
-	elseif entry.you ~= nil then
-		local head, tail = Text.split_end(entry.you, TAIL)
-		table.insert(out, { label = "you:", text = head, tail = tail })
+	local name = agent_name(a, if row.info ~= nil then row.info.program else nil)
+	if name == "omp" then
+		local key = agent_key(a)
+		local entry = cache[row.pane]
+		if entry == nil or entry.key ~= key then
+			stale[row.pane] = true
+		end
+		if entry == nil or not entry.read then
+			table.insert(out, { label = "you:", text = "…", class = "ob-d-wait" })
+		elseif entry.you ~= nil then
+			local head, tail = Text.split_end(entry.you, TAIL)
+			table.insert(out, { label = "you:", text = head, tail = tail })
+		end
 	end
 	if type(a.last_message) == "string" and a.last_message ~= "" then
 		-- omp ends a turn's text with a footer block ("\n·\n1.6s · 557 tok · …"): not part of the reply.
 		local reply = string.match(a.last_message, "^(.-)\n·\n[^\n]*$") or a.last_message
 		local head, tail = Text.split_end(Text.squeeze(reply, SQUEEZE), TAIL)
-		table.insert(out, { label = agent_name(a, if row.info ~= nil then row.info.program else nil) .. ":", text = head, tail = tail })
+		table.insert(out, { label = name .. ":", text = head, tail = tail })
 	end
 	return out
 end
