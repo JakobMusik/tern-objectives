@@ -89,7 +89,9 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
 - [x] 5.2 **(live)** After the push has finished, `tern plugin install github.com/JakobMusik/tern-objectives --force`, from a shell with no harness variables. Verify `tern plugin list` shows `objectives 0.11.0 … ready`, with `tabnav 0.1.0` untouched.
 
   Result: `installed objectives 0.11.0 → ~/Library/Application Support/Tern/plugins/objectives`; `tern plugin list` shows `objectives 0.11.0 … ready`, `omp-narration 0.1.0 … ready` and `tabnav 0.1.0 … ready`. Read-only afterwards: the live `kv.json` held 17 saved omp chats, among them pane `100000000001` of the linked tab "QA: Summarize the release checklist" with its `-Documents-Projects-demo/2026-10-29T08-14-15-789Z_….jsonl`. Every saved chat whose omp process was running matched the file that process holds or names (16 of 16).
-- [ ] 5.3 **(live)** With the user: a linked tab with an omp chat, closed, shows Resume, and its row reads "omp"; Resume brings the chat back with its messages in a new tab that takes the objective's link. Record the result here.
+- [x] 5.3 **(live)** With the user: a linked tab with an omp chat, closed, shows Resume, and its row reads "omp"; Resume brings the chat back with its messages in a new tab that takes the objective's link. Record the result here.
+
+  Result (user, 0.11.0): "the resume button is working". One issue reported: the new tab opens in the session that has focus, which can differ from the session the chat was in. That is what the requirement asks ("a new tab in the current session"); opening it in its original session is the next change, `resume-in-original-session` (0.11.1).
 
 ## Workflow follow-up
 
