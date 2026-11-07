@@ -43,7 +43,7 @@ In `menu`, for a done objective with at least one tab to close: `{ label = "Clos
 
 ### D3. The confirmation
 A second picker, like Delete's:
-- `Close 2 tabs` (icon `x-circle`), whose detail reads "ends their programs; omp chats come back with Resume", and, with kept tabs, also "1 linked to an open objective stays open";
+- `Close 2 tabs` (icon `x-circle`), whose detail reads "ends their programs; omp chats come back with Resume", and, with kept tabs, "1 tab linked to an open objective stays open; ends their programs; omp chats come back with Resume";
 - `Cancel`;
 - placeholder `Close the tabs of “<title>”?`.
 

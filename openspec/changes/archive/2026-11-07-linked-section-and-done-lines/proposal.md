@@ -35,8 +35,8 @@ None.
 
 ### Modified Capabilities
 
-- `objectives-graph`: "Linked tabs first" (the section follows the links; the divider's look); "Link lines" and "Done objectives group" (done objectives' lines only while selected, in green); "Selection" (no link bar for a done objective).
-- `tab-links`: "Linking from the graph" (only an open objective shows the link bar; a done objective's links can't change).
+- `objectives-graph`: "Linked tabs first" is removed and replaced by "Linked tabs section" (the section follows the links) and "Other tabs divider" (the divider's look); "Link lines" and "Done objectives group" (done objectives' lines only while selected, in green); "Selection" (no link bar for a done objective).
+- `tab-links`: "Linking from the graph" (only an open objective shows the link bar); "Done objectives' links are fixed" is added (a done objective's links can't change).
 - `objective-review`: "Review mode" and its closed-tab scenario: the listed objectives' lines show only for the selected one.
 
 ## Impact

@@ -22,7 +22,7 @@ No design.md: one CSS rule, no decision left open.
   - double-click on the "Default" session name: 0.00 on the heading and the name;
   - drags across "Done (3)", the session heading and "Closed tabs": 0.05, 0.00 and 0.00. The 0.05 is the caret: the drag's press and release toggled the group. Its crop shows no highlight;
   - `dragsel`/`seldiff.py`: Prune, New objective, the tag filters, All / This session, the due chip, the tag chip and the badge all 0.0. o1's side note (10.1) and title (4.0) still select;
-  - double-click on o1's title highlighted "build".
+  - double-click on o1's title highlighted "bug".
 
   `.ob-linkhead` and `.ob-divider` dropped their own `user-select` line, which `.ob-group` now covers.
 
@@ -33,7 +33,7 @@ No design.md: one CSS rule, no decision left open.
   Result: the isolated install (`/tmp/tobj-rel`) printed `installed objectives 0.8.3`, and `tern plugin list` showed `objectives 0.8.3 … 0 blocks, 0 lenses, window ready`.
 - [x] 2.2 **(live)** `tern plugin install github.com/JakobMusik/tern-objectives --force`, from a shell with no harness variables. Verify `tern plugin list` shows `objectives 0.8.3 … ready`, with `tabnav 0.1.0` untouched.
 
-  Result: `installed objectives 0.8.3 → ~/Library/Application Support/Tern/plugins/objectives`; `tern plugin list` shows `objectives 0.8.3 … ready` and `tabnav 0.1.0 … ready`. The tag is `v0.8.3` (`71850fb`), with the message "v0.8.3" instead of the usual "objectives 0.8.3"; it was left, since a published tag isn't moved.
+  Result: `installed objectives 0.8.3 → ~/Library/Application Support/Tern/plugins/objectives`; `tern plugin list` shows `objectives 0.8.3 … ready` and `tabnav 0.1.0 … ready`. The tag is `v0.8.3` (`047bad1`), with the message "v0.8.3" instead of the usual "objectives 0.8.3"; it was left, since a published tag isn't moved.
 - [x] 2.3 **(live)** With the user: double-clicking "Done (n)" or a session name highlights nothing, and titles still select. Record the result here.
 
   Result (user, checked on 0.10.0, which includes this change): confirmed.

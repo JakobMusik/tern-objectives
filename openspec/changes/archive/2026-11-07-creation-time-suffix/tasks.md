@@ -23,7 +23,7 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
   - **D2 changed twice** (design.md, D2): with the title growing, the time sat at the line's far end by ⋯. Then with the time `flex: 1 0.001 auto` and no box, at 460 px neither the time nor ⋯ showed. Shrink factors below 1 in total take only that fraction of the overflow, so the line overflowed. The title and time now share the clipping `.ob-name` box.
   - **Two with one title:** o10 and o11, both "Write slides" in the kv dump, made a minute apart, read `11-07 19:56` and `11-07 19:57`, each equal to its `created` formatted.
   - **Long title at 1400 px:** o5's title is 322.2 px wide and cut with "…", its time 6.0 px after it, 53.9 px wide with 53.0 px of ink; o1, given o5's `created` so the text matches, has 53.5 px of ink. Short titles are followed by their time 6.0 px after them, and ⋯ is inside every node.
-  - **460 px:** the name box has about 15 px on open nodes, as the title had before this change: the title shows 2–3 letters ("Fix", "Dra", "Wr"), clipped without "…", and the time is clipped away. ⋯ is inside every open node. A done node, which also has the trash icon, has no room for the name, as before, and its ⋯ already overflowed the node by 6 px before this change.
+  - **460 px:** the name box has about 15 px on open nodes, as the title had before this change: the title shows 2–3 letters ("Fix", "Wr"), clipped without "…", and the time is clipped away. ⋯ is inside every open node. A done node, which also has the trash icon, has no room for the name, as before, and its ⋯ already overflowed the node by 6 px before this change.
   - **Rename:** ⋯ → Rename opened the field holding "Write slides"; after "Write talk slides", o10 still reads `11-07 19:56`.
   - **Done and review:** done o3 shows `11-02 19:56`, also as the only node in "Review (1)". Shots `c11_light` and `c11_dark` show the times dimmed after the titles.
   - **`edgecheck.py`:** PASS at 1400 (`c11d_1400`) and 460 px (`c11d_460b`).
@@ -50,7 +50,7 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
   Result: the install into `/tmp/tobj-inst14/config` printed `installed objectives 0.14.0 → /tmp/tobj-inst14/config/plugins/objectives`.
 - [x] 2.2 **(live)** After the push has finished, `tern plugin install github.com/JakobMusik/tern-objectives --force`, from a shell with no harness variables. Verify `tern plugin list` shows `objectives 0.14.0 … ready`, with `tabnav 0.1.0` and `omp-narration 0.1.0` untouched.
 
-  Result: `installed objectives 0.14.0 → ~/Library/Application Support/Tern/plugins/objectives`; `tern plugin list` shows `objectives 0.14.0 … ready`, `omp-narration 0.1.0 … ready` and `tabnav 0.1.0 … ready`. The tag is `v0.14.0` (`08054c9`).
+  Result: `installed objectives 0.14.0 → ~/Library/Application Support/Tern/plugins/objectives`; `tern plugin list` shows `objectives 0.14.0 … ready`, `omp-narration 0.1.0 … ready` and `tabnav 0.1.0 … ready`. The tag is `v0.14.0` (`a8cd820`).
 - [x] 2.3 **(live)** With the user: objective nodes, the tab menu and the "Link this tab" picker show the creation time after the title. Record the result here.
 
   Result (user, 0.14.0): "it works", after checking objective nodes, a tab's right-click menu and "Objectives: Link this tab…".

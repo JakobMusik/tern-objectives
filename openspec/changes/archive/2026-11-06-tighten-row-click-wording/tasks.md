@@ -48,6 +48,6 @@ Checks run in the headless harness at `/tmp/tobj`. Nothing here touches the live
   Verify: `openspec show pane-details --type spec` holds the new wording and the scenario "Click beside the name", and `git status` is clean against `origin/main`.
 
   Result:
-  - **Verify:** no warnings. The only open item was this task. Design adherence and code patterns were not verified: there is no `design.md`, and no plugin code changed since `cb42106`.
+  - **Verify:** no warnings. The only open item was this task. Design adherence and code patterns were not verified: there is no `design.md`, and no plugin code changed since the 0.6.1 release (`449f5c0`).
   - **Archive:** as `2026-11-06-tighten-row-click-wording`, with "Folded pane rows" modified in `pane-details`. Its Purpose and other scenarios are untouched, and no delta headers remain.
   - **Validation:** strict, 6 of 6 specs pass.

@@ -11,7 +11,7 @@ The user asked to make the "Done (n)" header's text unselectable, because it get
   - "Closed tabs" and "Other windows";
   - the session headings in the right column;
   - the `Linked to “<title>”` heading and the `Other tabs` divider, which already were.
-- Objective titles, side notes, tab labels and pane names stay selectable, as the user asked in 0.8.0.
+- Objective titles, side notes, tab labels and pane details stay selectable, as the user asked in 0.8.0.
 - Release as 0.8.3, a patch.
 
 Out of scope:

@@ -44,7 +44,7 @@ Groups 1–2 shipped 0.3.0 with two surfaces (design "History"); groups 3–4 mo
 
   Verify: the tags API lists `v0.3.0`, and live `tern plugin list` shows `objectives 0.3.0` ready.
 
-  Result: an isolated install printed `installed objectives 0.3.0`; release commit `d7053fc`; the tags API lists `v0.3.0` first; live `tern plugin list` shows `objectives 0.3.0 … 1 blocks, 0 lenses, window ready`, with `tabnav 0.1.0` untouched.
+  Result: an isolated install printed `installed objectives 0.3.0`; release commit `f628886`; the tags API lists `v0.3.0` first; live `tern plugin list` shows `objectives 0.3.0 … 1 blocks, 0 lenses, window ready`, with `tabnav 0.1.0` untouched.
 
   Smoke test (agent, live window, 0.3.0): `tern ctl session switch devbox` then ⌃⌘O focused a new pane labelled "Objectives".
   - Its element tree held one `.ob-root` on the `plugin.tern.canvas` surface and none on the block.
@@ -83,7 +83,7 @@ Groups 1–2 shipped 0.3.0 with two surfaces (design "History"); groups 3–4 mo
 
   Verify: the tags API lists `v0.4.0`, and live `tern plugin list` shows `objectives 0.4.0` ready.
 
-  Result: an isolated install printed `installed objectives 0.4.0` and listed `0 blocks, 0 lenses, window ready`; release commit `cb975b7`; the tags API lists `v0.4.0` first; live `tern plugin list` shows `objectives 0.4.0 … 0 blocks, 0 lenses, window ready`, with `tabnav 0.1.0` untouched. The installed folder has no `host.luau`, and the live data folder holds only `kv.json`.
+  Result: an isolated install printed `installed objectives 0.4.0` and listed `0 blocks, 0 lenses, window ready`; release commit `9269872`; the tags API lists `v0.4.0` first; live `tern plugin list` shows `objectives 0.4.0 … 0 blocks, 0 lenses, window ready`, with `tabnav 0.1.0` untouched. The installed folder has no `host.luau`, and the live data folder holds only `kv.json`.
 - [x] 4.2 **(live)** With the user: ⌃⌘O opens the graph as a canvas in a session on this Mac and in "devbox"; devbox's tabs are listed; a click links and a pane row jumps; ⌃⌘O closes it.
 
   Result (user, 0.4.0): "it works", and the lines stay after a plugin reload (design R5).

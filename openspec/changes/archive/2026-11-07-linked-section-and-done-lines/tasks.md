@@ -90,7 +90,7 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
   Result: the install into `/tmp/tobj-inst13/config` printed `installed objectives 0.13.0 → /tmp/tobj-inst13/config/plugins/objectives`.
 - [x] 3.2 **(live)** After the push has finished, `tern plugin install github.com/JakobMusik/tern-objectives --force`, from a shell with no harness variables. Verify `tern plugin list` shows `objectives 0.13.0 … ready`, with `tabnav 0.1.0` and `omp-narration 0.1.0` untouched.
 
-  Result: `installed objectives 0.13.0 → ~/Library/Application Support/Tern/plugins/objectives`; `tern plugin list` shows `objectives 0.13.0 … ready`, `omp-narration 0.1.0 … ready` and `tabnav 0.1.0 … ready`. The tag is `v0.13.0` (`09e69e6`).
+  Result: `installed objectives 0.13.0 → ~/Library/Application Support/Tern/plugins/objectives`; `tern plugin list` shows `objectives 0.13.0 … ready`, `omp-narration 0.1.0 … ready` and `tabnav 0.1.0 … ready`. The tag is `v0.13.0` (`05d8892`).
 - [x] 3.3 **(live)** With the user: linking and unlinking move tabs across the new divider at once; a done objective shows its green lines when selected and no link bars. Record the result here.
 
   Result (user, 0.13.0): "it works", after checking linking and unlinking across the divider, the divider's look, and a selected done objective's green lines with no bars.

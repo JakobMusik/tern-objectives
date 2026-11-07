@@ -58,7 +58,7 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
   Result: the isolated install (`/tmp/tobj-rel`) printed `installed objectives 0.11.1`, and `tern plugin list` showed `objectives 0.11.1 … 0 blocks, 0 lenses, window ready`.
 - [x] 4.2 **(live)** After the push has finished, `tern plugin install github.com/JakobMusik/tern-objectives --force`, from a shell with no harness variables. Verify `tern plugin list` shows `objectives 0.11.1 … ready`, with `tabnav 0.1.0` untouched.
 
-  Result: `installed objectives 0.11.1 → ~/Library/Application Support/Tern/plugins/objectives`; `tern plugin list` shows `objectives 0.11.1 … ready`, `omp-narration 0.1.0 … ready` and `tabnav 0.1.0 … ready`. The tag is `v0.11.1` (`2738dd8`).
+  Result: `installed objectives 0.11.1 → ~/Library/Application Support/Tern/plugins/objectives`; `tern plugin list` shows `objectives 0.11.1 … ready`, `omp-narration 0.1.0 … ready` and `tabnav 0.1.0 … ready`. The tag is `v0.11.1` (`02a9331`).
 - [x] 4.3 **(live)** With the user: Resume on a closed linked omp tab, clicked from another session, brings the chat back in its own session at its old position. Record the result here.
 
   Result (user, 0.11.1): confirmed, "it works now".
