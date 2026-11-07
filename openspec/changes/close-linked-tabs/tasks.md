@@ -85,7 +85,9 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
 - [x] 5.1 Version `0.12.0` in `plugin.toml`. Verify an isolated `tern plugin install` of the repo folder prints `installed objectives 0.12.0`. Tick this box, then commit, push `main` and tag `v0.12.0` (annotated, message "objectives 0.12.0").
 
   Result: the isolated install (`/tmp/tobj-rel`) printed `installed objectives 0.12.0`, and `tern plugin list` showed `objectives 0.12.0 … 0 blocks, 0 lenses, window ready`.
-- [ ] 5.2 **(live)** After the push has finished, `tern plugin install github.com/JakobMusik/tern-objectives --force`, from a shell with no harness variables. Verify `tern plugin list` shows `objectives 0.12.0 … ready`, with `tabnav 0.1.0` untouched.
+- [x] 5.2 **(live)** After the push has finished, `tern plugin install github.com/JakobMusik/tern-objectives --force`, from a shell with no harness variables. Verify `tern plugin list` shows `objectives 0.12.0 … ready`, with `tabnav 0.1.0` untouched.
+
+  Result: `installed objectives 0.12.0 → ~/Library/Application Support/Tern/plugins/objectives`; `tern plugin list` shows `objectives 0.12.0 … ready`, `omp-narration 0.1.0 … ready` and `tabnav 0.1.0 … ready`. The tag is `v0.12.0` (`2d66447`).
 - [ ] 5.3 **(live)** With the user: "Close linked tabs" on a done objective closes its tabs, keeps one an open objective links, and the closed ones show with Resume when the objective is selected; "Prune closed tabs" leaves them. Record the result here.
 
 ## Workflow follow-up
