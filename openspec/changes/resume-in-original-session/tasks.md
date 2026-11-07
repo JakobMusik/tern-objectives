@@ -26,7 +26,7 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
 
 ## 2. Resume in the original session
 
-- [ ] 2.1 Implement D1 to D4 in `lib/app.luau` (`resume`): choose the session, check its host, open the tab there, order it, and toast on the fallback.
+- [x] 2.1 Implement D1 to D4 in `lib/app.luau` (`resume`): choose the session, check its host, open the tab there, order it, and toast on the fallback.
 
   Verify each scenario of "Where a chat resumes" with a linked omp chat tab in "work", closed, then Resume clicked from "home":
   - back in its own session: op `sessions` shows the new tab at position 2 of "work", "work" current, and no new tab in "home";
@@ -35,6 +35,13 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
   - fewer tabs: a tab that was tab 3 of a session now holding one tab comes back as its tab 2;
   - gone: with no session of that id or name, the new tab is the last of "home", and a shot shows the toast naming the session;
   - and, as before, the kv dump shows the links moved and the closed tab's snapshot gone.
+
+  Result (harness; one omp chat, "w2", in `/tmp/tobj/w/extra`, first in tab 10 at position 2 of "work" (id 6, tabs `[8,10,12]`), linked to o1; every Resume clicked from "home" (id 13)):
+  - back in its own session: "work" became `[8,87,12]` and current, the chat in tab 87; "home" stayed `[15]`; o1's 10 became 87, and 10's snapshot went;
+  - renamed: with "work" renamed "work-2" (snapshot still "work", id 6), the chat came back as tab 107 of "work-2", `[8,107,12]`;
+  - found by name: with session 6 closed and a new "work" (id 130, one tab) created, the chat came back in it as tab 140, `[132,140]`;
+  - fewer tabs: with tab 140 moved to position 3 and snapshotted, then "work" cut to one tab, the chat came back as its tab 2, `[132,174]`;
+  - gone: with "work" closed and no session of id 130 or name "work", the chat came back as the last tab of "home", `[15,202]`, and shot `s25_gone` shows the toast "Session “work” is gone: resumed here". o1's 174 became 202, 174's snapshot went, and pane 201 is saved with the same chat file.
 
 ## 3. README
 

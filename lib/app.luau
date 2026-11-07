@@ -500,13 +500,50 @@ local function jump_pane(cx: WindowCx, pane: number)
 	cx.layout:focus(pane)
 end
 
--- ---- resuming a closed tab's omp chats (resume-closed-agents D5, D6; resume-omp-chats D5) ----
+-- ---- resuming a closed tab's omp chats (resume-closed-agents D5, D6; resume-omp-chats D5;
+-- resume-in-original-session D1–D4) ----
+
+-- The session a closed tab's chats come back in (resume-in-original-session, D1): the one with the
+-- snapshot's session id, else the first with its name, exactly, then ignoring case; nil when none.
+-- Names are matched here, not with `find_session`, which would take a name such as "3" for an id.
+local function home_of(cx: WindowCx, snap: Store.TabSnap): SessionInfo?
+	local sessions = cx.session:sessions()
+	for _, s in sessions do
+		if s.id == snap.session then
+			return s
+		end
+	end
+	local name = snap.session_name or ""
+	for _, s in sessions do
+		if s.name == name then
+			return s
+		end
+	end
+	for _, s in sessions do
+		if string.lower(s.name) == string.lower(name) then
+			return s
+		end
+	end
+	return nil
+end
+
+-- Whether session `id` runs on this Mac (D2).
+local function on_this_mac(cx: WindowCx, id: number): boolean
+	local here: { [number]: boolean } = {}
+	for _, h in cx.hosts:list() do
+		if h.kind == "local" then
+			here[h.id] = true
+		end
+	end
+	for _, s in cx.sessions:list() do
+		if s.id == id then
+			return here[s.host] == true
+		end
+	end
+	return false
+end
 
 local function resume(cx: WindowCx, tab: number)
-	if cx.hosts:current().kind ~= "local" then
-		cx:toast("info", "Resume works in a session on this Mac")
-		return
-	end
 	local state = Store.read()
 	local win = Model.read(cx, Surface.find(cx))
 	local snap = state.tabs[tostring(tab)]
@@ -527,7 +564,25 @@ local function resume(cx: WindowCx, tab: number)
 		cx:toast("info", "That tab has no omp chat left to resume")
 		return
 	end
+	-- Its own session, else the current one (D1); never one on another machine (D2).
+	local home = home_of(cx, snap)
+	local target = home
+	if target == nil then
+		for _, s in cx.session:sessions() do
+			if s.current then
+				target = s
+			end
+		end
+	end
+	if target == nil or not on_this_mac(cx, target.id) then
+		cx:toast("info", "Resume works in a session on this Mac")
+		return
+	end
 	Surface.close(cx)
+	-- Switching first opens the tab in that session, in this same call (D3, task 1.1).
+	if not target.current then
+		cx.sessions:switch(target.id)
+	end
 	-- `new_tab` and `split` return the new shell pane; typing into it at once works (task 1.2).
 	local moved: { [string]: Store.AgentSession } = {}
 	local first: number? = nil
@@ -548,6 +603,15 @@ local function resume(cx: WindowCx, tab: number)
 	if new_tab == nil then
 		cx:toast("error", "Objectives: could not open a tab to resume in")
 		return
+	end
+	-- Its old place (D4): a new tab is the last, so only an earlier position needs a move. The
+	-- session's tabs were read before the new one opened.
+	if home ~= nil and snap.position > 0 and snap.position <= #target.tabs then
+		cx.layout:order_tab(new_tab, snap.position)
+	end
+	if home == nil then
+		local name = snap.session_name or ""
+		cx:toast("info", if name ~= "" then "Session “" .. name .. "” is gone: resumed here" else "Its session is gone: resumed here")
 	end
 	Store.adopt(tab, new_tab, moved)
 	-- The window lists the new tab only after this call: store its snapshot once it does. Its panes
