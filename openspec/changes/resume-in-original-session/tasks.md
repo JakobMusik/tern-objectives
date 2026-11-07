@@ -45,9 +45,11 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
 
 ## 3. README
 
-- [ ] 3.1 In "Using the graph", say Resume opens the tab in its own session at its old place and switches there, and in the current session when that session is gone. In "Known limits", replace "it refuses while the current session is on one" with the chosen session's machine.
+- [x] 3.1 In "Using the graph", say Resume opens the tab in its own session at its old place and switches there, and in the current session when that session is gone. In "Known limits", replace "it refuses while the current session is on one" with the chosen session's machine.
 
   Verify by reading the sections against the delta spec.
+
+  Result: "Using the graph" says Resume switches to the tab's session, even renamed, opens the tab at its old position, and when the session is gone opens it at the end of the current one with a message naming the session. "Known limits" now says it refuses when the session it would open in is on another machine, and adds that the old position is the one the plugin last saw (design, Risks). Both match "Where a chat resumes" and "Resuming a closed tab".
 
 ## 4. Release 0.11.1
 
