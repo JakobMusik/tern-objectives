@@ -102,9 +102,11 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
 - [x] 3.1 Version `0.14.1` in `plugin.toml`. Verify an isolated `tern plugin install` of the repo folder prints `installed objectives 0.14.1`. Tick this box, then commit, push `main` and tag `v0.14.1` (annotated, message "objectives 0.14.1").
 
   Result: the install into `/tmp/tobj-inst141/config` printed `installed objectives 0.14.1 → /tmp/tobj-inst141/config/plugins/objectives`.
-- [ ] 3.2 **(live)** After the push has finished, run `tern plugin install github.com/JakobMusik/tern-objectives --force` from a shell with no harness variables.
+- [x] 3.2 **(live)** After the push has finished, run `tern plugin install github.com/JakobMusik/tern-objectives --force` from a shell with no harness variables.
 
   Verify `tern plugin list` shows `objectives 0.14.1 … ready`, with `tabnav 0.1.0` and `omp-narration 0.1.0` untouched.
+
+  Result: `installed objectives 0.14.1 → ~/Library/Application Support/Tern/plugins/objectives`; `tern plugin list` shows `objectives 0.14.1 … ready`, `omp-narration 0.1.0 … ready` and `tabnav 0.1.0 … ready`. The tag is `v0.14.1` (`04bb790`), signed.
 - [ ] 3.3 **(live)** With the user:
   - a tag filter whose tag is removed from its last objective clears itself;
   - the "Link this tab" picker and the graph list objectives in the same order.
