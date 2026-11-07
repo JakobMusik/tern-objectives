@@ -35,14 +35,16 @@ See proposal.md, "Why".
 Alternative: store the formatted time in the title at creation. The user chose not to: Rename would expose it, and existing objectives would lack it.
 
 ### D2. The node
-- After `.ob-title`, a `.ob-created` span with the short time, keyed `created`, before the trash icon and ⋯.
-- `.ob-created`: 11 px, `color: var(--t3)`, `white-space: nowrap`, `overflow: hidden`, `text-overflow: clip`, `flex: 0 0.001 auto`, `min-width: 0`.
-- `.ob-title` gets `min-width: 3em` in place of 0.
-- In CSS flex, shrinking is shared in proportion to each item's shrink factor times its size, and an item stops at its `min-width`. With a factor of 0.001, the time gives up a fraction of a pixel while the title shrinks. Once the title is down to 3em, the time is the only item left to shrink. So a long title is cut first, and on a very narrow node the time is cut after it, with the title still showing a few letters.
-- Node heights don't change, so the layout sheet and the lines are untouched. The span sits inside the node's click area, so a click on it selects the node like the title does.
+- The title and a `.ob-created` span with the short time sit together in a `.ob-name` box, keyed `name`, before the trash icon and ⋯. The title keeps its class and key, so its line-through on done nodes is unchanged.
+- `.ob-name`: a flex row with a 6 px gap, `flex: 1 1 auto`, `min-width: 0`, `overflow: hidden`. It takes the line's spare room and shrinks to whatever the line leaves it, so the trash icon and ⋯ always fit.
+- Inside it, `.ob-title` is `flex: 0 1 auto` with `min-width: 3em`, cut with "…", and `.ob-created` is `flex: none`: 11 px, `color: var(--t3)`, no wrapping. The time follows the title directly.
+- A long title therefore shrinks first and the time stays whole. When the box is narrower than 3em of title, the gap and the whole time, the box clips the time from the right, with the title still showing a few letters.
+- Node heights don't change, so the layout sheet and the lines are untouched. The box has no action of its own, so a click on it selects the node as a click on the title does.
+
+First try, recorded in task 1.1: no box, the title `min-width: 3em`, and the time `flex: 1 0.001 auto` so it would give way only after the title. At 460 px neither the time nor ⋯ showed. When the shrinking items' factors add up to less than 1, CSS flex takes only that fraction of the overflow from them, so the line overflowed, and `.ob-l1` clipped the time and ⋯ at the node's edge. Before that, with the title growing (`flex: 1 1 auto`), the time had landed at the line's far end by ⋯ rather than after the title.
 
 Alternatives:
-- `flex: none` on the time keeps it whole at every width, but at 460 px the title would shrink to nothing.
+- `flex: none` on the time with no box keeps it whole at every width, but at 460 px the title would shrink to nothing.
 - The time at the start of the second line, before the note and chips: it would always fit, but it isn't a suffix of the name, which is what the user asked for.
 
 ### D3. Link choices
@@ -52,7 +54,7 @@ Alternatives:
 
 ## Risks / Trade-offs
 
-- **[Tern's flex shrinking differs from CSS]** Nothing records how Tern's layout shares shrinking between items or honours `min-width` on a shrinking item. → Task 1.1 measures the title and time rects at 1400 and 460 px wide. If the time is cut while the title still has room, or the title disappears, stop and update D2.
+- **[The name box at narrow widths]** The first try showed that Tern's flex layout follows CSS closely enough to break a design that ignored the rule on shrink factors below 1. → Task 1.1 measures the title, time and ⋯ rects at 1400 and 460 px wide. The time must be whole at 1400 px on a 120-character title, and ⋯ must be inside the node at both widths.
 - **[Same minute]** Two objectives with one title created within one minute still read alike. → The user's choice of format; the tooltip gives the full time, and the ids differ in the kv dump.
 - **[Wider menu rows]** Each "Link to" row grows by 14 characters. → The tab menu's known limit, a row per open objective with no scrolling, is about height, not width.
 - **[Clock and time zone]** The time is local at render time, so it shifts if the machine's time zone changes. → Accepted; the tooltip does the same.

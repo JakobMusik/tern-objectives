@@ -250,9 +250,12 @@ function M.link_tab(cx: WindowCx)
 	end
 	local items: { PickItem } = {}
 	for _, o in open do
+		-- The creation time tells same-titled objectives apart; the label stays the plain title for
+		-- typing and the toast (creation-time-suffix D3).
+		local created = Dates.short(o.created)
 		table.insert(items, {
 			label = o.title,
-			detail = "P" .. o.priority,
+			detail = "P" .. o.priority .. (if created ~= nil then " · " .. created else ""),
 			current = table.find(o.tabs, tab) ~= nil,
 			id = o.id,
 		})

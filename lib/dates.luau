@@ -28,6 +28,15 @@ function M.key(d: Day): string
 	return string.format("%04d-%02d-%02d", d.year, d.month, d.day)
 end
 
+-- An objective's creation time as shown after its title, `MM-DD HH:MM` in local time; nil without a
+-- time (creation-time-suffix D1).
+function M.short(t: number?): string?
+	if type(t) ~= "number" then
+		return nil
+	end
+	return os.date("%m-%d %H:%M", t) :: string
+end
+
 -- The day `s` names, or nil when it isn't `YYYY-MM-DD` or not a real date (2026-02-30).
 function M.parse(s: string): Day?
 	local y, m, d = string.match(s, "^%s*(%d%d%d%d)-(%d%d)-(%d%d)%s*$")

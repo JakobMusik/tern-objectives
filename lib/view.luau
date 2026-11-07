@@ -146,8 +146,15 @@ local function objective_node(o: Store.Objective, ui_state: Ui, first: string, r
 			title = "Priority: click to change",
 			actions = { click = "prio=" .. o.id },
 		}),
-		span("ob-title", o.title, { key = "title" }),
 	}
+	-- The title and its creation time, which tells same-titled objectives apart, share a box that
+	-- clips the time only once the title is down to 3em (creation-time-suffix D2).
+	local name: { Node } = { span("ob-title", o.title, { key = "title" }) }
+	local created = Dates.short(o.created)
+	if created ~= nil then
+		table.insert(name, span("ob-created", created, { key = "created" }))
+	end
+	table.insert(l1, el("div", { class = "ob-name", key = "name" }, name))
 	if o.done then
 		table.insert(l1, el("span", { class = "ob-trash", key = "trash", title = "Remove", actions = { click = "rm=" .. o.id } }, {
 			{ k = "icon", p = { name = "trash" } } :: any,
@@ -458,13 +465,20 @@ function M.build(state: Store.State, win: Model.Window, ui_state: Ui): Built
 		end
 	end
 	sort_open(menu_objs)
+	-- Each row's label carries the creation time; a menu row's `detail` is only a tooltip
+	-- (creation-time-suffix D3). Formatted once, not once per tab.
+	local menu_labels: { [string]: string } = {}
+	for _, o in menu_objs do
+		local created = Dates.short(o.created)
+		menu_labels[o.id] = if created ~= nil then o.title .. " · " .. created else o.title
+	end
 	local function menu_of(tab: number): { any }
 		if #menu_objs == 0 then
 			return { { id = "none", label = "No objectives yet", disabled = "Create one with ＋ New objective" } }
 		end
 		local rows: { any } = { { header = "Link to" } }
 		for _, o in menu_objs do
-			table.insert(rows, { id = "lnk=" .. o.id .. ":" .. tab, label = o.title, checked = table.find(o.tabs, tab) ~= nil })
+			table.insert(rows, { id = "lnk=" .. o.id .. ":" .. tab, label = menu_labels[o.id], checked = table.find(o.tabs, tab) ~= nil })
 		end
 		return rows
 	end
