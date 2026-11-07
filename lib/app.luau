@@ -14,25 +14,6 @@ local Refresh = require("./refresh")
 local M = {}
 
 local selected: string? = nil
--- The tabs the selection was linked to when it was made: they stay first in the right column until
--- the selection changes, whatever is linked meanwhile (design D3). Never stored, like the selection.
-local pinned: { [number]: boolean }? = nil
-
--- Every change of the selection goes through here, so the fixed set always matches it.
-local function select(id: string?)
-	selected = id
-	pinned = nil
-	if id ~= nil then
-		local o = Store.find(Store.read(), id)
-		if o ~= nil then
-			local set: { [number]: boolean } = {}
-			for _, tab in o.tabs do
-				set[tab] = true
-			end
-			pinned = set
-		end
-	end
-end
 
 -- The pane that had focus when the graph was last opened fresh (design P5); never stored.
 local origin: number? = nil
@@ -83,12 +64,11 @@ local function build(cx: WindowCx): View.Built
 	Store.refresh_snapshots(state, win.tabs :: any, win.key)
 	Store.save_sessions(state, {}, win.live)
 	if selected ~= nil and Store.find(state, selected) == nil then
-		select(nil)
+		selected = nil
 	end
 	Details.begin(cx, state.agents)
 	local built = View.build(state, win, {
 		selected = selected,
-		pinned = pinned,
 		origin = origin,
 		today = Dates.today(),
 		kind = Details.type,
@@ -214,7 +194,7 @@ local function new_objective(cx: WindowCx, tab: number?, facts: Model.Tab?, wind
 		if id == nil then
 			cx2:toast("error", "An objective needs a title")
 		elseif tab == nil then
-			select(id)
+			selected = id
 		else
 			cx2:toast("success", "Objective created for this tab")
 		end
@@ -401,7 +381,7 @@ local function delete(cx: WindowCx, o: Store.Objective)
 		icon = "trash",
 	}):next(function(item, _err, cx2)
 		if item ~= nil and item.op == "delete" and Store.delete(o.id) and selected == o.id then
-			select(nil)
+			selected = nil
 		end
 		finish(cx2, true)
 	end)
@@ -788,12 +768,12 @@ function M.action(ev: Action, cx: WindowCx)
 		drop_undo()
 	end
 	if act == "sel" then
-		select(if selected == value then nil else value)
+		selected = if selected == value then nil else value
 	elseif act == "bg" then
 		if selected == nil and not had_undo then
 			return
 		end
-		select(nil)
+		selected = nil
 	elseif act == "done" then
 		local saved = Store.mark_done(value, Dates.today())
 		if saved ~= nil then
@@ -810,7 +790,7 @@ function M.action(ev: Action, cx: WindowCx)
 		local saved = Store.remove(value)
 		if saved ~= nil then
 			if selected == value then
-				select(nil)
+				selected = nil
 			end
 			offer_undo("Removed “" .. saved.record.title .. "”", saved)
 		elseif Store.find(Store.read(), value) == nil then
