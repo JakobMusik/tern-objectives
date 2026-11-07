@@ -22,7 +22,7 @@ rules:
   proposal:
     - State what is out of scope explicitly.
   specs:
-    - Every scenario must be observable in the headless Tern (a real click, a screenshot, or a kv dump).
+    - Every scenario must be observable in the headless Tern (a real click, a screenshot, or a kv dump); plugin-package's repository and install scenarios are observed in the repository, on GitHub, or with an isolated install.
   design:
     - Back every claim about Tern behavior with a tern.d.luau line, an SDK doc page, or a recorded spike result; mark anything untested as a risk.
   tasks:

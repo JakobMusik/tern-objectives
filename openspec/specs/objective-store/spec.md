@@ -1,7 +1,7 @@
 # objective-store Specification
 
 ## Purpose
-Holds the user's objectives as one flat, global list that every session and window of this machine shares, together with the tab snapshots and view settings the graph needs, in the plugin's own private storage.
+Holds the user's objectives as one flat, global list that every session and window of this machine shares, together with their review schedules, the tab snapshots and saved omp chats the graph needs, and the view settings, in the plugin's own private storage.
 
 ## Requirements
 

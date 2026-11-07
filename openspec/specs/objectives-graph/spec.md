@@ -1,7 +1,7 @@
 # objectives-graph Specification
 
 ## Purpose
-Shows objectives and tabs as a clickable two-column graph, with lines for links. The user manages objectives entirely by clicking, and sees at a glance which tabs serve which objective.
+Shows objectives and tabs as a clickable two-column graph, with lines for links. The user manages objectives mostly by clicking, with a rename key and typed fields where text is needed, and sees at a glance which tabs serve which objective.
 
 ## Requirements
 

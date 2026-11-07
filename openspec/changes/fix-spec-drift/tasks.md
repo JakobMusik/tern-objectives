@@ -45,7 +45,7 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
 
 ## 2. Specs match the code
 
-- [ ] 2.1 Run each new or changed scenario of the deltas, unless 1.x already covered it.
+- [x] 2.1 Run each new or changed scenario of the deltas, unless 1.x already covered it.
   - objectives-graph: "Closed tab's line"; "Linking removes the fade" still holds on live tabs; "Filtered out"; "The graph's own tab"; "Every shown tab linked"; "Two sessions' closed tabs"; "Closed tab linked to an open objective" (shot).
   - tab-links: "Parked focus" (a session whose only pane is parked); "Menu heading"; "Resume moves a done objective's link".
   - objective-store: "Made for a tab".
@@ -54,12 +54,48 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
   - plugin-package: "Rename hidden without a selection" (`ctl palette objectives`).
 
   Verify: each scenario's THEN holds, with the reading named in it. Record every result. If one fails, stop and decide with the user whether the spec or the code changes.
-- [ ] 2.2 Purposes and config (D4): edit the objectives-graph and objective-store Purposes in the main specs, and the specs rule in `openspec/config.yaml`.
+
+  Result (harness; every THEN held, so no spec or code change was needed):
+  - **Resume moves a done objective's link** and **Found by name in another case:**
+    - setup: done X ("Write release notes") was linked to omp chat tab 6 (pane 5, saved), recorded as "work · tab 2"; the tab was then closed, session "work" closed, and session "Work" created;
+    - from session "home", X selected: tab 6 showed under "Closed tabs" with Resume;
+    - result: the chat opened as tab 110 in "Work", its tab 2, and Tern showed "Work"; the kv dump has X done, linked to `[110]`.
+  - **Linking removes the fade:** live App build (117) went from `ob-tab-unlinked` to the card class after a "Link to" menu choice, and its label's darkest pixel is RGB 59,59,59 before and after (shots `f21_fade_before`, `f21_fade_after`). The graph needs a 1400 px tall window, or that node sits under the glimpse's footer.
+  - **Filtered out:** Y ("Fix login bug" #api) linked to App build drew one edge layer; with "#web" hiding Y there were none, and clearing the filter brought it back.
+  - **Closed tab's line** and **Two sessions' closed tabs:**
+    - setup: X linked to Components ("web · tab 2"), Server ("api · tab 1") and Notes ("api · tab 3"), then all three closed;
+    - the "Closed tabs" group reads Server, Notes, Components;
+    - Components' node reads "closed · web · tab 2".
+  - **Closed tab linked to an open objective:** shot `f21_ghosts` (crop) shows Components with a faint dashed border, no fill, half-strength text and a struck-through label. The live tab next to it has a solid fill and full-strength text.
+  - **Every shown tab linked:** X linked to Benchmarks, the api session's only live tab. Under "This session": `{Linked to “Write release notes”} [api] Benchmarks {Closed tabs} Server Notes`, with no `.ob-divider`. Under "All" the divider is back.
+  - **Menu heading:** with two open objectives, App build's menu reads `Link to` (`mi-sec`), the two objectives' rows, a separator, then Copy.
+  - **The graph's own tab:** done o4 linked only to new tab D (129), and the graph was opened from D. "Close linked tabs · 1 open tab" was confirmed ("Close 1 tab"). D is gone, the graph came back over tab 124 beside a terminal, and o4 still links `[129]`.
+  - **Parked focus:** session "parked", whose only pane (135) was parked, has no tabs. "Link this tab…" and "New objective for this tab…" each showed the error toast "The focused pane is not in a tab", and the objectives in `kv.json` were unchanged.
+  - **Made for a tab:** "New objective for this tab…" from App build's shell, with "Ship the dashboard", stored o20, P2, open, linked to `[117]` only.
+  - **Picker from review mode:** "Review (2)" listed o5 and o6. o5's ⋯ menu dismissed with Esc left the graph in review mode with o5 and o6, the button still active. The harness picker did not close the glimpse, so the reopen path itself was not exercised here.
+  - **Rename hidden without a selection:** read from the palette's `div.cmdk` rows:
+    - with o1 selected, all four commands, rename with ⌥R;
+    - with the graph shown and nothing selected, and with no graph, rename is absent and the other three are listed.
+  - **Log:** renders took at most 7.5 ms, with no errors.
+- [x] 2.2 Purposes and config (D4): edit the objectives-graph and objective-store Purposes in the main specs, and the specs rule in `openspec/config.yaml`.
 
   Verify: `openspec validate --specs --strict` passes, and `openspec instructions specs --change fix-spec-drift --json` shows the new rule.
-- [ ] 2.3 README (D4): the box bullet's Resume exception, the tabs bullet's ghost look, and the Prune known limit.
+
+  Result:
+  - **objectives-graph Purpose:** "…manages objectives mostly by clicking, with a rename key and typed fields where text is needed…".
+  - **objective-store Purpose:** adds "their review schedules", "saved omp chats" and the view settings.
+  - **`openspec/config.yaml`:** the specs rule now adds "plugin-package's repository and install scenarios are observed in the repository, on GitHub, or with an isolated install".
+  - **Checks:** `openspec validate --specs --strict` 8 passed; `openspec instructions specs` lists the new rule; the change validates strictly.
+- [x] 2.3 README (D4): the box bullet's Resume exception, the tabs bullet's ghost look, and the Prune known limit.
 
   Verify by reading each passage against the matching requirement: "Done objectives' links are fixed", "Ghost tabs look different" with "Unlinked tabs look different", and "Pruning closed tabs".
+
+  Result:
+  - **The box bullet:** "their links can't change (Resume aside: a reopened tab takes them over)".
+  - **The tabs bullet:** live unlinked tabs are grey and dashed. Ghosts are faint, dashed, with a struck-through label and "closed ·" or "other window ·" before their place, and both groups are ordered by session name, then old position.
+  - **The Review (n) limit:** "done objectives with no links, or linked only to other sessions' or windows' tabs"; "pruned" is gone.
+  - **Filter bullet:** it also says a tag filter goes away by itself once no objective holds the tag (task 1.1).
+  - Each passage agrees with "Done objectives' links are fixed", "Ghost tabs look different" and "Unlinked tabs look different", "Order of closed and other-window tabs", "Pruning closed tabs" and "Tag filter".
 
 ## 3. Release 0.14.1
 
