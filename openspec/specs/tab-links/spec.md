@@ -56,7 +56,7 @@ The plugin SHALL NOT create or remove links on its own. Opening, closing or movi
 - **THEN** no objective links the new tab
 
 ### Requirement: Link status
-Each linked tab SHALL be shown in one of three states, worked out from the current window every time the graph draws and never stored:
+Each linked tab the graph shows SHALL be shown in one of three states, worked out from the current window every time the graph draws and never stored:
 - **live:** the window holds the tab;
 - **closed:** the window does not hold it, and its snapshot came from this window;
 - **elsewhere:** its snapshot came from another window.
@@ -66,7 +66,7 @@ Each linked tab SHALL be shown in one of three states, worked out from the curre
 - **THEN** every linked tab the window still holds is shown live, with its links intact
 
 #### Scenario: Closing a tab
-- **WHEN** the user closes a linked tab
+- **WHEN** the user closes a tab linked to an open objective
 - **THEN** it is shown as closed, and its links are kept
 
 #### Scenario: Tab from another window
