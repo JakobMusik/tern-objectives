@@ -74,9 +74,11 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
 
 ## 4. README
 
-- [ ] 4.1 "Using the graph": the "Close linked tabs" row, what it closes and keeps, that omp chats come back with Resume, and where done objectives' closed tabs show; Prune keeps them. "Known limits": no undo, programs end, a chat in its first reply or on another machine can't come back.
+- [x] 4.1 "Using the graph": the "Close linked tabs" row, what it closes and keeps, that omp chats come back with Resume, and where done objectives' closed tabs show; Prune keeps them. "Known limits": no undo, programs end, a chat in its first reply or on another machine can't come back.
 
   Verify by reading the sections against the delta specs.
+
+  Result: "Using the graph" gains a line on **Close linked tabs** (the ⋯ row and the notice's **Close 2 tabs**: asks first, keeps tabs an open objective links, notes omp chats first for **Resume**, keeps links, never closes on marking done, cancel keeps **Undo**), and the closed-tabs line now says done objectives' closed tabs show only when selected or in review, and that Prune removes open objectives' links only. "Known limits" adds that closing can't be undone and only omp chats come back, not one in its first reply or on another machine. Each matches a requirement of the delta specs.
 
 ## 5. Release 0.12.0
 
