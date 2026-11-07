@@ -20,6 +20,8 @@ See proposal.md, "Why".
 | Picker rows take an `icon`; `x-circle` is one of Tern's icon names | SDK book, "Icon names" ("Status and alerts") |
 | A picker opened from the graph can close the glimpse; `finish` reopens it | `lib/app.luau:187–199` |
 | `tern.process.run` calls back with a fresh `cx` | `tern.d.luau:2129`; `resume-omp-chats` task 2.1 |
+| Closing every pane of a tab, floating ones included, removes the tab | task 1.1: tab 7 (two side by side, one floating) was gone after closing its three panes in one call |
+| A tab whose other panes all close survives while the graph's glimpse is over it, holding only the graph | task 1.1: tab 23 kept pane 26, kind "plugin" |
 
 ## Goals / Non-Goals
 
@@ -55,7 +57,7 @@ On `ok`, the plugin re-reads the window and closes every row's pane of each tab,
 Saving first refreshes each tab's snapshot, so its rows are current, and saves each omp chat's file, so the closed tab shows Resume (`resume-omp-chats`).
 
 ### D5. The graph's own tab
-The graph is a glimpse over the current tab. When that tab is among those closed, the plugin closes the graph first (`Surface.close`), and `finish` opens it over the tab Tern shows next. Task 1.1 checks whether a tab whose other panes all close survives while it holds the glimpse; if it closes anyway, this step stays as a guard.
+The graph is a glimpse over the current tab, and its pane is not one of the tab's rows (`Model.read` skips it). A tab whose other panes all close survives holding only the graph (task 1.1). So when that tab is among those closed, the plugin closes the graph first (`Surface.close`), then the tab's panes, and `finish` opens the graph over the tab Tern shows next.
 
 ### D6. Which closed tabs show
 `View.build` keeps a closed tab in `closed` only when an open objective links it, the selected objective links it, or review mode lists an objective that links it. `Built` gains `prunable`: the tabs in `closed` that an open objective links. The Prune button shows when `#prunable > 0`, and `prune` in `lib/app.luau` passes `prunable`.
@@ -82,4 +84,3 @@ Lines need no change. A selected done objective draws none, as today; review mod
 - **Chats in sessions on another machine aren't saved** (capture reads this Mac), but their tabs still close. → README limit.
 - **Hidden tabs can be forgotten:** a done objective's closed tabs show only when it is selected or in review. → The README says so; the trash icon or Delete removes them with the objective.
 - **Mixed tabs:** a closed tab linked to open Y and done X loses Y's link on Prune and is then hidden, kept for X.
-- **The graph's tab closing** (D5) is checked in task 1.1.
