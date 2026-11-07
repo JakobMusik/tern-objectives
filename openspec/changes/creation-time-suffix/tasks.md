@@ -51,7 +51,9 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
 - [x] 2.2 **(live)** After the push has finished, `tern plugin install github.com/JakobMusik/tern-objectives --force`, from a shell with no harness variables. Verify `tern plugin list` shows `objectives 0.14.0 … ready`, with `tabnav 0.1.0` and `omp-narration 0.1.0` untouched.
 
   Result: `installed objectives 0.14.0 → ~/Library/Application Support/Tern/plugins/objectives`; `tern plugin list` shows `objectives 0.14.0 … ready`, `omp-narration 0.1.0 … ready` and `tabnav 0.1.0 … ready`. The tag is `v0.14.0` (`08054c9`).
-- [ ] 2.3 **(live)** With the user: objective nodes, the tab menu and the "Link this tab" picker show the creation time after the title. Record the result here.
+- [x] 2.3 **(live)** With the user: objective nodes, the tab menu and the "Link this tab" picker show the creation time after the title. Record the result here.
+
+  Result (user, 0.14.0): "it works", after checking objective nodes, a tab's right-click menu and "Objectives: Link this tab…".
 
 ## Workflow follow-up
 
