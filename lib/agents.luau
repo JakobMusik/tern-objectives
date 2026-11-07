@@ -211,33 +211,41 @@ end
 local pending = false
 local TIMEOUT_MS = 5000
 
-local function fail(msg: string)
-	pending = false
+local function warn(msg: string)
 	tern.log.warn("objectives: chat capture " .. msg)
 end
 
+-- Linked tabs' snapshots too, so a chat's row is stored as an agent even if its tab closes
+-- before the graph is next drawn (resume-closed-agents, design D4).
+local function refresh(cx: WindowCx?, state: Store.State)
+	if cx ~= nil then
+		local win = Model.read(cx, Surface.find(cx))
+		Store.refresh_snapshots(state, win.tabs :: any, win.key)
+	end
+end
+
 local function use(cx: WindowCx?, list: { [number]: string }, live: { [number]: boolean }, out: string, started: number)
-	pending = false
 	local found = M.pair(M.parse(out), list, tern.fs.exists, os.time())
 	local saved = 0
 	for _ in found do
 		saved += 1
 	end
 	local state = Store.read()
-	-- Linked tabs' snapshots too, so a chat's row is stored as an agent even if its tab closes
-	-- before the graph is next drawn (resume-closed-agents, design D4).
-	if cx ~= nil then
-		local win = Model.read(cx, Surface.find(cx))
-		Store.refresh_snapshots(state, win.tabs :: any, win.key)
-	end
+	refresh(cx, state)
 	Store.save_sessions(state, found, live)
 	tern.log.info(string.format("objectives: chat capture %.0f ms, %d saved", tern.now() - started, saved))
 end
 
-local function capture(cx: WindowCx)
+-- One capture now. `done(ok, cx)` runs once the snapshots are refreshed and the chats saved, or
+-- once that has failed; with no agent to read, right after refreshing the snapshots.
+local function capture(cx: WindowCx, done: (ok: boolean, cx: WindowCx?) -> ())
 	local list = chats(cx)
 	if next(list) == nil then
-		pending = false
+		local ok, err = pcall(refresh, cx, Store.read())
+		if not ok then
+			warn("failed: " .. tostring(err))
+		end
+		done(ok, cx)
 		return
 	end
 	local live: { [number]: boolean } = {}
@@ -247,13 +255,15 @@ local function capture(cx: WindowCx)
 	local started = tern.now()
 	tern.process.run({ "/bin/sh", "-c", SCRIPT }, { timeout_ms = TIMEOUT_MS }, function(res: ProcessResult, cx2: WindowCx?)
 		if res.timed_out or res.status ~= 0 then
-			fail(string.format("failed: status %d%s %s", res.status, if res.timed_out then " (timed out)" else "", res.stderr))
+			warn(string.format("failed: status %d%s %s", res.status, if res.timed_out then " (timed out)" else "", res.stderr))
+			done(false, cx2)
 			return
 		end
 		local ok, err = pcall(use, cx2, list, live, res.stdout, started)
 		if not ok then
-			fail("failed: " .. tostring(err))
+			warn("failed: " .. tostring(err))
 		end
+		done(ok, cx2)
 	end)
 end
 
@@ -269,11 +279,31 @@ function M.request()
 			pending = false
 			return
 		end
-		local ok, err = pcall(capture, cx)
+		local ok, err = pcall(capture, cx, function()
+			pending = false
+		end)
 		if not ok then
-			fail("failed: " .. tostring(err))
+			pending = false
+			warn("failed: " .. tostring(err))
 		end
 	end)
+end
+
+-- Captures at once, whether or not one is under way, and calls `done(ok, cx)` once, when it has
+-- saved (close-linked-tabs, design D4): closing a tab right after can't lose its chat.
+function M.save_now(cx: WindowCx, done: (ok: boolean, cx: WindowCx?) -> ())
+	local called = false
+	local function once(ok: boolean, cx2: WindowCx?)
+		if not called then
+			called = true
+			done(ok, cx2)
+		end
+	end
+	local ok, err = pcall(capture, cx, once)
+	if not ok then
+		warn("failed: " .. tostring(err))
+		once(false, cx)
+	end
 end
 
 return M

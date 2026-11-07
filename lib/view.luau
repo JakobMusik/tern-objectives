@@ -26,6 +26,9 @@ export type Ui = {
 	details: (row: Model.Row) -> { { text: string, class: string?, label: string?, tail: string? } },
 	-- The Undo notice's text after marking done or removing, until it is dropped (review design D6).
 	undo: string?,
+	-- After marking done: the objective and the count for the notice's "Close <n> tabs"
+	-- (close-linked-tabs, design D8).
+	undo_close: { id: string, n: number }?,
 	-- Review mode: the due done objectives with their rating buttons (review design D4).
 	reviewing: boolean,
 }
@@ -684,10 +687,21 @@ function M.build(state: Store.State, win: Model.Window, ui_state: Ui): Built
 	table.insert(head, el("div", { class = "ob-spacer", key = "sp" }))
 	if ui_state.undo ~= nil then
 		-- After marking done or removing (review design D6); any other click in the graph drops it.
-		table.insert(head, el("div", { class = "ob-undo", key = "undo" }, {
+		local kids: { Node } = {
 			span("ob-undo-text", ui_state.undo .. " ·", { key = "text", title = ui_state.undo }),
 			span("ob-undo-btn", "Undo", { key = "btn", actions = { click = "undo=" } }),
-		}))
+		}
+		local close = ui_state.undo_close
+		if close ~= nil then
+			-- After marking done, the tabs "Close linked tabs" would close (close-linked-tabs D8).
+			table.insert(kids, span("ob-undo-sep", "·", { key = "sep" }))
+			table.insert(kids, span("ob-undo-btn ob-undo-close", string.format("Close %d tab%s", close.n, if close.n == 1 then "" else "s"), {
+				key = "close",
+				title = "Close this objective's tabs; asks first",
+				actions = { click = "closetabs=" .. close.id },
+			}))
+		end
+		table.insert(head, el("div", { class = "ob-undo", key = "undo" }, kids))
 	end
 	if #due_list > 0 then
 		table.insert(head, span("ob-btn ob-btn-quiet ob-revbtn" .. (if reviewing then " ob-on" else ""), string.format("Review (%d)", #due_list), {
