@@ -13,14 +13,15 @@ The second point matters because Tern can't reopen a closed tab. What survives a
 ## What Changes
 
 1. **Close linked tabs:** a done objective's ⋯ menu gets "Close linked tabs", with the number of its tabs open in this window, when there is at least one. Choosing it asks first, naming how many tabs close and how many stay open because an open objective links them. On confirmation, the plugin saves the omp chats in those tabs, as it does at a turn, then closes every pane of each tab. The links stay, so the tabs become closed tabs with Resume.
-2. **Done objectives' closed tabs are tucked away:** a closed tab that only done objectives link no longer shows in "Closed tabs". It shows while one of those objectives is selected, and in review mode for the objectives listed, with their lines.
-3. **Prune keeps them:** "Prune closed tabs" removes only open objectives' links. A closed tab's snapshot and saved chats go only when no done objective links it. The button counts, and shows for, closed tabs linked to an open objective.
-4. Release as 0.12.0, with the README updated.
+2. **From the done notice:** when the objective just marked done has tabs to close, the notice reads "Marked done “X” · Undo · Close 2 tabs". The button asks the same confirmation. Confirming closes the tabs and ends the notice; cancelling leaves the notice and its Undo. Marking done never closes anything by itself (the user's choice on 2026-11-07: Undo can't bring tabs back, and a mis-click on the box must stay harmless).
+3. **Done objectives' closed tabs are tucked away:** a closed tab that only done objectives link no longer shows in "Closed tabs". It shows while one of those objectives is selected, and in review mode for the objectives listed, with their lines.
+4. **Prune keeps them:** "Prune closed tabs" removes only open objectives' links. A closed tab's snapshot and saved chats go only when no done objective links it. The button counts, and shows for, closed tabs linked to an open objective.
+5. Release as 0.12.0, with the README updated.
 
 Out of scope:
 - Closing tabs of open objectives, or of tabs held by another window.
 - Undo of a close: Tern can't reopen tabs. Resume brings back the omp chats.
-- Closing the tabs at the moment an objective is marked done, from the "Marked done" notice.
+- Closing tabs automatically when an objective is marked done.
 - Showing done objectives' tabs held by another window differently: "Other windows" is unchanged.
 - Restoring a resumed tab's layout beyond today's side-by-side splits.
 
@@ -32,15 +33,15 @@ None.
 
 ### Modified Capabilities
 
-- `objectives-graph`: the ⋯ menu's new row; closing a done objective's tabs; which closed tabs the right column shows; when "Prune closed tabs" shows.
+- `objectives-graph`: the ⋯ menu's new row; the done notice's button; closing a done objective's tabs; which closed tabs the right column shows; when "Prune closed tabs" shows.
 - `objective-store`: "Pruning closed tabs" keeps done objectives' links and their tabs' snapshots.
 - `objective-review`: review mode's right column adds the listed objectives' closed tabs.
 - `tab-links`: "Link status" covers the linked tabs the graph shows, not every linked tab.
 
 ## Impact
 
-- `lib/app.luau`: the menu row, the confirmation, the close flow, and the prune count.
+- `lib/app.luau`: the menu row, the notice's button and its effect on the notice, the confirmation, the close flow, and the prune count.
 - `lib/agents.luau`: a capture that reports when it has saved, for closing right after.
-- `lib/view.luau`: which closed tabs are shown, and a list of the ones Prune may touch.
+- `lib/view.luau`: the notice's button, which closed tabs are shown, and a list of the ones Prune may touch; `styles.css` for the button.
 - `lib/store.luau`: `prune` keeps done objectives' links and snapshots.
 - `README.md`, `plugin.toml` (0.12.0).

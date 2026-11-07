@@ -65,7 +65,14 @@ Lines need no change. A selected done objective draws none, as today; review mod
 ### D7. Prune keeps done objectives' links
 `Store.prune(tabs)` removes links to those tabs from open objectives only. A tab's snapshot and its panes' saved chats go only when no done objective links it any more. It returns the number of links removed.
 
-### D8. Release
+### D8. The done notice's button
+- **When it shows:** `M.action`'s `done` branch, which already offers Undo, counts the tabs D1 would close for that objective. When there are any, the `Undo` entry also keeps the objective's id and the count, and `View.build` gets the count with the notice text (`ui_state`). The notice then ends with a `span` "Close 2 tabs", styled like Undo, with `click = "closetabs=<id>"`.
+- **What a click does:** the click handler drops the notice on every click but Undo; `closetabs` is exempt too. It opens D3's confirmation for that objective, counting again. Confirming drops the notice, then runs D4. Cancelling leaves the notice, whose own 10 s timer may have ended it meanwhile. If no tab is left to close, it toasts and keeps the notice.
+- **Why keep the notice on cancel:** done is final except through Undo (`objective-store`, "Final done state"), so a mis-click on the button must not cost the Undo.
+- **The graph:** the confirmation can close the glimpse; `finish` reopens it with `M.open(cx, true)`, which keeps the notice (`lib/app.luau:136–139` drops it only on a fresh open).
+- **Alternatives:** closing the tabs on marking done was rejected with the user: Undo couldn't bring them back, and the done box is a quick, frequent target.
+
+### D9. Release
 0.12.0, a minor release: a new action, and Prune behaves differently.
 
 ## Risks / Trade-offs
