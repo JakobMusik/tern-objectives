@@ -31,6 +31,9 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
   - confirming closes A and B and keeps C (op `sessions`), the kv dump still links X to A, B and C, and a shot shows the toast;
   - A held a replied omp chat: selecting X shows A under "Closed tabs" with "Resume", its row "omp";
   - with the graph opened over B, confirming leaves no tab holding only the graph, and the graph shows again.
+- [ ] 2.3 The done notice's button (D8): counted when marking done, "Close <n> tabs" after Undo, the same confirmation, the notice ended on confirm and kept on cancel; unselectable like the rest of the notice.
+
+  Verify each scenario of "Closing tabs from the done notice": the header text after marking a linked objective done (`ctl tree '.ob-undo'`, shot) with its tabs still open; Cancel then Undo leaves the tabs open and the objective open; confirming closes the tabs, keeps the objective done and linked, and removes the notice; an objective with no open tabs gets no button.
 
 ## 3. Closed tabs and Prune
 

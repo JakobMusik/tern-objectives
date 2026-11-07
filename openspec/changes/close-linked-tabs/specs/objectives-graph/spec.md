@@ -15,6 +15,25 @@ Choosing "Close linked tabs" SHALL ask for confirmation, naming how many tabs it
 - **WHEN** the user picks "Close linked tabs" and cancels the confirmation
 - **THEN** A, B and C are all still open, and `kv.json` is unchanged
 
+### Requirement: Closing tabs from the done notice
+When an objective is marked done in the graph and has tabs "Close linked tabs" would close, its "Marked done" notice SHALL also offer "Close <n> tabs" after Undo. Clicking it SHALL ask the same confirmation as the menu row. Confirming SHALL close the tabs and end the notice; cancelling SHALL leave the notice and its Undo as they were. Marking done SHALL NOT close any tab by itself.
+
+#### Scenario: Offered after marking done
+- **WHEN** open objective X links two open tabs that no other open objective links, and the user clicks X's done box
+- **THEN** the header reads "Marked done “X” · Undo · Close 2 tabs", and both tabs are still open
+
+#### Scenario: Cancel keeps Undo
+- **WHEN** the user clicks "Close 2 tabs" and cancels the confirmation, then clicks Undo within 10 seconds of marking done
+- **THEN** both tabs are still open, and X is open again
+
+#### Scenario: Confirmed from the notice
+- **WHEN** the user clicks "Close 2 tabs" and confirms
+- **THEN** both tabs are closed, X stays done and still links them, and the header shows no notice
+
+#### Scenario: Nothing to close
+- **WHEN** an objective with no open linked tabs is marked done
+- **THEN** the header reads "Marked done “<title>” · Undo", with no close button
+
 ### Requirement: Done objectives' closed tabs
 A closed tab that only done objectives link SHALL NOT show in the right column, except while one of those objectives is selected or is listed in review mode.
 
