@@ -39,7 +39,10 @@ local origin: number? = nil
 local edges_css = ""
 
 -- The Undo notice after marking done or removing (review-done-objectives, design D6); never stored.
-type Undo = { text: string, saved: Store.Saved, timer: TimerHandle? }
+-- `close`: after marking done, the objective whose tabs its "Close <n> tabs" button closes, and n
+-- (close-linked-tabs, design D8).
+export type NoticeClose = { id: string, n: number }
+type Undo = { text: string, saved: Store.Saved, timer: TimerHandle?, close: NoticeClose? }
 local undo: Undo? = nil
 local UNDO_MS = 10000
 
@@ -51,9 +54,9 @@ local function drop_undo()
 end
 
 -- Shows the notice for 10 s, or until the next click in the graph.
-local function offer_undo(text: string, saved: Store.Saved)
+local function offer_undo(text: string, saved: Store.Saved, close: NoticeClose?)
 	drop_undo()
-	local entry: Undo = { text = text, saved = saved, timer = nil }
+	local entry: Undo = { text = text, saved = saved, timer = nil, close = close }
 	entry.timer = tern.timer(UNDO_MS, function(cx: WindowCx?)
 		if undo == entry then
 			undo = nil
@@ -93,6 +96,7 @@ local function build(cx: WindowCx): View.Built
 			return Details.lines(cx, row)
 		end,
 		undo = if undo ~= nil then undo.text else nil,
+		undo_close = if undo ~= nil then undo.close else nil,
 		reviewing = reviewing,
 	})
 	if built.due == 0 then
@@ -403,6 +407,112 @@ local function delete(cx: WindowCx, o: Store.Objective)
 	end)
 end
 
+-- ---- closing a done objective's tabs (close-linked-tabs, design D1–D5) ----
+
+local function plural(n: number, word: string): string
+	return string.format("%d %s%s", n, word, if n == 1 then "" else "s")
+end
+
+-- D1: the tabs of `o` this window holds that no open objective links, and how many of its open tabs
+-- an open objective keeps.
+local function closable(state: Store.State, win: Model.Window, o: Store.Objective): ({ number }, number)
+	local open_links: { [number]: boolean } = {}
+	for _, other in state.objectives do
+		if not other.done then
+			for _, tab in other.tabs do
+				open_links[tab] = true
+			end
+		end
+	end
+	local tabs: { number } = {}
+	local kept = 0
+	for _, tab in o.tabs do
+		if win.tabs[tab] ~= nil then
+			if open_links[tab] then
+				kept += 1
+			else
+				table.insert(tabs, tab)
+			end
+		end
+	end
+	return tabs, kept
+end
+
+-- D4, D5: saves the omp chats, then closes every pane of each tab, counted again now; the graph
+-- first when it is over one of them, since a tab holding only the graph would stay open.
+local function close_tabs(cx: WindowCx, id: string)
+	Agents.save_now(cx, function(ok: boolean, cx2: WindowCx?)
+		if cx2 == nil then
+			return
+		end
+		if not ok then
+			cx2:toast("error", "Objectives: couldn't save the omp chats, so no tab was closed")
+			finish(cx2, true)
+			return
+		end
+		local state = Store.read()
+		local o = Store.find(state, id)
+		if o == nil then
+			toast_gone(cx2)
+			finish(cx2, true)
+			return
+		end
+		local win = Model.read(cx2, Surface.find(cx2))
+		local tabs = closable(state, win, o)
+		local graph = Surface.find(cx2)
+		local graph_tab = if graph ~= nil then cx2.session:tab_of(graph) else nil
+		if graph_tab ~= nil and table.find(tabs, graph_tab) ~= nil then
+			Surface.close(cx2)
+		end
+		for _, tab in tabs do
+			for _, r in (win.tabs[tab] :: Model.Tab).rows do
+				cx2.layout:close(r.pane)
+			end
+		end
+		cx2:toast("success", "Closed " .. plural(#tabs, "tab") .. " of “" .. o.title .. "”")
+		finish(cx2, true)
+	end)
+end
+
+-- D3: asks first, counting the tabs again; `confirmed` runs on "Close", and cancelling only
+-- brings the graph back.
+local function confirm_close(cx: WindowCx, id: string, confirmed: (cx: WindowCx) -> ())
+	local state = Store.read()
+	local o = Store.find(state, id)
+	if o == nil then
+		toast_gone(cx)
+		finish(cx, true)
+		return
+	end
+	local tabs, kept = closable(state, Model.read(cx, Surface.find(cx)), o)
+	if #tabs == 0 then
+		cx:toast("info", "“" .. o.title .. "” has no open tab left to close")
+		finish(cx, true)
+		return
+	end
+	local detail = "ends their programs; omp chats come back with Resume"
+	if kept > 0 then
+		detail = plural(kept, "tab") .. " linked to an open objective stay" .. (if kept == 1 then "s" else "") .. " open; " .. detail
+	end
+	cx:pick({
+		items = {
+			{ label = "Close " .. plural(#tabs, "tab"), detail = detail, op = "close", icon = "x-circle" },
+			{ label = "Cancel", op = "cancel" },
+		},
+		placeholder = "Close the tabs of “" .. o.title .. "”?",
+		icon = "x-circle",
+	}):next(function(item, _err, cx2)
+		if cx2 == nil then
+			return
+		end
+		if item ~= nil and item.op == "close" then
+			confirmed(cx2)
+		else
+			finish(cx2, true)
+		end
+	end)
+end
+
 local function menu(cx: WindowCx, id: string)
 	local o = Store.find(Store.read(), id)
 	if o == nil then
@@ -413,14 +523,22 @@ local function menu(cx: WindowCx, id: string)
 	for _, tag in o.tags do
 		table.insert(tag_list, "#" .. tag)
 	end
+	local items: { PickItem } = {
+		{ label = "Rename", detail = o.title, op = "rename", icon = "pencil" },
+		{ label = "Side note", detail = o.note or "none", op = "note", icon = "note" },
+		{ label = "Due date", detail = o.due or "none", op = "due", icon = "calendar" },
+		{ label = "Tags", detail = if #tag_list > 0 then table.concat(tag_list, " ") else "none", op = "tags", icon = "tag" },
+	}
+	-- D2: a done objective with tabs to close offers to close them.
+	if o.done then
+		local tabs = closable(Store.read(), Model.read(cx, Surface.find(cx)), o)
+		if #tabs > 0 then
+			table.insert(items, { label = "Close linked tabs", detail = plural(#tabs, "open tab"), op = "close", icon = "x-circle" })
+		end
+	end
+	table.insert(items, { label = "Delete", detail = "asks first", op = "delete", icon = "trash" })
 	cx:pick({
-		items = {
-			{ label = "Rename", detail = o.title, op = "rename", icon = "pencil" },
-			{ label = "Side note", detail = o.note or "none", op = "note", icon = "note" },
-			{ label = "Due date", detail = o.due or "none", op = "due", icon = "calendar" },
-			{ label = "Tags", detail = if #tag_list > 0 then table.concat(tag_list, " ") else "none", op = "tags", icon = "tag" },
-			{ label = "Delete", detail = "asks first", op = "delete", icon = "trash" },
-		},
+		items = items,
 		placeholder = o.title,
 		icon = "list-checks",
 	}):next(function(item, _err, cx2)
@@ -443,6 +561,10 @@ local function menu(cx: WindowCx, id: string)
 			tags(cx2, fresh)
 		elseif item.op == "delete" then
 			delete(cx2, fresh)
+		elseif item.op == "close" then
+			confirm_close(cx2, fresh.id, function(cx3)
+				close_tabs(cx3, fresh.id)
+			end)
 		end
 	end)
 end
@@ -657,9 +779,10 @@ export type Action = { act: string, value: string? }
 
 function M.action(ev: Action, cx: WindowCx)
 	local act, value = ev.act, ev.value or ""
-	-- Any click but Undo drops the Undo notice (review design D6).
+	-- Any click but Undo, and the notice's own close button, drops the Undo notice (review design D6;
+	-- close-linked-tabs D8).
 	local had_undo = undo ~= nil
-	if act ~= "undo" then
+	if act ~= "undo" and act ~= "closetabs" then
 		drop_undo()
 	end
 	if act == "sel" then
@@ -672,7 +795,11 @@ function M.action(ev: Action, cx: WindowCx)
 	elseif act == "done" then
 		local saved = Store.mark_done(value, Dates.today())
 		if saved ~= nil then
-			offer_undo("Marked done “" .. saved.record.title .. "”", saved)
+			-- D8: the notice offers to close the tabs that "Close linked tabs" would close.
+			local state = Store.read()
+			local o = Store.find(state, value)
+			local n = if o ~= nil then #(closable(state, Model.read(cx, Surface.find(cx)), o)) else 0
+			offer_undo("Marked done “" .. saved.record.title .. "”", saved, if n > 0 then { id = value, n = n } else nil)
 		elseif Store.find(Store.read(), value) == nil then
 			toast_gone(cx)
 		end
@@ -692,6 +819,13 @@ function M.action(ev: Action, cx: WindowCx)
 			Store.restore(undo.saved)
 			drop_undo()
 		end
+	elseif act == "closetabs" then
+		-- The notice's "Close <n> tabs" (D8): confirming ends the notice, and with it the Undo of done;
+		-- cancelling leaves both.
+		confirm_close(cx, value, function(cx2)
+			drop_undo()
+			close_tabs(cx2, value)
+		end)
 	elseif act == "noop" then
 		-- A done objective's box: done is final, so the click only drops the notice (design D7).
 	elseif act == "rev" then
