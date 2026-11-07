@@ -88,7 +88,13 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
 - [x] 5.2 **(live)** After the push has finished, `tern plugin install github.com/JakobMusik/tern-objectives --force`, from a shell with no harness variables. Verify `tern plugin list` shows `objectives 0.12.0 … ready`, with `tabnav 0.1.0` untouched.
 
   Result: `installed objectives 0.12.0 → ~/Library/Application Support/Tern/plugins/objectives`; `tern plugin list` shows `objectives 0.12.0 … ready`, `omp-narration 0.1.0 … ready` and `tabnav 0.1.0 … ready`. The tag is `v0.12.0` (`2d66447`).
-- [ ] 5.3 **(live)** With the user: "Close linked tabs" on a done objective closes its tabs, keeps one an open objective links, and the closed ones show with Resume when the objective is selected; "Prune closed tabs" leaves them. Record the result here.
+- [x] 5.3 **(live)** With the user: "Close linked tabs" on a done objective closes its tabs, keeps one an open objective links, and the closed ones show with Resume when the objective is selected; "Prune closed tabs" leaves them. Record the result here.
+
+  Result (user, 0.12.0): working, and marked finished by the user. One error seen along the way, deferred until it happens again:
+  - Resume on a closed tab typed `omp --resume '…/-demo/2026-11-07T04-35-02-083Z_01a1b449-….jsonl'`, and omp refused: "the session header is missing or malformed". That file, and a second one from the same close (`01a1b466-…`), held a single `session_exit` record (`sighup`, 14:48:08, omp 18.18.0), written when "Close linked tabs" closed their tabs. Both chats had started (12:35 and 13:06) and never been written to.
+  - Not reproduced: in the harness, a fresh omp 18.18.0 creates no chat file before a message, and closing it leaves none. How the plugin came to save these header-less files is open.
+  - Resuming by session id finds a chat in any folder and reopens it in its own folder (harness, `omp --resume 01a1b4cb-…`), but answers "Session not found" for a file with no header.
+  - Proposed fix, for when it recurs: save the session id read from the chat file's header instead of the path, so a file without a header is never saved, and type `omp --resume <id>`.
 
 ## Workflow follow-up
 
