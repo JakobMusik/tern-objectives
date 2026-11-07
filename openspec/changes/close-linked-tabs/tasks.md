@@ -9,13 +9,17 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
 
 ## 1. Spike
 
-- [ ] 1.1 Check D5 and the tab-closing assumption with a helper op that closes every row pane of a tab, as D4 will.
+- [x] 1.1 Check D5 and the tab-closing assumption with a helper op that closes every row pane of a tab, as D4 will.
 
   Verify, and record in design.md's source record:
   - closing every pane of a tab with a split and a float removes the tab (op `sessions`);
   - with the graph open over tab T, closing T's other panes: does T survive holding the glimpse? (op `sessions`, `ctl tree '.ob-root'`)
 
   If either differs from D4 and D5, stop and update the artifacts.
+
+  Result (harness, 2026-11-07, helper op `close_tab`):
+  - tab 7, holding panes 6 and 10 side by side and pane 12 floating over them: closing all three in one call removed the tab; "Default" read `[3]` again;
+  - tab 23, holding pane 22 with the graph's glimpse (pane 26, kind "plugin") over it: closing pane 22 alone left tab 23 alive, holding only the graph. So D5's step is required, not a guard: when the graph's tab is among those closed, the graph closes first, and `finish` reopens it over the tab Tern shows next.
 
 ## 2. Close linked tabs
 
