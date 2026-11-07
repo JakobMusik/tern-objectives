@@ -66,8 +66,8 @@ Clicking "Review (n)" SHALL draw the button active and list in the left column o
 - **THEN** the left column lists only the two due objectives, the fresh one's buttons read "Hard · 1d", "Good · 3d" and "Easy · 4d", and there is no Done group
 
 #### Scenario: Closed tab in review
-- **WHEN** a due objective's only linked tab was closed with "Close linked tabs", it held an omp chat that had replied, and the user clicks "Review (1)"
-- **THEN** that tab shows under "Closed tabs" with "Resume", joined to the objective by a dashed line
+- **WHEN** a due objective's only linked tab was closed with "Close linked tabs", it held an omp chat that had replied, the user clicks "Review (1)" and then selects the objective
+- **THEN** after "Review (1)", that tab shows under "Closed tabs" with "Resume" and no line; after selecting, a dashed green line joins it to the objective, and no tab node has a link bar
 
 ### Requirement: Leaving review mode
 Review mode SHALL end when its list becomes empty, when the active "Review (n)" button is clicked, or when the graph closes. It SHALL NOT be remembered across opens of the graph.
