@@ -176,7 +176,7 @@ end
 
 type Shown = { tab: Model.Tab, status: string }
 
--- The link bar a tab node shows while an objective is selected (design P6).
+-- The link bar a tab node shows while an open objective is selected (design P6).
 type Link = { unlink: boolean, title: string }
 
 -- `resume`: a closed tab with a saved omp chat shows "Resume" (resume-omp-chats, design D4).
@@ -424,7 +424,7 @@ function M.build(state: Store.State, win: Model.Window, ui_state: Ui): Built
 		if view_state.done_open then
 			for _, o in done_list do
 				local f = Layout.first(left)
-				Layout.add_obj(left)
+				obj_cy[o.id] = Layout.add_obj(left)
 				table.insert(left_kids, objective_node(o, ui_state, f))
 				if o.id == selected then
 					sel_obj = o
@@ -443,8 +443,9 @@ function M.build(state: Store.State, win: Model.Window, ui_state: Ui): Built
 			sel_tabs[tab] = true
 		end
 	end
+	-- A done objective's links are fixed, so it gets no bar (linked-section D3).
 	local function link_of(tab: number): Link?
-		if sel_obj == nil then
+		if sel_obj == nil or sel_obj.done then
 			return nil
 		end
 		return { unlink = sel_tabs[tab] == true, title = sel_obj.title }
@@ -657,10 +658,10 @@ function M.build(state: Store.State, win: Model.Window, ui_state: Ui): Built
 		place(nil, "")
 	end
 
-	-- Edges: open objectives in the left column to tabs in the right column.
+	-- Edges: open objectives' lines outside review mode, and the selected objective's when it is done,
+	-- in review mode too (linked-section D4).
 	local edges: { Edges.Edge } = {}
-	-- Open objectives' lines, or in review mode the listed objectives' (review design D4).
-	for _, o in (if reviewing then due_list else open_list) :: { Store.Objective } do
+	local function add_edges(o: Store.Objective)
 		local from = obj_cy[o.id]
 		for _, tab in o.tabs do
 			local to = tab_cy[tab]
@@ -669,11 +670,20 @@ function M.build(state: Store.State, win: Model.Window, ui_state: Ui): Built
 					from = from,
 					to = to,
 					priority = o.priority,
+					done = o.done,
 					dashed = status_of[tab] ~= "live",
 					selected = o.id == selected,
 				})
 			end
 		end
+	end
+	if not reviewing then
+		for _, o in open_list do
+			add_edges(o)
+		end
+	end
+	if sel_obj ~= nil and sel_obj.done then
+		add_edges(sel_obj)
 	end
 	local height = math.max(left.y, right.y)
 	local css, layers = Edges.build(edges, height)

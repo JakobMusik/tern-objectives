@@ -31,6 +31,10 @@ M.px = {
 -- shared by the badges (CSS below) and the lines drawn inside the edge SVGs.
 M.palette = { "#e5484d", "#f76b15", "#3b82f6", "#8b8d98" }
 
+-- A done objective's lines, shown only while it is selected (linked-section D4): green like the done
+-- box's tick, and unlike any priority colour.
+M.done_color = "#30a46c"
+
 -- The graph's canvas (design G4); every plugin rule is scoped under it.
 M.SCOPE = "[data-surface='plugin.tern.canvas'] .ob-root"
 local SCOPE = M.SCOPE
