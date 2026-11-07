@@ -17,6 +17,8 @@ See proposal.md, "Why".
 | `cx.layout:move_to_new_tab(pane, session, reveal)` moves a pane to a new last tab of a session and returns the tab | `tern.d.luau:1764–1765` |
 | `cx.layout:order_tab(tab, position)` reorders a tab at a one-based position within its session | `tern.d.luau:1781–1782` |
 | `cx.session:sessions()` lists this window's sessions with `id`, `name`, `current` and ordered `tabs` | `tern.d.luau:1099`, `1708` |
+| `cx.sessions:switch(id)` then `cx.layout:new_tab` in one call opens the tab in that session and shows it; `order_tab` on that tab works in the same call | task 1.1: from "home", tab 19 opened in "work", which became current; `order_tab(19, 2)` gave `[8,19,10,12]` |
+| `move_to_new_tab(pane, session)` on a pane opened in the same call moves its whole tab, keeping the tab id, and leaves no empty tab | task 1.1: tab 25 went from "home" to the end of "work" |
 | `cx.session:find_session(spec)` tries the spec as an id before names | `tern.d.luau:1713` ("Session by id, exact name, then name ignoring case") |
 | `cx.sessions:list()` gives each session's `host`; `cx.hosts:list()` each host's `kind` | `tern.d.luau:706–715`; `lib/agents.luau` `local_panes` |
 
@@ -46,14 +48,14 @@ The plugin matches names itself instead of calling `find_session`, which tries a
 Resume refuses when the chosen session's host (`cx.sessions:list()`, `host`) isn't a local host (`cx.hosts:list()`, `kind` "local"), with the toast "Resume works in a session on this Mac". Today's check, on the current host, goes: a chat from a local session can now come back there even while a remote session is shown. Chats are saved only in local sessions (`resume-omp-chats` D1), so step 4's fallback is the only way to reach a remote session.
 
 ### D3. Opening the tab there
-Two ways; task 1.1 picks one:
-- **A. Switch first:** `cx.sessions:switch(id)`, then `cx.layout:new_tab({ cwd })`. No tab ever exists in the wrong session, and the switch is wanted anyway. Risk: the window may apply the switch only after the call returns, as it lists a new tab only then; `new_tab` would then open in the old session.
-- **B. Open, then move:** `new_tab` in the current session, then `cx.layout:move_to_new_tab(pane, id)`. Risks: the pane may not be movable within the call that opened it, and the emptied tab may linger.
+**Switch first:** `cx.sessions:switch(id)`, then `cx.layout:new_tab({ cwd })`, in the same call. No tab ever exists in the wrong session, and the switch is wanted anyway. Task 1.1 showed the new tab opens in the switched-to session (source record). When the target is the current session, the switch is skipped.
 
-Further chats split from the first pane, wherever it is, after it has been placed. When the target is the current session, neither is needed.
+Alternative: `new_tab` in the current session, then `cx.layout:move_to_new_tab(pane, id)`. It works too (task 1.1), but the tab exists in the wrong session for a moment.
+
+Further chats split from the first pane, as today.
 
 ### D4. Position
-`cx.layout:order_tab(tab, p)`, with `p` the snapshot's `position` capped at the session's tab count, the new tab included. A new tab is the last, so a position at or past the count needs no call. If `order_tab` can't see the tab within the opening call (as `tabs` can't), it runs in the 250 ms timer that already refreshes the new tab's snapshot. Task 1.1 checks which.
+`cx.layout:order_tab(tab, p)` in the same call, with `p` the snapshot's `position` capped at the session's tab count, the new tab included; task 1.1 showed it moves a tab opened in that call. A new tab is the last, so a position at or past the count needs no call. The tab is `cx.session:tab_of(pane)`, and the count comes from `cx.session:sessions()` read before opening, plus one.
 
 ### D5. Release
 0.11.1, a patch release. The requirement changes, but this fixes where Resume opens, as the user reported.

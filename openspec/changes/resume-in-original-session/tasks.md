@@ -8,7 +8,7 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
 
 ## 1. Spike
 
-- [ ] 1.1 Check D3 and D4 with sessions "work" (three tabs) and "home", with a helper op that runs each way in one call.
+- [x] 1.1 Check D3 and D4 with sessions "work" (three tabs) and "home", with a helper op that runs each way in one call.
 
   Verify, and record in design.md's source record:
   - A: from "home", `switch` to "work" then `new_tab`: which session holds the new tab (op `sessions`), and which is shown;
@@ -16,6 +16,13 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
   - `order_tab(tab, 2)` on the new tab, in the same call and from a 250 ms timer: which one moves it.
 
   Pick A if it works, else B, and update D3 and D4. If neither works, stop and update the artifacts.
+
+  Result (harness, 2026-11-07; sessions "Default" 1, "work" 6 with tabs `[8,10,12]`, "home" 13, current):
+  - A, from "home": `switch(6)` then `new_tab` in one call opened pane 18 in tab 19 of "work", and "work" became current. `order_tab(19, 2)` in the same call returned without error and "work" read `[8,19,10,12]`; "home" was unchanged;
+  - B, from "home": `new_tab` gave pane 24 in tab 25, and `move_to_new_tab(24, 6)` returned 25: the whole tab moved to the end of "work" (`[…,12,25]`), "work" became current, and "home" kept no empty tab;
+  - `order_tab` from a 250 ms timer also works: tab 29, opened by A, went to position 1.
+
+  A is kept (design D3), with `order_tab` in the same call (D4).
 
 ## 2. Resume in the original session
 
