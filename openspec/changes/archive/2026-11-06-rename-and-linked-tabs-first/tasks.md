@@ -10,7 +10,7 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
 
 ## 1. Spike
 
-- [x] 1.1 Double-click delivery in the canvas (design, "Not yet known").
+- [x] 1.1 Double-click delivery in the canvas (design, "Source record").
 
   In the fixtures copy only, give `.ob-title` `dblclick = "ren=<id>"` and `.ob-l2` `dblclick = "note=<id>"`, and log every `canvas_action` `act` with `tern.now()`.
 
@@ -42,7 +42,7 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
   Result (`/tmp/tobj/bin/order2`, which adds `{group}` texts to `order`; links made with the helper `menulink`):
   - **Unselected:** `[api] Benchmarks Server [web] App build Components`.
   - **X selected, linked to Benchmarks (13) and Components (8):** `{Linked to “Write release notes”} [api] Benchmarks [web] Components {Other tabs} [api] Server [web] App build`.
-  - **X also linked to a spare tab 17, then closed:** `{Linked to “Write release notes”} [api] Benchmarks [web] Components {Closed tabs} extra {Other tabs} [api] Server [web] App build`. (A helper `new_tab` in the background docked the glimpse into Benchmarks's tab, which Tern does for any tab opened behind a glimpse; the checks ran in the docked graph.)
+  - **X also linked to a spare tab 17, then closed:** `{Linked to “Write release notes”} [api] Benchmarks [web] Components {Closed tabs} extra {Other tabs} [api] Server [web] App build`. (A helper `new_tab` in the background docked the glimpse into the Benchmarks tab, which Tern does for any tab opened behind a glimpse; the checks ran in the docked graph.)
   - **While X was selected,** "＋ Link" on Server (11) and "× Unlink" on Components (8) left the order as it was. The bars read `× Unlink` and `＋ Link` afterwards, and the kv dump went from `[13, 8, 17]` to `[13, 17, 11]`.
   - **Deselected:** `[api] Benchmarks Server [web] App build Components {Closed tabs} extra`. **Selected again:** `{Linked to “Write release notes”} [api] Benchmarks Server {Closed tabs} extra {Other tabs} [web] App build Components`.
   - **"Write slides" (o33), created and selected:** the normal order, with no heading or divider.
@@ -94,11 +94,11 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
   Verify: the tags API lists `v0.7.0`, and live `tern plugin list` shows `objectives 0.7.0` ready.
 
   Result:
-  - The isolated install printed `installed objectives 0.7.0` (`0 blocks, 0 lenses, window ready`). The release commit is `c7ffc3b`, and the tags API lists `v0.7.0` first.
+  - The isolated install printed `installed objectives 0.7.0` (`0 blocks, 0 lenses, window ready`). The release commit is `2076050`, and the tags API lists `v0.7.0` first.
   - The first "live" install landed in `/tmp/tobj/config`, because the shell still held the harness's `TERN_CONFIG_DIR` and `TERN_DAEMON_SOCKET` from an earlier `. env.sh` ("no daemon running"). That stray copy was removed, the variables were unset, and the install was run again.
   - The second install wrote `~/Library/Application Support/Tern/plugins/objectives`. Live `tern plugin list` shows `objectives 0.7.0 … ready`, with `tabnav 0.1.0` untouched.
 
-  The user's check of 0.7.0 found the double-click unreliable: it sometimes left another objective selected. The user asked to drop it and rename by key, with R as the default if possible (group 5). The live check moved to 5.5.
+  The user's check of 0.7.0 found the double-click unreliable: it sometimes left another objective selected. The user asked to drop it and rename by key, with R as the default if possible (group 5). The live check moved to group 5, and is now 7.4.
 
 ## 5. Rename key instead of double-click
 
@@ -111,7 +111,7 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
 
   Result (recorded in design.md's key facts):
   - `r` was refused with `plugin bind left out: the preset binds these keys`, since Tern's defaults bind it to `canvas.tool_rect`, `git.refresh` and `notebook.to_raw`;
-  - `shift+r` bound, but ran with focus in Benchmarks's shell (`focused=12`), and the prompt showed no "R": a plugin key runs whatever `available` returns;
+  - `shift+r` bound, but ran with focus in the Benchmarks tab's shell (`focused=12`), and the prompt showed no "R": a plugin key runs whatever `available` returns;
   - `ctrl+cmd+r` bound with no warning, and ran with the graph focused (`focused=27`).
 
   So the default is ⌃⌘R, and R isn't possible.
@@ -121,16 +121,16 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
   - `cx.actions:keys()` maps `ctrl+cmd+r` to `plugin.objectives.rename`, and the log holds no `bind left out` for it;
   - "Rename by key": o1 selected, ⌃⌘R opens the field filled with o1's title; "Fix login timeout" and Enter put it on the node and in the kv dump, and o1 stays selected;
   - "Nothing selected": with no selection, ⌃⌘R shows the info toast and opens no field;
-  - "Letters still reach the panes": in Benchmarks's shell, typing "r" and "R" shows "rR" at the prompt, with no toast;
+  - "Letters still reach the panes": in the Benchmarks tab's shell, typing "r" and "R" shows "rR" at the prompt, with no toast;
   - `ctl dblclick` on a title opens no field, and the selection changes once, as a single click does: only the first press sends the card's click (task 1.1), as in 0.6.1;
   - `dragsel` highlights text across a title and a note again, as in 0.6.1, and none on the chips and badge.
 
   Result:
-  - **Code:** `lib/view.luau` and `styles.css` match the group 2 commit `fab3508` again. `lib/app.luau` keeps D3 and adds `M.rename_selected` and `M.can_rename`. `window.luau` registers `rename` on `ctrl+cmd+r`.
+  - **Code:** `lib/view.luau` and `styles.css` match the group 2 commit `824a1c7` again. `lib/app.luau` keeps D3 and adds `M.rename_selected` and `M.can_rename`. `window.luau` registers `rename` on `ctrl+cmd+r`.
   - **Keymap:** `ctrl+cmd+r` maps to `plugin.objectives.rename`, `shift+r` is free again, and `r` is Tern's own (`canvas.tool_rect`, `git.refresh`, `notebook.to_raw`). The load logged no warning.
   - **Rename by key:** with o1 ("Fix login timeout", left by task 3.1) selected, ⌃⌘R opened the field filled with "Fix login timeout". "Fix login bug" and Enter put the original title back on the node and in the kv dump. o1 stayed selected, and the graph came back after the field.
   - **Nothing selected:** ⌃⌘R opened no field, and the shot `k_none` shows the info toast "Select an objective in the graph to rename it".
-  - **Letters:** with the graph closed and Benchmarks's shell focused, `r` then Shift+R showed `rR` at the prompt (shot `k_letters`), with no toast. Both characters were then deleted with Backspace.
+  - **Letters:** with the graph closed and the Benchmarks tab's shell focused, `r` then Shift+R showed `rR` at the prompt (shot `k_letters`), with no toast. Both characters were then deleted with Backspace.
   - **Double-click:** on o3's title, it opened no field and selected o3 once.
   - **`dragsel`:** o1's note and title change (mean 9.7 and 3.4), and the crop shows a text highlight on each. The chips, badge and header controls stay at 0.0.
 - [x] 5.3 README: the commands table lists "Objectives: Rename selected objective" with ⌃⌘R, "Using the graph" says to select an objective and press ⌃⌘R, and the double-click sentence goes.
@@ -142,9 +142,9 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
 
   Verify: the tags API lists `v0.8.0`, and live `tern plugin list` shows `objectives 0.8.0` ready.
 
-  Result: the isolated install printed `installed objectives 0.8.0` (`0 blocks, 0 lenses, window ready`). The release commit is `7226826`, and the tags API lists `v0.8.0` first. The live install, run only after checking the shell had no `TERN_CONFIG_DIR` or `TERN_DAEMON_SOCKET`, wrote `~/Library/Application Support/Tern/plugins/objectives`. `tern plugin list` shows `objectives 0.8.0 … ready`, with `tabnav 0.1.0` untouched.
+  Result: the isolated install printed `installed objectives 0.8.0` (`0 blocks, 0 lenses, window ready`). The release commit is `9996403`, and the tags API lists `v0.8.0` first. The live install, run only after checking the shell had no `TERN_CONFIG_DIR` or `TERN_DAEMON_SOCKET`, wrote `~/Library/Application Support/Tern/plugins/objectives`. `tern plugin list` shows `objectives 0.8.0 … ready`, with `tabnav 0.1.0` untouched.
 
-  The user's check of 0.8.0 found ⌃⌘R already bound to "rename session". The user asked for another key, and said R was meant inside the open graph with an objective selected (group 6). The live check moved to 6.4.
+  The user's check of 0.8.0 found ⌃⌘R already bound to "rename session". The user asked for another key, and said R was meant inside the open graph with an objective selected (group 6). The live check moved to group 6, and is now 7.4.
 
 ## 6. Move the rename key
 
@@ -168,20 +168,20 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
   - `cx.actions:keys()` maps `alt+cmd+r` to `plugin.objectives.rename`, and neither `ctrl+cmd+r` nor `shift+cmd+r` to it, with no `bind left out` in the log;
   - "Rename by key" with ⌥⌘R: o1 selected, the field opens filled with its title, Enter keeps it, and o1 stays selected;
   - "Nothing selected" with ⌥⌘R: the toast, and no field;
-  - "Letters still reach the panes": "r" and "R" in Benchmarks's shell show "rR";
+  - "Letters still reach the panes": "r" and "R" in the Benchmarks tab's shell show "rR";
   - the README has ⌥⌘R in the table and in "Using the graph", and neither ⌃⌘R nor ⌘⇧R.
 
   Result:
   - **Keymap:** the R chords in `keys_all` are `alt+cmd+r → plugin.objectives.rename`, `shift+cmd+r → rename_tab`, `cmd+r → sqlite.*` and `r → canvas.tool_rect, git.refresh, notebook.to_raw`. The load logged no warning.
   - **Rename by key:** with the graph reopened from Benchmarks and o1 selected, ⌥⌘R opened the field filled with "Fix login bug". Enter kept the title in the kv dump, and o1 stayed selected.
   - **Nothing selected:** ⌥⌘R opened no field, and the shot `k2_none` shows the toast "Select an objective in the graph to rename it".
-  - **Letters:** with the graph closed, `r` then Shift+R in Benchmarks's shell showed `rR` (shot `k2_letters`), with no toast. Both characters were then deleted.
+  - **Letters:** with the graph closed, `r` then Shift+R in the Benchmarks tab's shell showed `rR` (shot `k2_letters`), with no toast. Both characters were then deleted.
   - **README:** ⌥⌘R in the table row and in "Using the graph". The only other key mentions are in `window.luau`'s comment naming ⌘⇧R and ⌃⌘R as taken.
 - [x] 6.3 Version `0.8.1`: an isolated install prints `installed objectives 0.8.1`; commit, push `main`, tag `v0.8.1`; `tern plugin install github.com/JakobMusik/tern-objectives --force` live, from a shell with no harness variables.
 
   Verify: the tags API lists `v0.8.1`, and live `tern plugin list` shows `objectives 0.8.1` ready.
 
-  Result: the isolated install printed `installed objectives 0.8.1` (`0 blocks, 0 lenses, window ready`). The release commit is `956f620`, and the tags API lists `v0.8.1` first. The live install, run after checking the shell had no harness variables, wrote `~/Library/Application Support/Tern/plugins/objectives`. `tern plugin list` shows `objectives 0.8.1 … ready`, with `tabnav 0.1.0` untouched.
+  Result: the isolated install printed `installed objectives 0.8.1` (`0 blocks, 0 lenses, window ready`). The release commit is `4e723f5`, and the tags API lists `v0.8.1` first. The live install, run after checking the shell had no harness variables, wrote `~/Library/Application Support/Tern/plugins/objectives`. `tern plugin list` shows `objectives 0.8.1 … ready`, with `tabnav 0.1.0` untouched.
 
   The user's check of 0.8.1 found two things:
   - Reset on the command's row in Tern's Keyboard settings made the row disappear;
@@ -198,7 +198,7 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
   Result:
   - Reset had written `"alt+cmd+r": []`, an empty entry that removes the plugin's chord, so the Keyboard page, which lists only actions in effect, dropped the row. That is Tern's Reset, not something the plugin controls.
   - `alt+r` bound without a warning (`keys_all`: `alt+r → plugin.objectives.rename`).
-  - With the graph closed, Option+R in Benchmarks's shell typed nothing and showed the hint (shot `o_shell`).
+  - With the graph closed, Option+R in the Benchmarks tab's shell typed nothing and showed the hint (shot `o_shell`).
   - In the graph with X selected, it opened the Rename field filled with "Write release notes", and X stayed selected after Enter.
 - [x] 7.2 The key becomes `alt+r` in `window.luau` and the comments of `window.luau` and `lib/app.luau`. README:
   - ⌥R in the commands table and in "Using the graph";
@@ -208,20 +208,20 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
   Verify:
   - `keys_all` maps `alt+r` to `plugin.objectives.rename` and `alt+cmd+r` to nothing, with no `bind left out`;
   - "Rename by key" and "Nothing selected" with ⌥R;
-  - "Letters still reach the panes": "r" and "R" in Benchmarks's shell show "rR";
+  - "Letters still reach the panes": "r" and "R" in the Benchmarks tab's shell show "rR";
   - the README has ⌥R in the table and in "Using the graph", both known limits, and no ⌥⌘R.
 
   Result:
   - **Keymap:** the R chords in `keys_all` are `alt+r → plugin.objectives.rename`, `shift+cmd+r → rename_tab`, `cmd+r → sqlite.*` and `r → canvas.tool_rect, git.refresh, notebook.to_raw`. Nothing maps `alt+cmd+r`, and the load logged no warning.
   - **Rename by key:** with o1 selected in the reopened graph, ⌥R opened the field filled with "Fix login bug". Enter kept the title, and o1 stayed selected.
   - **Nothing selected:** ⌥R opened no field and showed the toast (shot `o2_none`).
-  - **Letters:** `r` then Shift+R in Benchmarks's shell showed `rR` (shot `o2_letters`), with no toast. Both characters were then deleted.
+  - **Letters:** `r` then Shift+R in the Benchmarks tab's shell showed `rR` (shot `o2_letters`), with no toast. Both characters were then deleted.
   - **README:** the table row and "Using the graph" read ⌥R, and Known limits has both new entries. No ⌥⌘R or `alt+cmd+r` is left in the README or the code.
 - [x] 7.3 Version `0.8.2`: an isolated install prints `installed objectives 0.8.2`; commit, push `main`, tag `v0.8.2`; `tern plugin install github.com/JakobMusik/tern-objectives --force` live, from a shell with no harness variables.
 
   Verify: the tags API lists `v0.8.2`, and live `tern plugin list` shows `objectives 0.8.2` ready.
 
-  Result: the isolated install printed `installed objectives 0.8.2` (`0 blocks, 0 lenses, window ready`). The release commit is `d3e2454`, and the tags API lists `v0.8.2` first. The live install, run after checking the shell had no harness variables, wrote `~/Library/Application Support/Tern/plugins/objectives`. `tern plugin list` shows `objectives 0.8.2 … ready`, with `tabnav 0.1.0` untouched. The user's `settings.json` still holds Reset's `"alt+cmd+r": []`, which now unbinds nothing, and was left alone.
+  Result: the isolated install printed `installed objectives 0.8.2` (`0 blocks, 0 lenses, window ready`). The release commit is `1c48755`, and the tags API lists `v0.8.2` first. The live install, run after checking the shell had no harness variables, wrote `~/Library/Application Support/Tern/plugins/objectives`. `tern plugin list` shows `objectives 0.8.2 … ready`, with `tabnav 0.1.0` untouched. The user's `settings.json` still holds Reset's `"alt+cmd+r": []`, which now unbinds nothing, and was left alone.
 - [x] 7.4 **(live)** With the user:
   - select an objective and press ⌥R to rename it; without a selection, ⌥R shows the hint;
   - the command's row is back in Tern's Keyboard settings with ⌥R;

@@ -113,7 +113,7 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
   Result: the isolated install (`/tmp/tobj-rel`) printed `installed objectives 0.10.0`, and `tern plugin list` showed `objectives 0.10.0 … 0 blocks, 0 lenses, window ready`.
 - [x] 4.2 **(live)** `tern plugin install github.com/JakobMusik/tern-objectives --force`, from a shell with no harness variables. Verify `tern plugin list` shows `objectives 0.10.0 … ready`, with `tabnav 0.1.0` untouched.
 
-  Result: `installed objectives 0.10.0 → ~/Library/Application Support/Tern/plugins/objectives`; `tern plugin list` shows `objectives 0.10.0 … ready` and `tabnav 0.1.0 … ready`. The tag is `v0.10.0` (`a5abdc1`).
+  Result: `installed objectives 0.10.0 → ~/Library/Application Support/Tern/plugins/objectives`; `tern plugin list` shows `objectives 0.10.0 … ready` and `tabnav 0.1.0 … ready`. The tag is `v0.10.0` (`957fde2`).
 - [x] 4.3 **(live)** With the user:
   - marking done offers Undo, which works;
   - a done objective's box does nothing, and its trash icon removes it with Undo;
@@ -126,4 +126,6 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
 ## Workflow follow-up
 
 - Archive the change (`openspec archive review-done-objectives --yes`), run `openspec validate --specs --strict`, commit and push.
+
+  On archiving, the main `objectives-graph` spec's "Objective node content" description was shortened to fit OpenSpec's 500-character limit: the chip texts ("review due", or "review in <n>d") were dropped from it, and they remain in the main specs' scenarios ("review in 1d" in objectives-graph, "review due" in objective-review).
 - Stop the harness services.

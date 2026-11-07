@@ -29,7 +29,7 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
 
   Verify, in shots before and after linking an unlinked tab from the graph (kv dump shows the link): the node's fill changes from grey to the card colour, and its label's text colour is the same in both.
 
-  Result: with o6 selected, the "＋ Link" bar on docs's `omp` tab (20) gave o6 `[9, 20]`. In shots `u21_before` and `u21_after`, the fill went from `(239,239,239)` to `(255,255,255)`, and the label's darkest pixel stayed `(59,59,59)`.
+  Result: with o6 selected, the "＋ Link" bar on the `omp` tab (20) in docs gave o6 `[9, 20]`. In shots `u21_before` and `u21_after`, the fill went from `(239,239,239)` to `(255,255,255)`, and the label's darkest pixel stayed `(59,59,59)`.
 - [x] 2.2 Light and dark appearances.
 
   Verify: in shots of both appearances, the unlinked fill differs from linked cards, all badge colours show, and `edgecheck.py` passes.
@@ -108,10 +108,10 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
 
   Result:
   - a regression pass first (link bar on and off, pane-row jump, reopen order, ⌃⌘O close) all held;
-  - the isolated install printed `installed objectives 0.5.0` (`0 blocks, 0 lenses, window ready`); release commit `bea43bf`;
+  - the isolated install printed `installed objectives 0.5.0` (`0 blocks, 0 lenses, window ready`); release commit `9564274`;
   - the tags API lists `v0.5.0` first; live `tern plugin list` shows `objectives 0.5.0 … ready`, with `tabnav 0.1.0` untouched.
 
-  The user's check of 0.5.0 turned into the row-click request; it moved to 7.2, covering 0.6.0.
+  The user's check of 0.5.0 turned into the row-click request; it moved to group 7, covering 0.6.0, and is now 8.3.
 
 ## 6. Row clicks
 
@@ -132,7 +132,7 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
   - **Jump.** A click on row 17's jump button showed session api with pane 17 focused and no canvas left.
   - **Layout** (shot `s61`): jump buttons 28 × 22, rows 22, nodes 48; `edgecheck.py` passes with the row open.
   - **Ghost row.** "misc", linked to o8 and then closed, is a ghost row `shell misc` with no jump button. A click on it showed "That tab is closed" (shot `s61_ghost`) with focus unchanged.
-  - **Drag.** From Components's header across row 15's type and name: "Components" and part of "web" highlight, the row doesn't (mean change: type 0.3, name 0.0; shots `u61_clean`, `u61_drag`).
+  - **Drag.** From the Components tab's header across row 15's type and name: "Components" and part of "web" highlight, the row doesn't (mean change: type 0.3, name 0.0; shots `u61_clean`, `u61_drag`).
 - [x] 6.2 README: a row's name opens its details, and its arrow button jumps. Refresh `docs/graph.png`.
 
   Verify: `grep` finds no ▸ or ▾ in the README's rows text; the screenshot shows jump buttons and no toggles.
@@ -145,7 +145,7 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
 
   Verify: the tags API lists `v0.6.0`, and live `tern plugin list` shows `objectives 0.6.0` ready.
 
-  Result: the isolated install printed `installed objectives 0.6.0` (`0 blocks, 0 lenses, window ready`); release commit `1d85f90`; the tags API lists `v0.6.0` first; live `tern plugin list` shows `objectives 0.6.0 … ready`, with `tabnav 0.1.0` untouched.
+  Result: the isolated install printed `installed objectives 0.6.0` (`0 blocks, 0 lenses, window ready`); release commit `f1fb94c`; the tags API lists `v0.6.0` first; live `tern plugin list` shows `objectives 0.6.0 … ready`, with `tabnav 0.1.0` untouched.
 
   The user's check of 0.6.0 found omp rows named `zsh` (group 8). The live check moved to 8.3.
 
@@ -164,7 +164,7 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
 
   Verify: the tags API lists `v0.6.1`, and live `tern plugin list` shows `objectives 0.6.1` ready.
 
-  Result: the isolated install printed `installed objectives 0.6.1`; fix commit `4e08852`, release commit `4ee78a4`; the tags API lists `v0.6.1` first; live `tern plugin list` shows `objectives 0.6.1 … ready`, with `tabnav 0.1.0` untouched.
+  Result: the isolated install printed `installed objectives 0.6.1`; fix commit `f5d1180`, release commit `59ae62b`; the tags API lists `v0.6.1` first; live `tern plugin list` shows `objectives 0.6.1 … ready`, with `tabnav 0.1.0` untouched.
 - [x] 8.3 **(live)** With the user:
   - the graph opened from a later tab lists that tab's session and tab first;
   - unlinked tabs read at full strength;

@@ -26,7 +26,7 @@ Motivation is in proposal.md. The graph is one canvas filled from window Lua (ar
 
 ## Goals / Non-Goals
 
-**Goals:** the six refinements in the proposal, with the existing layout arithmetic (node and row heights, line ends) unchanged.
+**Goals:** the seven refinements in the proposal, with the existing layout arithmetic (node and row heights, line ends) unchanged.
 
 **Non-Goals:**
 - reordering Tern's own tabs;

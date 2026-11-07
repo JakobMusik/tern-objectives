@@ -21,7 +21,7 @@ All on 2026-11-07, on the user's Mac (read-only `ps` and `lsof` of their own pro
 | That id is the plugin's pane id | omp process 6843 has `TERN_PANE=100000000001`; the live `kv.json` stores pane `100000000001`, kind "agent", for the linked tab "QA: Summarize the release checklist" |
 | A harness shell (`tern serve`, no daemon) gets `TERN_WINDOW_PANE=<pane>` and no `TERN_PANE` | harness: `env` typed in pane 4 held `TERN_WINDOW_PANE=4`; the plugin listed pane 4 |
 | An omp chat that has had a message holds its chat file open | `lsof -p`: 7 of 17 omp processes held one `~/.omp/agent/sessions/<folder>/<time>_<id>.jsonl` |
-| A chat Tern restored, not written to since, holds no file but names it on its command line | 10 processes ran `omp --restore <file>` and held no `.jsonl`; 6843, restored the same way and written to since, held its file |
+| A chat Tern restored, not written to since, holds no file but names it on its command line | the other 10 omp processes held no `.jsonl`: 9 ran `omp --restore <file>`, and 7457 (next row) ran plain `omp`; 6843, restored the same way and written to since, held its file |
 | A chat that has never had a message has no file | process 7457 (plain `omp`, started 2026-11-03 10:18:27 UTC) held none, and `sessions/-demo/` has no file named for that time. A file is named after its process's start: 38515 started 08:35:41 UTC and holds `2026-11-06T08-35-41-832Z_….jsonl` |
 | Subagents' files sit one level deeper, in the chat's own folder | `find ~/.omp/agent/sessions -mindepth 3 -name '*.jsonl'`: 773 files such as `<folder>/<chat>/DemoCheck.jsonl` |
 | Every omp process's parent is a `zsh`, one per process | `ps -o ppid=` of the 17 processes: 17 different parents, all `/bin/zsh` |

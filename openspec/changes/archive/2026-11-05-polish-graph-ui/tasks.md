@@ -198,7 +198,7 @@ All checks run in the headless harness at `/tmp/tobj` (archived design D14) unle
 
   Verify: `gh api repos/JakobMusik/tern-objectives/tags` lists `v0.2.0`.
 
-  Result: release commit `2756044`; the tags API lists `v0.2.0`, `v0.1.2`, `v0.1.1` and `v0.1.0`.
+  Result: release commit `bea2669`; the tags API lists `v0.2.0`, `v0.1.2`, `v0.1.1` and `v0.1.0`.
 - [x] 6.3 **(live)** Run `tern plugin install github.com/JakobMusik/tern-objectives --force` in the user's live Tern.
 
   Verify: `tern plugin list` shows `objectives 0.2.0` ready.
@@ -222,7 +222,7 @@ All checks run in the headless harness at `/tmp/tobj` (archived design D14) unle
 
   Verify: `gh api repos/JakobMusik/tern-objectives/tags` lists `v0.2.1`, and the live `tern plugin list` shows `objectives 0.2.1` ready.
 
-  Result: release commit `784b8fc`; the tags API lists `v0.2.1` first; an isolated install printed `installed objectives 0.2.1`; live `tern plugin list` shows `objectives 0.2.1 … 1 blocks, 0 lenses, window ready`, with `tabnav 0.1.0` untouched.
+  Result: release commit `66b1aa4`; the tags API lists `v0.2.1` first; an isolated install printed `installed objectives 0.2.1`; live `tern plugin list` shows `objectives 0.2.1 … 1 blocks, 0 lenses, window ready`, with `tabnav 0.1.0` untouched.
 
 ## Workflow follow-up
 

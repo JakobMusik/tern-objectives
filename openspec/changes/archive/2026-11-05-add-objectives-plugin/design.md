@@ -277,7 +277,7 @@ All timers stop when the canvas is gone.
 - **R7. A tab held by a window that has since closed for good stays "elsewhere".** → The user can remove those links with × while an objective is selected.
 - **R8. A disconnected remote host makes its tabs look closed.** → Links return on reconnect unless the user prunes them. The prune confirmation names the count.
 - **R9. Terminal details need Tern's shell integration.** After a cold daemon restart, shells start fresh, so "last command" is empty until a new command runs (IdStability: shells re-spawn). → The row reads "no command yet".
-- **R10. Canvas limits are 2000 nodes, depth 32 and 256 KiB per update (L1564).** → The estimate is under 700 nodes at the target size. The Done group stays collapsed by default.
+- **R10. Canvas limits are 2000 nodes, depth 32 and 256 KiB per update (L1564).** → The estimate is under 700 nodes at the target size. The Done group stays collapsed by default. [Later, task 8.3 counted 5,359 canvas nodes with 30 objectives and 40 panes; its renders took 8.5–13.8 ms, with no budget pause.]
 - **R11. The harness cannot exercise a full daemon restart.** → That durability rests on the IdStability spike (ids identical across 3 cold restores and 1 handover) plus `kv.json` being a plain file. Restarting `serve` with existing links is avoided in tests, because ids restart at 1 and would collide.
 - **R12. The 50 ms window budget.** → A render does no file reads other than `tern.kv.get` and no subprocesses. Its measured cost is logged.
 

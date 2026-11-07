@@ -70,7 +70,7 @@ The `objectives://` link route, `App.link` and `host.luau` go, along with the ho
 ## Risks / Trade-offs
 
 - **R1. Esc.** Tern's glimpse closes on Esc only while its title bar has focus, as in 0.1.x. → ⌃⌘O, a click outside and × close it; the README says so.
-- **R2. No remote machine in the harness.** With no branch on the session's machine, the harness's local sessions run the same code as remote ones. → The smoke test and the user's check in devbox confirmed it (tasks 4.1, 4.2).
+- **R2. No remote machine in the harness.** With no branch on the session's machine, the harness's local sessions run the same code as remote ones. → The smoke test and the user's check in devbox confirmed it (task 4.2).
 - **R3. Remote tabs in the graph.** The window half lists the window's sessions with `cx.session:*`; whether devbox's tabs appear and jump correctly is only visible live. → Confirmed live: devbox's tabs are listed and jumps work (task 4.2).
 - **R4. Docking.** A canvas glimpse docks on programmatic focus changes exactly as the block did, and the same "close before jumping" rule applies (archived design D2).
 - **R5. Redraw after a plugin reload.** The load-time timer redraws a shown graph and its line sheet, as in 0.1.x. In the headless harness, plugin timers set at load fire only when the plugin next runs a hook, so a redraw after reload with a canvas shown couldn't be observed there; a click redraws it. A speculative retry was tried and dropped. → Live, on 0.4.0, the user saw the lines stay after a plugin reload (task 4.2).

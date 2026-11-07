@@ -146,7 +146,7 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
   Result: the isolated install (`/tmp/tobj-rel`) printed `installed objectives 0.9.0`, and `tern plugin list` showed `objectives 0.9.0 … 0 blocks, 0 lenses, window ready`.
 - [x] 5.2 **(live)** `tern plugin install github.com/JakobMusik/tern-objectives --force`, from a shell with no harness variables. Verify `tern plugin list` shows `objectives 0.9.0 … ready`, with `tabnav 0.1.0` untouched.
 
-  Result: the first attempt ran alongside the push and installed 0.8.3. Run again after the push, it installed `objectives 0.9.0` into `~/Library/Application Support/Tern/plugins/objectives`. `tern plugin list` shows `objectives 0.9.0 … ready` and `tabnav 0.1.0 … ready`. The tag is `v0.9.0` (`9bd67c3`).
+  Result: the first attempt ran alongside the push and installed 0.8.3. Run again after the push, it installed `objectives 0.9.0` into `~/Library/Application Support/Tern/plugins/objectives`. `tern plugin list` shows `objectives 0.9.0 … ready` and `tabnav 0.1.0 … ready`. The tag is `v0.9.0` (`301e9f4`).
 - [x] 5.3 **(live)** With the user:
   - a Claude chat in a linked tab, sent one message, then its tab closed: the closed tab shows Resume, and its row reads "claude";
   - Resume brings the chat back in a new tab that takes the objective's link;
