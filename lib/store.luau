@@ -570,7 +570,8 @@ function M.refresh_snapshots(s: State, live: { [number]: TabFacts }, window: str
 	end
 end
 
--- Removes every link to the tabs in `closed` and their snapshots; returns how many links went.
+-- Removes open objectives' links to the tabs in `closed` (close-linked-tabs D7), and the snapshot
+-- and saved chats of each tab no done objective links; returns how many links went.
 function M.prune(closed: { number }): number
 	local gone = 0
 	local set: { [number]: boolean } = {}
@@ -578,23 +579,31 @@ function M.prune(closed: { number }): number
 		set[tab] = true
 	end
 	M.mutate(function(s)
+		local kept: { [number]: boolean } = {}
 		for _, o in s.objectives do
 			for i = #o.tabs, 1, -1 do
-				if set[o.tabs[i]] then
-					table.remove(o.tabs, i)
-					gone += 1
+				local tab = o.tabs[i]
+				if set[tab] then
+					if o.done then
+						kept[tab] = true
+					else
+						table.remove(o.tabs, i)
+						gone += 1
+					end
 				end
 			end
 		end
 		for tab in set do
-			local snap = s.tabs[tostring(tab)]
-			if snap ~= nil then
-				-- A pruned tab is closed, so its panes aren't live: their saved sessions go with it.
-				for _, p in snap.panes do
-					s.agents[tostring(p.pane)] = nil
+			if not kept[tab] then
+				local snap = s.tabs[tostring(tab)]
+				if snap ~= nil then
+					-- A pruned tab is closed, so its panes aren't live: their saved sessions go with it.
+					for _, p in snap.panes do
+						s.agents[tostring(p.pane)] = nil
+					end
 				end
+				s.tabs[tostring(tab)] = nil
 			end
-			s.tabs[tostring(tab)] = nil
 		end
 		return true
 	end)
