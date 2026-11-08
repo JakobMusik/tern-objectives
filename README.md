@@ -25,7 +25,7 @@ It needs nothing on `PATH` but `git`, which `tern plugin install` already uses. 
 | Command | Key | What it does |
 |---|---|---|
 | Objectives: Open graph | ⌃⌘O | Show or hide the graph. |
-| Objectives: Rename selected objective | ⌥R | Rename the objective selected in the graph. |
+| Objectives: Rename selected objective | ⌥R | Rename the objective selected in the graph. Clicking a title in the graph renames it too. |
 | Objectives: Link this tab… | | Link the current tab to an objective, or unlink it. |
 | Objectives: New objective for this tab… | | Create an objective already linked to the current tab. |
 

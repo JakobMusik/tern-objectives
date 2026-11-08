@@ -161,8 +161,10 @@ local function objective_node(o: Store.Objective, ui_state: Ui, first: string, t
 	-- 3em (creation-time-suffix D2).
 	local created = Dates.short(o.created)
 	local rows: { Node } = {}
+	-- Each line's text renames on a click (attention-marks-and-titles D2); beside it, the card selects.
+	-- No `title` of its own, so hovering shows the card's tooltip with the whole title.
 	for i, line in title do
-		local row: { Node } = { span("ob-title", line, { key = "title" }) }
+		local row: { Node } = { span("ob-title", line, { key = "title", actions = { click = "ren=" .. o.id } }) }
 		if i == #title and created ~= nil then
 			table.insert(row, span("ob-created", created, { key = "created" }))
 		end

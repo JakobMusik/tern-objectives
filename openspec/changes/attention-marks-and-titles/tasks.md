@@ -39,7 +39,7 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
 
 ## 2. Click the title to rename
 
-- [ ] 2.1 Rename by clicking the title (D2): `ren=` on each title line, act `ren` in `M.action`, `user-select: none` on `.ob-title`. README: in the commands table, "Rename" also by clicking a title.
+- [x] 2.1 Rename by clicking the title (D2): `ren=` on each title line, act `ren` in `M.action`, `user-select: none` on `.ob-title`. README: in the commands table, "Rename" also by clicking a title.
 
   Verify, with `ctl click` on the title's rect and the Rename field read from `ctl state`:
   - "Rename by clicking the title": "Rename by click", "Selection unchanged", "Beside a short title", and "Second line of a title";
@@ -48,6 +48,21 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
   - "Creation time after the title": "Rename keeps the time";
   - the title click in review mode opens the field, and ⌥R still renames the selected objective;
   - the tooltip risk: hovering a cut title shows the node's tooltip with the whole title (shot). If it shows none, give the title lines the node's tooltip, and say so here.
+
+  Result (harness, data of 1.1; each title span has class `sf-act`, the pointing hand):
+  - **Rename by click:** a click on o1's title `Fix login bug` opened the field (`ctl state` picker mode `prompt`, query `Fix login bug`). ⌘A, then typing `Fix login timeout` and Enter, left the graph shown with the node reading `Fix login timeout` and the kv title the same. Nothing was selected before or after.
+  - **Rename keeps the time:** the field held the title without the time, and the node kept `11-08 14:40`.
+  - **Beside a short title:** a click between o1's time and its ⋯ selected o1 and opened no field.
+  - **Selection unchanged:** with o1 selected, a click on o3's title opened the field with `Prepare the quarterly planning slide`. Escape left o1 selected, o3 unselected and o3's title unchanged.
+  - **Second line of a title:** a click on `contributors to the API` opened the field with the whole title of o2.
+  - **Select and clear:** a click beside o2's first line selected it. The one tab node showed its link bar, and the edge layers became `ob-e-all ob-e-dim` plus `ob-e-sel` (shot `t2_selected`). A click on empty space cleared all of that (`t2_cleared`).
+  - **Selecting a done objective:** a click on o5's second line, right of its review chip, selected it with no link bar and no field.
+  - **Done and review titles:** a click on o5's title opened the field with its title, and Escape kept o5 selected. In review mode a click on o6's title opened the field with `Set up CI`, and review mode stayed on after Escape.
+  - **⌥R:** `plugins run plugin.objectives.rename` with o5 selected opened the field with o5's title.
+  - **Drag across a title:** a press on o1's note, dragged up across the title and released beside it, left the title and time pixels unchanged against a clean shot (mean difference 0.0), and no field opened.
+  - **Drag across a node's badge and chips:** o1 got a due date (Today) and the tag `api` through ⋯. A drag from the note across the due and tag chips left both chips unchanged (0.0), while the selectable note changed (12.5), which shows the measure catches a highlight. A drag from the title across the badge to the line's start left the badge and title unchanged (0.0), with no field and priority still P3.
+  - **Tooltip:** hovering the cut third line of o4's title showed Tern's tooltip with the whole title and `Created 2026-11-08 14:43` (shot `t2_hover`). Hovering takes the card's tooltip, so no fallback was needed.
+  - **Log:** renders took at most 2.5 ms; no errors.
 
 ## 3. Attention marks
 

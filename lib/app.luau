@@ -857,6 +857,16 @@ function M.action(ev: Action, cx: WindowCx)
 	elseif act == "menu" then
 		menu(cx, value)
 		later = true
+	elseif act == "ren" then
+		-- A click on a title (attention-marks-and-titles D2): the Rename field, the selection left as
+		-- it is; `finish` draws once the field closes.
+		local o = Store.find(Store.read(), value)
+		if o == nil then
+			toast_gone(cx)
+		else
+			rename(cx, o)
+			later = true
+		end
 	elseif act == "new" then
 		new_objective(cx, nil, nil, "", true)
 		later = true
