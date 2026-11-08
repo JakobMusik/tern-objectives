@@ -168,6 +168,7 @@
 
 /* ---- objective nodes ---- */
 [data-surface='plugin.tern.canvas'] .ob-root .ob-obj {
+	position: relative; /* the drop zones sit over it while a node is lifted */
 	box-sizing: border-box;
 	flex: none;
 	overflow: hidden;
@@ -266,6 +267,57 @@
    the box, badge, trash icon and ⋯ stay on its first 18 px. */
 [data-surface='plugin.tern.canvas'] .ob-root .ob-l1 {
 	align-items: flex-start;
+}
+/* The grip (custom-order-and-direct-controls, design D2): the done box's 22 x 18 px hit area, a pointer
+   that says it lifts, and no text to select. */
+[data-surface='plugin.tern.canvas'] .ob-root .ob-grip {
+	flex: none;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 22px;
+	height: 18px;
+	margin-left: -4px;
+	margin-right: -6px;
+	border-radius: 4px;
+	color: var(--t3);
+	cursor: grab;
+	user-select: none;
+}
+[data-surface='plugin.tern.canvas'] .ob-root .ob-grip:hover {
+	color: var(--t1);
+	background: rgb(from var(--t1) r g b / 8%);
+}
+/* The lifted node: an accent bar down its left edge and an accent border; its grip stays lit. */
+[data-surface='plugin.tern.canvas'] .ob-root .ob-obj.ob-lifted {
+	border-color: var(--accent);
+	box-shadow: inset 3px 0 0 var(--accent);
+}
+[data-surface='plugin.tern.canvas'] .ob-root .ob-lifted .ob-grip {
+	color: var(--accent);
+	cursor: grabbing;
+}
+/* While a node is lifted, each other open node's halves take the drop; the half under the pointer
+   draws the insertion line along its edge. */
+[data-surface='plugin.tern.canvas'] .ob-root .ob-drop {
+	position: absolute;
+	left: 0;
+	right: 0;
+	z-index: 2;
+	height: 50%;
+	cursor: pointer;
+}
+[data-surface='plugin.tern.canvas'] .ob-root .ob-drop-top {
+	top: 0;
+}
+[data-surface='plugin.tern.canvas'] .ob-root .ob-drop-bot {
+	bottom: 0;
+}
+[data-surface='plugin.tern.canvas'] .ob-root .ob-drop-top:hover {
+	box-shadow: inset 0 3px 0 var(--accent);
+}
+[data-surface='plugin.tern.canvas'] .ob-root .ob-drop-bot:hover {
+	box-shadow: inset 0 -3px 0 var(--accent);
 }
 /* Done box: a 22 x 18 px hit area with the 14 px box drawn centred in it (design P8). */
 [data-surface='plugin.tern.canvas'] .ob-root .ob-check {

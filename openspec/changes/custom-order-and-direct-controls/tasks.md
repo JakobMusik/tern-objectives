@@ -48,7 +48,7 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
 
 ## 2. Custom order and moving
 
-- [ ] 2.1 Stored order (D1) and new-objective defaults in the state (D8):
+- [x] 2.1 Stored order (D1) and new-objective defaults in the state (D8):
   - `ordered` and its migration in `normalize`;
   - `Store.move`;
   - `state.settings` with defaults;
@@ -62,7 +62,21 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
   - objective-store "Creating an objective" (priority 3 and no other fields), "Record without a priority" (badge P3), "Another window's objective kept" (`Store.move` after an outside write to `kv.json`), and "Order survives a reload" (`ctl plugins fixtures`).
   - tab-links "Create linked": a P3 record linked to the tab, first among the open records.
   - objective-review "Undo after done or remove": "Undo marking done" puts the objective back in its place.
-- [ ] 2.2 Pick and drop (D2): the grip, `moving`, the lifted look, the `Moving` notice with Cancel, the drop zones and their `:hover` bars, and the `lift`, `unlift` and `drop` clicks. Add README "Use" text on moving with the grip.
+
+  Result (harness, demo layout of 1.1):
+  - **Order kept from before:** with the graph closed, a store without `ordered` or `settings` went into `kv.json`, holding o1 "P2 due tomorrow", o2 "P2 no date", o3 "P0 no date" and o4 "P2 due today", in that order. The task said to stop the serve; closing the graph is enough, since nothing writes then.
+    - The opened graph listed o3, o4, o1, o2.
+    - The kv dump kept o1–o4 until the first write, a badge click, which stored o3, o4, o1, o2 with `ordered: true` and the settings `{start_priority 3, new_place "top"}`.
+  - **Badge clicks don't move a node:** P3 o1 "Fix login bug", o2 "Review pull requests" and o3 "Write slides" read o1, o2, o3 after each of three badge clicks on o3, which then read P2, P1 and P0. They still read o1, o2, o3 after a click on empty space, and the kv dump held priority 0 for o3.
+  - **Due date doesn't move a node:** with ⋯ › Due date › Today on o3 (⋯ goes in 3.1), the chip read "due today", and the order stayed o1, o2, o3.
+  - **New objective on top:** "＋ New objective" with "Write slides" over o1 and o2 gave the column, and the kv dump, o3, o1, o2. o3 was selected with a P3 badge, and all 6 tab nodes had a link bar.
+  - **Same order in link choices:** the "Link this tab…" rows read "Write slides", "Fix login bug" and "Review pull requests", and the tab menu read the same three with their times, then Copy.
+  - **Creating an objective:** "  Fix login bug  " stored `{id o4, title "Fix login bug", done false, priority 3, created, tags [], tabs []}`.
+  - **Record without a priority:** o1 stored without `priority` showed P3, and kept its first place.
+  - **Create linked:** "New objective for this tab…" in "Release notes" (tab 5) stored o3 "Add caching layer" at priority 3, with tabs `[5]`, first in the list.
+  - **Undo marking done:** o3, o1, o2 became o3, o2 when o1 was marked done, then o3, o1, o2 after Undo, with o1's record identical to before.
+  - "Another window's objective kept" and "Order survives a reload" need moving, so they are recorded under 2.2.
+- [x] 2.2 Pick and drop (D2): the grip, `moving`, the lifted look, the `Moving` notice with Cancel, the drop zones and their `:hover` bars, and the `lift`, `unlift` and `drop` clicks. Add README "Use" text on moving with the grip.
 
   Verify each objectives-graph "Moving objectives" scenario, with `ctl click` on the grip and on the zones (`.ob-drop-top`, `.ob-drop-bot`), and the order from `ctl tree` and the kv dump:
   - "Move to the top" and "Move below";
@@ -75,6 +89,19 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
   - "Measured hit areas" for the grip, from the shot's layout data;
   - "Direct controls don't select text" for the grip and the `Moving` notice, with `ctl down`/`move`/`up` across them and a shot;
   - render times from the log, and no errors.
+
+  Result (harness; o1 "Fix login bug" and o3 "Write slides" tagged `api`, o2 "Review pull requests" not):
+  - **Move to the top:** after the grip of o3 was clicked, o3 had `ob-lifted`, the other two had four zones between them, and the header read `Moving “Write slides” ·` with Cancel. A click on o1's upper zone gave o3, o1, o2 in the column and in the kv dump, with nothing lifted and no zones left.
+  - **Move below:** o3's grip, then o2's lower zone, gave o1, o2, o3.
+  - **Insertion line:** with o3 lifted and the pointer resting on o1's lower zone, shot `mv_insertion` shows o3 with the accent bar down its left edge and an accent line along the bottom of o1 only.
+  - **Cancelled move:** a click on empty space, Cancel, and a second click on the grip each left nothing lifted, no `Moving` notice and no zones, with the kv order unchanged.
+  - **Moving under a tag filter:** with "#api" on, the column read o1, o3. After o3 was dropped on o1's upper zone and the filter cleared, the column and the kv dump read o3, o1, o2.
+  - **No grip on done objectives:** with done o4 and o5 in the open Done group, the grips were on the three open nodes only, and the group read o5, o4, most recently done first.
+  - **Order survives a reload:** after a move to o3, o1, o2, `ctl plugins fixtures` and a fresh open showed o3, o1, o2.
+  - **Another window's objective kept:** o9 "Outside objective" was appended to `kv.json` by hand. Moving o2 above o3 then left the kv dump as o2, o3, o1, o4, o5, o9.
+  - **Hit areas:** every grip was 22 × 18 px, and every objective node 48 px tall.
+  - **No text selected:** with a press beside the `Moving` notice and a drag across it, and with a press on o1's second line and a drag across its title and grip, the notice's text and the grip were unchanged from clean shots (mean difference 0.0 each).
+  - **Log:** 29 renders, the longest 4.6 ms, and no errors.
 
 ## 3. Action bar and questions in place
 

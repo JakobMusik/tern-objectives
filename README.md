@@ -42,6 +42,8 @@ It needs nothing on `PATH` but `git`, which `tern plugin install` already uses. 
 
 Close the graph with ⌃⌘O, its ×, a click outside it, or Esc after clicking its title bar.
 
+Open objectives stay in the order you give them; priorities and due dates don't reorder them. New objectives go on top. To move one, click its grip (the six dots at its left), then click the upper or lower half of the objective it should go above or below. Cancel in the header, or a click anywhere else, puts it back.
+
 ⌥R works in every pane, so Option+R no longer types "®". To change either key, bind `plugin.objectives.open` or `plugin.objectives.rename` in Tern's keybind settings.
 
 ## Data and removal

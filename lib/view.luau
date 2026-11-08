@@ -29,11 +29,11 @@ export type Ui = {
 	undo_close: { id: string, n: number }?,
 	-- Review mode: the due done objectives with their rating buttons (review design D4).
 	reviewing: boolean,
-	-- While priorities change, the open objectives' order before the first badge click
-	-- (raise-priority-in-place D3).
-	held: { string }?,
 	-- An omp row's call on the user: "wait", "replied" or nil (attention-marks-and-titles D3).
 	attention: (row: Model.Row) -> string?,
+	-- The open objective lifted by its grip, until it is dropped or the move ends
+	-- (custom-order-and-direct-controls, design D2).
+	moving: string?,
 }
 
 -- An objective's attention mark: the strongest call over its live tabs, and those tabs' labels.
@@ -58,28 +58,6 @@ local function span(class: string, text: string, extra: { [string]: any }?): Nod
 		end
 	end
 	return el("span", props)
-end
-
--- Open objectives in graph order: priority, then due date (none last), then created, then id. The
--- "Link this tab" picker uses it too (fix-spec-drift D3).
-function M.sort_open(list: { Store.Objective })
-	table.sort(list, function(a, b)
-		if a.priority ~= b.priority then
-			return a.priority < b.priority
-		end
-		if a.due ~= b.due then
-			if a.due == nil then
-				return false
-			elseif b.due == nil then
-				return true
-			end
-			return (a.due :: string) < (b.due :: string)
-		end
-		if a.created ~= b.created then
-			return a.created < b.created
-		end
-		return a.id < b.id
-	end)
 end
 
 local function sort_done(list: { Store.Objective })
@@ -141,6 +119,12 @@ local function objective_node(o: Store.Objective, ui_state: Ui, first: string, t
 	if mark ~= nil then
 		cls ..= " ob-att-" .. mark.kind
 	end
+	-- Moving (design D2): open nodes outside review mode have a grip; the lifted one is drawn lifted,
+	-- and every other one takes the drop on its upper or lower half.
+	local movable = not o.done and not review
+	if movable and ui_state.moving == o.id then
+		cls ..= " ob-lifted"
+	end
 	local line2: { Node } = {}
 	if mark ~= nil then
 		table.insert(line2, span("ob-chip ob-attchip ob-attchip-" .. mark.kind, MARK_CHIP[mark.kind], {
@@ -160,19 +144,26 @@ local function objective_node(o: Store.Objective, ui_state: Ui, first: string, t
 	for _, tag in o.tags do
 		table.insert(line2, span("ob-chip ob-tagchip", "#" .. tag))
 	end
+	local l1: { Node } = {}
+	if movable then
+		table.insert(l1, el("span", {
+			class = "ob-grip",
+			key = "grip",
+			title = if ui_state.moving == o.id then "Put it back" else "Move: click, then click where it goes",
+			actions = { click = "lift=" .. o.id },
+		}, { { k = "icon", p = { name = "grip" } } :: any }))
+	end
 	-- Done is final (design D7): a done box has its own no-op click, so it doesn't select the card.
-	local l1: { Node } = {
-		span("ob-check" .. (if o.done then " ob-check-on" else ""), if o.done then "✓" else "", {
-			key = "done",
-			title = if o.done then "Done " .. stamp(o.done_at) else "Mark done",
-			actions = { click = if o.done then "noop=" else "done=" .. o.id },
-		}),
-		span("ob-badge ob-p" .. o.priority, "P" .. o.priority, {
-			key = "prio",
-			title = "Priority: click to change",
-			actions = { click = "prio=" .. o.id },
-		}),
-	}
+	table.insert(l1, span("ob-check" .. (if o.done then " ob-check-on" else ""), if o.done then "✓" else "", {
+		key = "done",
+		title = if o.done then "Done " .. stamp(o.done_at) else "Mark done",
+		actions = { click = if o.done then "noop=" else "done=" .. o.id },
+	}))
+	table.insert(l1, span("ob-badge ob-p" .. o.priority, "P" .. o.priority, {
+		key = "prio",
+		title = "Priority: click to change",
+		actions = { click = "prio=" .. o.id },
+	}))
 	-- The title's lines, one row each (attention-marks-and-titles D1). The creation time, which tells
 	-- same-titled objectives apart, follows the last line, clipped only once that line is down to
 	-- 3em (creation-time-suffix D2).
@@ -210,6 +201,11 @@ local function objective_node(o: Store.Objective, ui_state: Ui, first: string, t
 			}))
 		end
 		table.insert(lines, el("div", { class = "ob-l3", key = "l3" }, row))
+	end
+	if movable and ui_state.moving ~= nil and ui_state.moving ~= o.id then
+		-- Over the node's content, so they take the click; their :hover draws the insertion line.
+		table.insert(lines, el("div", { class = "ob-drop ob-drop-top", key = "dropt", actions = { click = "drop=" .. o.id .. ":before" } }))
+		table.insert(lines, el("div", { class = "ob-drop ob-drop-bot", key = "dropb", actions = { click = "drop=" .. o.id .. ":after" } }))
 	end
 	return el("div", { class = cls, key = "o:" .. o.id, title = tooltip(o), actions = { click = "sel=" .. o.id } }, lines)
 end
@@ -394,23 +390,8 @@ function M.build(state: Store.State, win: Model.Window, ui_state: Ui): Built
 			table.insert(if o.done then done_list else open_list, o)
 		end
 	end
-	M.sort_open(open_list)
-	-- A held order keeps every held objective in its place; the rest follow, sorted.
-	local held = ui_state.held
-	if held ~= nil then
-		local place: { [string]: number } = {}
-		for i, id in held do
-			place[id] = i
-		end
-		for i, o in open_list do
-			if place[o.id] == nil then
-				place[o.id] = #held + i
-			end
-		end
-		table.sort(open_list, function(a, b)
-			return place[a.id] < place[b.id]
-		end)
-	end
+	-- Open objectives keep the list's own order, the user's custom order, and filters only leave some
+	-- out (custom-order-and-direct-controls, design D1). The Done group sorts by when each was done.
 	sort_done(done_list)
 
 	-- Review mode's list (review-done-objectives, design D4): the done objectives the filters show whose
@@ -543,14 +524,13 @@ function M.build(state: Store.State, win: Model.Window, ui_state: Ui): Built
 		end
 		return { unlink = sel_tabs[tab] == true, title = sel_obj.title }
 	end
-	-- The tab menu's rows: every open objective in graph order, whatever the filters (design P6).
+	-- The tab menu's rows: every open objective in the custom order, whatever the filters (design P6).
 	local menu_objs: { Store.Objective } = {}
 	for _, o in state.objectives do
 		if not o.done then
 			table.insert(menu_objs, o)
 		end
 	end
-	M.sort_open(menu_objs)
 	-- Each row's label carries the creation time; a menu row's `detail` is only a tooltip
 	-- (creation-time-suffix D3). Formatted once, not once per tab.
 	local menu_labels: { [string]: string } = {}
@@ -812,6 +792,15 @@ function M.build(state: Store.State, win: Model.Window, ui_state: Ui): Built
 	end
 	table.insert(head, el("div", { class = "ob-ftags", key = "tags" }, tags))
 	table.insert(head, el("div", { class = "ob-spacer", key = "sp" }))
+	local lifted = if ui_state.moving ~= nil then Store.find(state, ui_state.moving) else nil
+	if lifted ~= nil then
+		-- While a node is lifted (design D2); the lifting click already dropped any Undo notice.
+		local text = "Moving “" .. lifted.title .. "”"
+		table.insert(head, el("div", { class = "ob-undo ob-moving", key = "moving" }, {
+			span("ob-undo-text", text .. " ·", { key = "text", title = text .. ": click above or below another objective" }),
+			span("ob-undo-btn", "Cancel", { key = "btn", actions = { click = "unlift=" } }),
+		}))
+	end
 	if ui_state.undo ~= nil then
 		-- After marking done or removing (review design D6); any other click in the graph drops it.
 		local kids: { Node } = {

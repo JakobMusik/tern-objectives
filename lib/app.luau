@@ -15,9 +15,8 @@ local M = {}
 
 local selected: string? = nil
 
--- The open objectives' ids in the order shown before the first priority badge click, kept while
--- only badges are clicked so a clicked node stays put (raise-priority-in-place D3); never stored.
-local held: { string }? = nil
+-- The open objective lifted by its grip (custom-order-and-direct-controls, design D2); never stored.
+local moving: string? = nil
 
 -- The pane that had focus when the graph was last opened fresh (design P5); never stored.
 local origin: number? = nil
@@ -70,6 +69,10 @@ local function build(cx: WindowCx): View.Built
 	if selected ~= nil and Store.find(state, selected) == nil then
 		selected = nil
 	end
+	local lifted = if moving ~= nil then Store.find(state, moving) else nil
+	if lifted == nil or lifted.done then
+		moving = nil
+	end
 	-- A filter on a tag no objective holds any more has no chip left to clear it: drop it here, which
 	-- covers every way a tag can go, other windows' changes included (fix-spec-drift D1).
 	local tag = state.view.tag
@@ -95,8 +98,8 @@ local function build(cx: WindowCx): View.Built
 		undo = if undo ~= nil then undo.text else nil,
 		undo_close = if undo ~= nil then undo.close else nil,
 		reviewing = reviewing,
-		held = held,
 		attention = Details.attention,
+		moving = moving,
 	})
 	if built.due == 0 then
 		reviewing = false
@@ -140,7 +143,7 @@ function M.open(cx: WindowCx, keep_origin: boolean?)
 	if not keep_origin then
 		drop_undo()
 		reviewing = false
-		held = nil
+		moving = nil
 		local focused = cx.session:focused()
 		if focused ~= nil and focused ~= Surface.find(cx) then
 			origin = focused
@@ -233,15 +236,14 @@ end
 
 -- ---- linking from the palette ----
 
--- The open objectives in graph order, the graph's own sort included (fix-spec-drift D3).
-local function sorted_open(state: Store.State): { Store.Objective }
+-- The open objectives in the custom order (custom-order-and-direct-controls, design D1).
+local function open_in_order(state: Store.State): { Store.Objective }
 	local list = {}
 	for _, o in state.objectives do
 		if not o.done then
 			table.insert(list, o)
 		end
 	end
-	View.sort_open(list)
 	return list
 end
 
@@ -251,7 +253,7 @@ function M.link_tab(cx: WindowCx)
 		no_tab(cx)
 		return
 	end
-	local open = sorted_open(Store.read())
+	local open = open_in_order(Store.read())
 	if #open == 0 then
 		cx:toast("info", "No objectives yet", "Create one with Objectives: New objective for this tab…")
 		return
@@ -781,21 +783,33 @@ function M.action(ev: Action, cx: WindowCx)
 	if act ~= "undo" and act ~= "closetabs" then
 		drop_undo()
 	end
-	-- Any click but a badge's ends a held order, and the column is drawn sorted again even after
-	-- the verbs that otherwise leave drawing to their own flow (raise-priority-in-place D3).
-	local resort = act ~= "prio" and held ~= nil
-	if resort then
-		held = nil
+	-- Any click but the grips' and the drop zones' ends a move (design D2).
+	local was_moving = moving ~= nil
+	if act ~= "lift" and act ~= "drop" then
+		moving = nil
 	end
 	-- Set by verbs whose own flow draws the graph later, or closes it.
 	local later = false
 	if act == "sel" then
 		selected = if selected == value then nil else value
 	elseif act == "bg" then
-		if selected == nil and not had_undo and not resort then
+		if selected == nil and not had_undo and not was_moving then
 			return
 		end
 		selected = nil
+	elseif act == "lift" then
+		-- The grip lifts its node; the lifted node's grip puts it back.
+		moving = if moving == value then nil else value
+	elseif act == "unlift" then
+		-- The Moving notice's Cancel: the move already ended above.
+	elseif act == "drop" then
+		-- "<target>:<before|after>" from a drop zone: the lifted objective goes to that line.
+		local target, where = string.match(value, "^([^:]+):(%a+)$")
+		local id = moving
+		moving = nil
+		if id ~= nil and target ~= nil and not Store.move(id, target, where :: string) then
+			toast_gone(cx)
+		end
 	elseif act == "done" then
 		local saved = Store.mark_done(value, Dates.today())
 		if saved ~= nil then
@@ -843,15 +857,7 @@ function M.action(ev: Action, cx: WindowCx)
 			end
 		end
 	elseif act == "prio" then
-		-- The first badge click holds the order on screen: filters hide objectives but never
-		-- reorder the rest (D3).
-		if held == nil then
-			local ids = {}
-			for _, o in sorted_open(Store.read()) do
-				table.insert(ids, o.id)
-			end
-			held = ids
-		end
+		-- Priority no longer sorts, so the node stays where it is (custom-order-and-direct-controls, D1).
 		if not Store.cycle_priority(value) then
 			toast_gone(cx)
 		end
@@ -938,7 +944,7 @@ function M.action(ev: Action, cx: WindowCx)
 	else
 		return
 	end
-	if not later or resort then
+	if not later then
 		M.render(cx)
 	end
 end

@@ -69,14 +69,25 @@ local function valid_session(a: any): boolean
 	return type(a) == "table" and a.agent == "omp" and M.is_chat_file(a.session) and type(a.cwd) == "string"
 end
 
+-- Configure's defaults for new objectives (custom-order-and-direct-controls, design D8).
+export type Settings = {
+	start_priority: number, -- 0..3
+	new_place: string, -- "top" or "bottom"
+}
+
 export type State = {
 	version: number,
 	next_id: number,
+	-- The open objectives' custom order is their order in this list (custom-order-and-direct-controls,
+	-- design D1); done records keep their slots, which only Undo reads.
 	objectives: { Objective },
+	-- True once the list holds the custom order; absent before 0.17.0, whose order was computed.
+	ordered: boolean?,
 	tabs: { [string]: TabSnap },
 	-- Saved sessions by pane id (design D3).
 	agents: { [string]: AgentSession },
 	view: ViewState,
+	settings: Settings,
 }
 
 local KEY = "state"
@@ -84,15 +95,59 @@ local VERSION = 1
 
 local array = tern.json.array
 
+local function default_settings(): Settings
+	return { start_priority = 3, new_place = "top" }
+end
+
 local function default(): State
 	return {
 		version = VERSION,
 		next_id = 1,
 		objectives = array({}),
+		ordered = true,
 		tabs = {},
 		agents = {},
 		view = { scope = "all", done_open = false, expanded = {} },
+		settings = default_settings(),
 	}
+end
+
+-- The order open objectives had before 0.17.0: priority, then due date (none last), then created,
+-- then id. Only the migration below uses it (design D1).
+local function legacy_before(a: Objective, b: Objective): boolean
+	if a.priority ~= b.priority then
+		return a.priority < b.priority
+	end
+	if a.due ~= b.due then
+		if a.due == nil then
+			return false
+		elseif b.due == nil then
+			return true
+		end
+		return (a.due :: string) < (b.due :: string)
+	end
+	if a.created ~= b.created then
+		return a.created < b.created
+	end
+	return a.id < b.id
+end
+
+-- Puts the open records into the old computed order, in the slots open records hold, so done records
+-- stay where they are. Every read before the first write derives the same order (design D1).
+local function migrate_order(s: State)
+	local open: { Objective } = {}
+	local slots: { number } = {}
+	for i, o in s.objectives do
+		if not o.done then
+			table.insert(open, o)
+			table.insert(slots, i)
+		end
+	end
+	table.sort(open, legacy_before)
+	for k, i in slots do
+		s.objectives[i] = open[k]
+	end
+	s.ordered = true
 end
 
 -- Tags lists as JSON arrays and fills absent fields, so a stored state always has every field.
@@ -142,6 +197,16 @@ local function normalize(raw: any): State
 		done_open = v.done_open == true,
 		expanded = if type(v.expanded) == "table" then v.expanded else {},
 	}
+	-- Absent before 0.17.0 (design D8): Configure's defaults, with anything invalid replaced.
+	local set = (s.settings or {}) :: any
+	local start = set.start_priority
+	s.settings = {
+		start_priority = if type(start) == "number" and start >= 0 and start <= 3 and start % 1 == 0 then start else 3,
+		new_place = if set.new_place == "bottom" then "bottom" else "top",
+	}
+	if s.ordered ~= true then
+		migrate_order(s)
+	end
 	return s
 end
 
@@ -255,6 +320,8 @@ end
 
 -- ---- objective changes; each returns what it did, or nil when the objective is gone ----
 
+-- A new objective takes Configure's starting priority and place (design D1, D8): "top" puts it first
+-- in the list, "bottom" last.
 function M.create(title: string, tab: number?, facts: TabFacts?, window: string?): string?
 	local clean = M.clean_title(title)
 	if clean == nil then
@@ -264,15 +331,20 @@ function M.create(title: string, tab: number?, facts: TabFacts?, window: string?
 	M.mutate(function(s)
 		id = "o" .. s.next_id
 		s.next_id += 1
-		table.insert(s.objectives, {
+		local record: Objective = {
 			id = id,
 			title = clean,
 			done = false,
-			priority = 3,
+			priority = s.settings.start_priority,
 			created = os.time(),
 			tags = array({}),
 			tabs = array(if tab ~= nil then { tab } else {}),
-		})
+		}
+		if s.settings.new_place == "bottom" then
+			table.insert(s.objectives, record)
+		else
+			table.insert(s.objectives, 1, record)
+		end
 		if tab ~= nil and facts ~= nil then
 			s.tabs[tostring(tab)] = snapshot(facts, window or "", os.time())
 		end
@@ -303,6 +375,41 @@ function M.rename(id: string, title: string): boolean
 		o.title = clean
 		return true
 	end)
+end
+
+-- Moves open objective `id` to just before or after open objective `target` (design D1, D2). Other
+-- records keep their order, hidden ones included. False when either is gone or done, or they are one.
+function M.move(id: string, target: string, where: string): boolean
+	local moved = false
+	M.mutate(function(s)
+		if id == target then
+			return false
+		end
+		local from: number? = nil
+		for i, o in s.objectives do
+			if o.id == id then
+				from = i
+			end
+		end
+		local record = if from ~= nil then s.objectives[from] else nil
+		if record == nil or record.done then
+			return false
+		end
+		table.remove(s.objectives, from :: number)
+		local at: number? = nil
+		for i, o in s.objectives do
+			if o.id == target and not o.done then
+				at = i
+			end
+		end
+		if at == nil then
+			return false
+		end
+		table.insert(s.objectives, if where == "after" then at + 1 else at, record)
+		moved = true
+		return true
+	end)
+	return moved
 end
 
 -- What Undo needs to put an objective back as it was (review-done-objectives, design D2): the record
@@ -705,6 +812,13 @@ end
 function M.set_view(fn: (ViewState) -> boolean?)
 	M.mutate(function(s)
 		return fn(s.view)
+	end)
+end
+
+-- Configure's new-objective defaults (design D8); `fn` returns false when nothing changed.
+function M.set_settings(fn: (Settings) -> boolean?)
+	M.mutate(function(s)
+		return fn(s.settings)
 	end)
 end
 
