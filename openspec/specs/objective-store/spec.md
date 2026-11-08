@@ -14,11 +14,11 @@ Each objective SHALL have:
 - an optional side note, due date and tag list;
 - once done, a review schedule: its next review date, interval in days, ease in percent and review count.
 
-A new objective SHALL start not done, at P2, with the current time as its created time, with no note, due date, tags or review schedule, and no links unless made for a tab.
+A new objective SHALL start not done, at P3, with the current time as its created time, with no note, due date, tags or review schedule, and no links unless made for a tab.
 
 #### Scenario: Creating an objective
 - **WHEN** the user creates an objective titled "  Fix login bug  "
-- **THEN** the stored record has title "Fix login bug", done false, priority P2, a created time, and no note, due date, tags, links or review schedule
+- **THEN** the stored record has title "Fix login bug", done false, priority P3, a created time, and no note, due date, tags, links or review schedule
 
 #### Scenario: Blank title
 - **WHEN** the user submits a title that is empty or only spaces
@@ -154,3 +154,10 @@ Marking an objective done SHALL record the done time and start its review schedu
 #### Scenario: Done stays done
 - **WHEN** the user marks a linked objective done, waits for the Undo notice to go, then clicks its done box in the Done group
 - **THEN** the record is still done with the same done time, and its tab links are identical throughout
+
+### Requirement: Missing priority
+A stored objective without a priority SHALL read as P3, the same default a new objective gets.
+
+#### Scenario: Record without a priority
+- **WHEN** `kv.json` holds an open objective with no priority field and the graph is opened
+- **THEN** its badge reads P3 and it is ordered as a P3 objective

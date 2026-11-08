@@ -35,11 +35,11 @@ While an open objective is selected, every tab node SHALL show a full-width link
 - **THEN** a toast says there are no objectives yet and nothing changes
 
 ### Requirement: New objective for this tab command
-"Objectives: New objective for this tab…" SHALL ask for a title, then create an objective at P2 already linked to the focused pane's tab.
+"Objectives: New objective for this tab…" SHALL ask for a title, then create an objective at P3 already linked to the focused pane's tab.
 
 #### Scenario: Create linked
 - **WHEN** the user runs the command in tab "API Learning" and enters "Add caching layer"
-- **THEN** a new P2 objective "Add caching layer" exists, linked to that tab
+- **THEN** a new P3 objective "Add caching layer" exists, linked to that tab
 
 ### Requirement: Focused pane without a tab
 When the focused pane belongs to no tab, both tab commands SHALL show an error toast and change nothing.
@@ -118,8 +118,8 @@ Where the user picks an objective to link, each objective SHALL show its creatio
 - **THEN** the menu has two rows, each "Write slides · " followed by that objective's creation time, and choosing one links only that objective in the kv dump
 
 #### Scenario: Same title in the picker
-- **WHEN** the user runs "Objectives: Link this tab…" with the same two objectives open
-- **THEN** both rows read "Write slides", each with dim text `P2 · ` followed by its own creation time
+- **WHEN** the user runs "Objectives: Link this tab…" with the same two objectives open, both still at the P3 they were made with
+- **THEN** both rows read "Write slides", each with dim text `P3 · ` followed by its own creation time
 
 #### Scenario: Plain title in a toast
 - **WHEN** the user picks one of them in "Objectives: Link this tab…"
