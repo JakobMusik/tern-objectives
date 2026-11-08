@@ -222,14 +222,23 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
   - **No text selected:** drags across the header both ways, over "Close 1 done tab", "＋ New objective", "All" and the tag chip, left all four unchanged against a clean shot (0.0 each). That is "Drag across the header" without Prune, plus the new button.
   - **README:** "Finish cleanly" names "Close n tabs", the notice, "Close n done tabs" and their asking in place. It never assumed a picker, the check 3.2 left open.
   - **Log:** 44 renders, the longest 5.4 ms, and no errors.
+
 ## 4. ⌥N
 
-- [ ] 4.1 The `new` command on `alt+n`, or the spelling 1.1 settled on, with `App.new_key` (D5). Add the README commands table row and the known limit: Option+N runs the command in every pane, and Configure moves or removes the key.
+- [x] 4.1 The `new` command on `alt+n`, or the spelling 1.1 settled on, with `App.new_key` (D5). Add the README commands table row and the known limit: Option+N runs the command in every pane, and Configure moves or removes the key.
 
   Verify:
   - each objectives-graph "New objective key" scenario with `ctl key Alt+n`: "In the graph", "From a shell" (the graph shown, then the new node selected) and "Letters still reach the panes" (`ctl type nN` in the Benchmarks shell);
   - with the settings page shown (after group 5, rerun there), ⌥N shows the graph's columns and the field;
   - plugin-package "Palette commands" ("Commands listed" with ⌥N, read from the palette's rows in `ctl state`).
+
+  Result (fresh harness rebuilt to the README layout: docs "Guides" 5 and "Release notes" 7, web "App build" 10 and "Components" 14, api "Server" 19 and "Benchmarks" 23, with omp chats in Release notes and Server):
+  - **Keymap:** `alt+n → plugin.objectives.new`, beside `alt+r` and `ctrl+cmd+o`, with no `bind left out`.
+  - **In the graph:** ⌥N in the graph shown over Guides opened the field. "Write slides" became o3, at the top and selected, and was stored first in the kv dump.
+  - **From a shell:** with no graph shown and the Benchmarks shell focused (session api), ⌥N showed the graph over Benchmarks with the field open. "Update docs" became o4, at the top and selected, and the shell's text was unchanged.
+  - **Letters still reach the panes:** "nN" typed into the Benchmarks shell showed `nN` at its prompt, with no field or toast. The two letters were then deleted.
+  - **Palette:** with o1 selected in the shown graph, the palette for "objectives" listed Open graph ⌃⌘O, Rename selected objective ⌥R, New objective ⌥N, Link this tab… and New objective for this tab…. Configure comes in group 5, which also reruns ⌥N with the settings page shown.
+  - **README:** the commands table has the ⌥N row, and the keys note covers ⌥N, either Option key and `plugin.objectives.new`. Group 5 points it at Configure.
 
 ## 5. Configure
 
@@ -261,7 +270,6 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
   - plugin-package "Screenshots match this version": open nodes in `graph.png` show grips, and neither image shows ⋯;
   - "Graph screenshot first": the README's first image is still `docs/graph.png`;
   - every line end in `graph.png` sits within 2 px of its node and tab-header centres (the edge check of 3.1).
-
 
 ## 6. Release 0.17.0
 

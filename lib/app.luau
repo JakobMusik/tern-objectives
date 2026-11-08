@@ -233,6 +233,15 @@ local function new_objective(cx: WindowCx, tab: number?, facts: Model.Tab?, wind
 	end)
 end
 
+-- ⌥N (custom-order-and-direct-controls, design D5): a new objective in the graph, as "＋ New objective"
+-- makes it, so it lands selected; when the graph isn't shown over this tab, a fresh open comes first.
+function M.new_key(cx: WindowCx)
+	if Surface.here(cx) == nil then
+		M.open(cx)
+	end
+	new_objective(cx, nil, nil, "", true)
+end
+
 function M.new_for_tab(cx: WindowCx)
 	local tab, facts, window = focused_tab(cx)
 	if tab == nil then

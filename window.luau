@@ -46,6 +46,17 @@ tern.command({
 	run = App.rename_selected,
 })
 
+-- ⌥N, as the user asked (custom-order-and-direct-controls, design D5): a new objective, made in the graph,
+-- which opens first when it isn't shown here. Like ⌥R it runs in every pane, whichever Option key.
+tern.command({
+	id = "new",
+	title = "Objectives: New objective",
+	icon = "plus",
+	group = "Objectives",
+	keys = { "alt+n" },
+	run = App.new_key,
+})
+
 tern.command({
 	id = "link_tab",
 	title = "Objectives: Link this tab…",

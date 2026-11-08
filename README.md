@@ -37,6 +37,7 @@ It needs nothing on `PATH` but `git`, which `tern plugin install` already uses. 
 |---|---|---|
 | Objectives: Open graph | ⌃⌘O | Show or hide the graph. |
 | Objectives: Rename selected objective | ⌥R | Rename the objective selected in the graph. Clicking a title in the graph renames it too. |
+| Objectives: New objective | ⌥N | Create an objective in the graph, opening the graph first if it isn't shown. Same as **＋ New objective**. |
 | Objectives: Link this tab… | | Link the current tab to an objective, or unlink it. |
 | Objectives: New objective for this tab… | | Create an objective already linked to the current tab. |
 
@@ -46,7 +47,7 @@ Open objectives stay in the order you give them; priorities and due dates don't 
 
 Click an objective to select it: its lines stand out, every tab offers **＋ Link** or **× Unlink**, and a row of buttons appears under it. Click its title to rename it.
 
-⌥R works in every pane, so Option+R no longer types "®". To change either key, bind `plugin.objectives.open` or `plugin.objectives.rename` in Tern's keybind settings.
+⌥R and ⌥N work in every pane, with either Option key, so Option+R no longer types "®" and Option+N no longer starts "˜" anywhere in Tern. To change or remove a key, bind `plugin.objectives.open`, `plugin.objectives.rename` or `plugin.objectives.new` in Tern's keybind settings.
 
 ## Data and removal
 
