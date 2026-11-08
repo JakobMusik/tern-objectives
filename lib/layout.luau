@@ -10,6 +10,7 @@ M.px = {
 	obj_m = 8,
 	title_line_h = 18, -- each title line past the first (attention-marks-and-titles D1)
 	review_h = 30, -- review mode's button row under an objective node: 8 px gap and 22 px buttons
+	acts_h = 30, -- the selected node's action bar: 8 px gap and 22 px buttons (custom-order-and-direct-controls D3)
 	group_h = 24, -- "Done (n)", "Closed tabs", "Other windows"
 	group_m = 14,
 	divider_h = 32, -- "Other tabs" divider after the selected objective's tabs (linked-section D2)
@@ -32,9 +33,10 @@ M.px = {
 -- never learns its width and the edges need each node's exact height.
 M.title = { width = 36, lines = 3 }
 
--- An objective node's height: 48 px, review mode's button row, and 18 px per extra title line.
-local function obj_height(review: boolean?, lines: number?): number
-	return M.px.obj_h + (if review then M.px.review_h else 0) + ((lines or 1) - 1) * M.px.title_line_h
+-- An objective node's height: 48 px, review mode's button row, the action bar while selected, and
+-- 18 px per extra title line.
+local function obj_height(review: boolean?, lines: number?, acts: boolean?): number
+	return M.px.obj_h + (if review then M.px.review_h else 0) + (if acts then M.px.acts_h else 0) + ((lines or 1) - 1) * M.px.title_line_h
 end
 
 -- Priority colours P0..P3: red, orange, blue, grey. Mid tones that read on light and dark pages;
@@ -55,6 +57,8 @@ function M.css(): string
 	local rules = {
 		string.format("%s .ob-obj { height: %dpx; margin-top: %dpx; }", SCOPE, p.obj_h, p.obj_m),
 		string.format("%s .ob-obj.ob-review { height: %dpx; }", SCOPE, p.obj_h + p.review_h),
+		string.format("%s .ob-obj.ob-acts-on { height: %dpx; }", SCOPE, p.obj_h + p.acts_h),
+		string.format("%s .ob-obj.ob-review.ob-acts-on { height: %dpx; }", SCOPE, p.obj_h + p.review_h + p.acts_h),
 		string.format("%s .ob-group { height: %dpx; line-height: %dpx; margin-top: %dpx; }", SCOPE, p.group_h, p.group_h, p.group_m),
 		string.format("%s .ob-divider { height: %dpx; margin-top: %dpx; }", SCOPE, p.divider_h, p.group_m),
 		string.format("%s .ob-hint { height: %dpx; margin-top: %dpx; }", SCOPE, p.hint_h, p.hint_m),
@@ -72,6 +76,8 @@ function M.css(): string
 		local extra = (n - 1) * p.title_line_h
 		table.insert(rules, string.format("%s .ob-obj.ob-n%d { height: %dpx; }", SCOPE, n, p.obj_h + extra))
 		table.insert(rules, string.format("%s .ob-obj.ob-review.ob-n%d { height: %dpx; }", SCOPE, n, p.obj_h + p.review_h + extra))
+		table.insert(rules, string.format("%s .ob-obj.ob-acts-on.ob-n%d { height: %dpx; }", SCOPE, n, p.obj_h + p.acts_h + extra))
+		table.insert(rules, string.format("%s .ob-obj.ob-review.ob-acts-on.ob-n%d { height: %dpx; }", SCOPE, n, p.obj_h + p.review_h + p.acts_h + extra))
 		table.insert(rules, string.format("%s .ob-obj.ob-n%d .ob-l1 { height: %dpx; }", SCOPE, n, n * p.title_line_h))
 	end
 	for i, color in M.palette do
@@ -99,10 +105,10 @@ local function add(s: Stack, m: number, h: number): number
 	return top
 end
 
--- Objective node, taller with review mode's button row and with each title line past the first;
--- returns its vertical centre.
-function M.add_obj(s: Stack, review: boolean?, lines: number?): number
-	local h = obj_height(review, lines)
+-- Objective node, taller with review mode's button row, the action bar and each title line past the
+-- first; returns its vertical centre.
+function M.add_obj(s: Stack, review: boolean?, lines: number?, acts: boolean?): number
+	local h = obj_height(review, lines, acts)
 	return add(s, M.px.obj_m, h) + h / 2
 end
 

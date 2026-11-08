@@ -264,7 +264,7 @@
 	white-space: nowrap;
 }
 /* Line 1 grows with the title's rows (attention-marks-and-titles D1; heights from the layout sheet):
-   the box, badge, trash icon and ⋯ stay on its first 18 px. */
+   the grip, box, badge and trash icon stay on its first 18 px. */
 [data-surface='plugin.tern.canvas'] .ob-root .ob-l1 {
 	align-items: flex-start;
 }
@@ -360,7 +360,7 @@
 	user-select: none;
 }
 /* The title's lines stack in one box that takes the line's spare room and shrinks to what it leaves,
-   so ⋯ always fits. Each line is a row cut with "…" when the graph is too narrow for it; on the last,
+   so the trash icon always fits. Each line is a row cut with "…" when the graph is too narrow for it; on the last,
    the title gives way first, down to 3em, then the row clips the time from the right
    (creation-time-suffix D2). */
 [data-surface='plugin.tern.canvas'] .ob-root .ob-name {
@@ -395,16 +395,67 @@
 	font-size: 11px;
 	color: var(--t3);
 }
-[data-surface='plugin.tern.canvas'] .ob-root .ob-more {
-	flex: none;
-	width: 22px;
-	height: 18px;
-	border-radius: 4px;
-	line-height: 18px;
-	text-align: center;
-	color: var(--t3);
+/* The selected node's action bar (custom-order-and-direct-controls, design D3): the review row's
+   8 px gap and 22 px buttons, each an icon and a label that gives way first when the column narrows. */
+[data-surface='plugin.tern.canvas'] .ob-root .ob-acts {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	gap: 6px;
+	height: 22px;
+	margin-top: 8px;
 }
-/* A done objective's trash icon (review-done-objectives, design D7): the ⋯ button's 22 x 18 px. */
+[data-surface='plugin.tern.canvas'] .ob-root .ob-act {
+	flex: 1 1 0;
+	min-width: 0;
+	height: 22px;
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	justify-content: center;
+	gap: 4px;
+	padding: 0 6px;
+	border-radius: 6px;
+	font-size: 12px;
+	color: var(--t2);
+	box-shadow: inset 0 0 0 1px var(--l2);
+	white-space: nowrap;
+	overflow: hidden;
+	user-select: none;
+}
+[data-surface='plugin.tern.canvas'] .ob-root .ob-act:hover {
+	color: var(--t1);
+	background: rgb(from var(--t1) r g b / 6%);
+}
+[data-surface='plugin.tern.canvas'] .ob-root .ob-act-l {
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+[data-surface='plugin.tern.canvas'] .ob-root .ob-act-del:hover,
+[data-surface='plugin.tern.canvas'] .ob-root .ob-act-close:hover,
+[data-surface='plugin.tern.canvas'] .ob-root .ob-act-cfm,
+[data-surface='plugin.tern.canvas'] .ob-root .ob-act-cfm:hover {
+	color: var(--bad);
+	box-shadow: inset 0 0 0 1px var(--bad);
+	background: rgb(from var(--bad) r g b / 8%);
+}
+/* The bar asking "Close n tabs?": the question takes the room, its two answers stay whole. */
+[data-surface='plugin.tern.canvas'] .ob-root .ob-ask {
+	flex: 1 1 auto;
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	font-size: 12px;
+	font-weight: 600;
+	color: var(--t1);
+	user-select: none;
+}
+[data-surface='plugin.tern.canvas'] .ob-root .ob-acts-ask .ob-act {
+	flex: none;
+}
+/* A done objective's trash icon (review-done-objectives, design D7): 22 x 18 px, like the done box. */
 [data-surface='plugin.tern.canvas'] .ob-root .ob-trash {
 	flex: none;
 	display: flex;

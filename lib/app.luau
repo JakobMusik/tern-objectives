@@ -18,6 +18,12 @@ local selected: string? = nil
 -- The open objective lifted by its grip (custom-order-and-direct-controls, design D2); never stored.
 local moving: string? = nil
 
+-- The question an action is asking in place (custom-order-and-direct-controls, design D4), never
+-- stored: "close" for an objective's tabs, from its bar or from the done notice, and "done_tabs" for
+-- the header's "Close n done tabs" (D11). Any other click ends it.
+type Confirm = { kind: string, id: string?, where: string? }
+local confirm: Confirm? = nil
+
 -- The pane that had focus when the graph was last opened fresh (design P5); never stored.
 local origin: number? = nil
 local edges_css = ""
@@ -100,6 +106,7 @@ local function build(cx: WindowCx): View.Built
 		reviewing = reviewing,
 		attention = Details.attention,
 		moving = moving,
+		confirm = confirm,
 	})
 	if built.due == 0 then
 		reviewing = false
@@ -144,6 +151,7 @@ function M.open(cx: WindowCx, keep_origin: boolean?)
 		drop_undo()
 		reviewing = false
 		moving = nil
+		confirm = nil
 		local focused = cx.session:focused()
 		if focused ~= nil and focused ~= Surface.find(cx) then
 			origin = focused
@@ -279,9 +287,6 @@ function M.link_tab(cx: WindowCx)
 			cx2:toast("success", "Linked to " .. item.label)
 		elseif result == "unlinked" then
 			cx2:toast("info", "Unlinked from " .. item.label)
-		elseif result == "done" then
-			-- Marked done in another window while the picker was open (linked-section D3).
-			cx2:toast("info", "“" .. item.label .. "” is done; its links can't change")
 		end
 		M.render(cx2)
 	end)
@@ -387,56 +392,16 @@ local function tags(cx: WindowCx, o: Store.Objective)
 	end)
 end
 
-local function delete(cx: WindowCx, o: Store.Objective)
-	cx:pick({
-		items = {
-			{ label = "Delete “" .. o.title .. "”", detail = "removes it and its links", op = "delete", icon = "trash" },
-			{ label = "Cancel", op = "cancel" },
-		},
-		placeholder = "Delete this objective?",
-		icon = "trash",
-	}):next(function(item, _err, cx2)
-		if item ~= nil and item.op == "delete" and Store.delete(o.id) and selected == o.id then
-			selected = nil
-		end
-		finish(cx2, true)
-	end)
-end
-
--- ---- closing a done objective's tabs (close-linked-tabs, design D1–D5) ----
+-- ---- closing tabs (close-linked-tabs, design D1–D5; custom-order-and-direct-controls, D4) ----
 
 local function plural(n: number, word: string): string
 	return string.format("%d %s%s", n, word, if n == 1 then "" else "s")
 end
 
--- D1: the tabs of `o` this window holds that no open objective links, and how many of its open tabs
--- an open objective keeps.
-local function closable(state: Store.State, win: Model.Window, o: Store.Objective): ({ number }, number)
-	local open_links: { [number]: boolean } = {}
-	for _, other in state.objectives do
-		if not other.done then
-			for _, tab in other.tabs do
-				open_links[tab] = true
-			end
-		end
-	end
-	local tabs: { number } = {}
-	local kept = 0
-	for _, tab in o.tabs do
-		if win.tabs[tab] ~= nil then
-			if open_links[tab] then
-				kept += 1
-			else
-				table.insert(tabs, tab)
-			end
-		end
-	end
-	return tabs, kept
-end
-
--- D4, D5: saves the omp chats, then closes every pane of each tab, counted again now; the graph
--- first when it is over one of them, since a tab holding only the graph would stay open.
-local function close_tabs(cx: WindowCx, id: string)
+-- Saves the omp chats, then closes every pane of the tabs `count` gives, counted again now; the graph
+-- first when it is over one of them, since a tab holding only the graph would stay open. `count`
+-- returns the tabs and the toast's ending, or nil when what it counts is gone. No link changes.
+local function close_tabs(cx: WindowCx, count: (cx: WindowCx, state: Store.State, win: Model.Window) -> ({ number }?, string))
 	Agents.save_now(cx, function(ok: boolean, cx2: WindowCx?)
 		if cx2 == nil then
 			return
@@ -446,15 +411,18 @@ local function close_tabs(cx: WindowCx, id: string)
 			finish(cx2, true)
 			return
 		end
-		local state = Store.read()
-		local o = Store.find(state, id)
-		if o == nil then
+		local win = Model.read(cx2, Surface.find(cx2))
+		local tabs, what = count(cx2, Store.read(), win)
+		if tabs == nil then
 			toast_gone(cx2)
 			finish(cx2, true)
 			return
 		end
-		local win = Model.read(cx2, Surface.find(cx2))
-		local tabs = closable(state, win, o)
+		if #tabs == 0 then
+			cx2:toast("info", "No open tab left to close")
+			finish(cx2, true)
+			return
+		end
 		local graph = Surface.find(cx2)
 		local graph_tab = if graph ~= nil then cx2.session:tab_of(graph) else nil
 		if graph_tab ~= nil and table.find(tabs, graph_tab) ~= nil then
@@ -465,129 +433,27 @@ local function close_tabs(cx: WindowCx, id: string)
 				cx2.layout:close(r.pane)
 			end
 		end
-		cx2:toast("success", "Closed " .. plural(#tabs, "tab") .. " of “" .. o.title .. "”")
+		cx2:toast("success", "Closed " .. plural(#tabs, "tab") .. what)
 		finish(cx2, true)
 	end)
 end
 
--- D3: asks first, counting the tabs again; `confirmed` runs on "Close", and cancelling only
--- brings the graph back.
-local function confirm_close(cx: WindowCx, id: string, confirmed: (cx: WindowCx) -> ())
-	local state = Store.read()
-	local o = Store.find(state, id)
-	if o == nil then
-		toast_gone(cx)
-		finish(cx, true)
-		return
-	end
-	local tabs, kept = closable(state, Model.read(cx, Surface.find(cx)), o)
-	if #tabs == 0 then
-		cx:toast("info", "“" .. o.title .. "” has no open tab left to close")
-		finish(cx, true)
-		return
-	end
-	local detail = "ends their programs; omp chats come back with Resume"
-	if kept > 0 then
-		detail = plural(kept, "tab") .. " linked to an open objective stay" .. (if kept == 1 then "s" else "") .. " open; " .. detail
-	end
-	cx:pick({
-		items = {
-			{ label = "Close " .. plural(#tabs, "tab"), detail = detail, op = "close", icon = "x-circle" },
-			{ label = "Cancel", op = "cancel" },
-		},
-		placeholder = "Close the tabs of “" .. o.title .. "”?",
-		icon = "x-circle",
-	}):next(function(item, _err, cx2)
-		if cx2 == nil then
-			return
+-- A done objective's "Close n tabs", from its action bar or its done notice, once confirmed.
+local function close_objective_tabs(cx: WindowCx, id: string)
+	close_tabs(cx, function(_cx, state, win)
+		local o = Store.find(state, id)
+		if o == nil then
+			return nil, ""
 		end
-		if item ~= nil and item.op == "close" then
-			confirmed(cx2)
-		else
-			finish(cx2, true)
-		end
+		return (View.closable(state, win, o)), " of “" .. o.title .. "”"
 	end)
 end
 
-local function menu(cx: WindowCx, id: string)
-	local o = Store.find(Store.read(), id)
-	if o == nil then
-		toast_gone(cx)
-		return
-	end
-	local tag_list = {}
-	for _, tag in o.tags do
-		table.insert(tag_list, "#" .. tag)
-	end
-	local items: { PickItem } = {
-		{ label = "Rename", detail = o.title, op = "rename", icon = "pencil" },
-		{ label = "Side note", detail = o.note or "none", op = "note", icon = "note" },
-		{ label = "Due date", detail = o.due or "none", op = "due", icon = "calendar" },
-		{ label = "Tags", detail = if #tag_list > 0 then table.concat(tag_list, " ") else "none", op = "tags", icon = "tag" },
-	}
-	-- D2: a done objective with tabs to close offers to close them.
-	if o.done then
-		local tabs = closable(Store.read(), Model.read(cx, Surface.find(cx)), o)
-		if #tabs > 0 then
-			table.insert(items, { label = "Close linked tabs", detail = plural(#tabs, "open tab"), op = "close", icon = "x-circle" })
-		end
-	end
-	table.insert(items, { label = "Delete", detail = "asks first", op = "delete", icon = "trash" })
-	cx:pick({
-		items = items,
-		placeholder = o.title,
-		icon = "list-checks",
-	}):next(function(item, _err, cx2)
-		if item == nil or cx2 == nil then
-			finish(cx2, true)
-			return
-		end
-		-- Re-read: the objective may have changed while the picker was open.
-		local fresh = Store.find(Store.read(), id)
-		if fresh == nil then
-			toast_gone(cx2)
-			finish(cx2, true)
-		elseif item.op == "rename" then
-			rename(cx2, fresh)
-		elseif item.op == "note" then
-			side_note(cx2, fresh)
-		elseif item.op == "due" then
-			due_date(cx2, fresh)
-		elseif item.op == "tags" then
-			tags(cx2, fresh)
-		elseif item.op == "delete" then
-			delete(cx2, fresh)
-		elseif item.op == "close" then
-			confirm_close(cx2, fresh.id, function(cx3)
-				close_tabs(cx3, fresh.id)
-			end)
-		end
-	end)
-end
-
--- ---- pruning ----
-
--- Prunes the shown closed tabs an open objective links (close-linked-tabs D6, D7): their open
--- objectives' links go; done objectives keep theirs, for review.
-local function prune(cx: WindowCx)
-	local tabs = build(cx).prunable
-	local n = #tabs
-	if n == 0 then
-		return
-	end
-	local what = string.format("%d closed tab%s", n, if n == 1 then "" else "s")
-	cx:pick({
-		items = {
-			{ label = "Prune " .. what, detail = "removes their links to open objectives; done objectives keep theirs", op = "prune", icon = "trash" },
-			{ label = "Cancel", op = "cancel" },
-		},
-		placeholder = "Remove the links of " .. what .. "?",
-		icon = "trash",
-	}):next(function(item, _err, cx2)
-		if item ~= nil and item.op == "prune" then
-			Store.prune(tabs)
-		end
-		finish(cx2, true)
+-- "Close n done tabs" in the header, once confirmed (custom-order-and-direct-controls, design D11): the
+-- live tabs the graph shows that only done objectives link, counted again from a fresh build.
+local function close_done_tabs(cx: WindowCx)
+	close_tabs(cx, function(cx2, _state, _win)
+		return build(cx2).done_tabs, " that only done objectives link"
 	end)
 end
 
@@ -777,10 +643,14 @@ export type Action = { act: string, value: string? }
 
 function M.action(ev: Action, cx: WindowCx)
 	local act, value = ev.act, ev.value or ""
-	-- Any click but Undo, and the notice's own close button, drops the Undo notice (review design D6;
-	-- close-linked-tabs D8).
+	-- Any click ends a question asked in place; Close and Cancel act on the one they answer (D4).
+	local asked = confirm
+	confirm = nil
+	-- Any click but Undo, the notice's own "Close n tabs" and that question's Cancel drops the Undo
+	-- notice (review design D6; close-linked-tabs D8).
 	local had_undo = undo ~= nil
-	if act ~= "undo" and act ~= "closetabs" then
+	local notice_kept = act == "closetabs" or (act == "cfx" and asked ~= nil and asked.where == "notice")
+	if act ~= "undo" and not notice_kept then
 		drop_undo()
 	end
 	-- Any click but the grips' and the drop zones' ends a move (design D2).
@@ -793,7 +663,7 @@ function M.action(ev: Action, cx: WindowCx)
 	if act == "sel" then
 		selected = if selected == value then nil else value
 	elseif act == "bg" then
-		if selected == nil and not had_undo and not was_moving then
+		if selected == nil and not had_undo and not was_moving and asked == nil then
 			return
 		end
 		selected = nil
@@ -816,13 +686,14 @@ function M.action(ev: Action, cx: WindowCx)
 			-- D8: the notice offers to close the tabs that "Close linked tabs" would close.
 			local state = Store.read()
 			local o = Store.find(state, value)
-			local n = if o ~= nil then #(closable(state, Model.read(cx, Surface.find(cx)), o)) else 0
+			local n = if o ~= nil then #(View.closable(state, Model.read(cx, Surface.find(cx)), o)) else 0
 			offer_undo("Marked done “" .. saved.record.title .. "”", saved, if n > 0 then { id = value, n = n } else nil)
 		elseif Store.find(Store.read(), value) == nil then
 			toast_gone(cx)
 		end
-	elseif act == "rm" then
-		-- A done objective's trash icon: removed at once, with Undo (review design D7).
+	elseif act == "rm" or act == "del" then
+		-- A done objective's trash icon, or Delete in an open one's action bar: removed at once, with
+		-- Undo (review design D7; custom-order-and-direct-controls D3).
 		local saved = Store.remove(value)
 		if saved ~= nil then
 			if selected == value then
@@ -837,13 +708,42 @@ function M.action(ev: Action, cx: WindowCx)
 			Store.restore(undo.saved)
 			drop_undo()
 		end
+	elseif act == "close" then
+		-- "Close n tabs" in a done objective's bar asks in the bar (D4).
+		confirm = { kind = "close", id = value, where = "bar" }
 	elseif act == "closetabs" then
-		-- The notice's "Close <n> tabs" (D8): confirming ends the notice, and with it the Undo of done;
-		-- cancelling leaves both.
-		confirm_close(cx, value, function(cx2)
-			drop_undo()
-			close_tabs(cx2, value)
-		end)
+		-- The done notice's "Close n tabs" (close-linked-tabs D8) asks in the notice, which keeps its
+		-- Undo until the question is answered (D4).
+		confirm = { kind = "close", id = value, where = "notice" }
+	elseif act == "closedone" then
+		-- The header's "Close n done tabs" asks in the header (D4, D11).
+		confirm = { kind = "done_tabs" }
+	elseif act == "cfm" then
+		-- Close: the notice went above, with its Undo of done, as confirming always ended it.
+		if asked ~= nil and asked.kind == "close" and asked.id ~= nil then
+			close_objective_tabs(cx, asked.id)
+			later = true
+		elseif asked ~= nil and asked.kind == "done_tabs" then
+			close_done_tabs(cx)
+			later = true
+		end
+	elseif act == "cfx" then
+		-- Cancel: the question ended above.
+	elseif act == "note" or act == "due" or act == "tags" then
+		-- The action bar's buttons open their field or picker directly (D3); `finish` draws after.
+		local o = Store.find(Store.read(), value)
+		if o == nil then
+			toast_gone(cx)
+		else
+			if act == "note" then
+				side_note(cx, o)
+			elseif act == "due" then
+				due_date(cx, o)
+			else
+				tags(cx, o)
+			end
+			later = true
+		end
 	elseif act == "noop" then
 		-- A done objective's box: done is final, so the click only drops the notice (design D7).
 	elseif act == "rev" then
@@ -861,9 +761,6 @@ function M.action(ev: Action, cx: WindowCx)
 		if not Store.cycle_priority(value) then
 			toast_gone(cx)
 		end
-	elseif act == "menu" then
-		menu(cx, value)
-		later = true
 	elseif act == "ren" then
 		-- A click on a title (attention-marks-and-titles D2): the Rename field, the selection left as
 		-- it is; `finish` draws once the field closes.
@@ -938,9 +835,6 @@ function M.action(ev: Action, cx: WindowCx)
 			v.done_open = not v.done_open
 			return true
 		end)
-	elseif act == "prune" then
-		prune(cx)
-		later = true
 	else
 		return
 	end

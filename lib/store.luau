@@ -539,33 +539,14 @@ local function drop_orphans(s: State)
 	end
 end
 
-function M.delete(id: string): boolean
-	local found = false
-	M.mutate(function(s)
-		for i, o in s.objectives do
-			if o.id == id then
-				table.remove(s.objectives, i)
-				drop_orphans(s)
-				found = true
-				return true
-			end
-		end
-		return false
-	end)
-	return found
-end
-
--- Removes a done objective at once (its trash icon), with its links. Returns what Undo needs: the
--- record, its place, and the snapshots and saved sessions that went with it; nil when it is gone or
--- isn't done.
+-- Removes an objective at once, with its links: a done one's trash icon, or Delete in an open one's
+-- action bar (custom-order-and-direct-controls, design D3). Returns what Undo needs: the record, its
+-- place, and the snapshots and saved sessions that went with it; nil when it is gone.
 function M.remove(id: string): Saved?
 	local saved: Saved? = nil
 	M.mutate(function(s)
 		for i, o in s.objectives do
 			if o.id == id then
-				if not o.done then
-					return false
-				end
 				local before = copy(s.tabs) :: { [string]: TabSnap }
 				table.remove(s.objectives, i)
 				drop_orphans(s)
@@ -621,18 +602,14 @@ function M.restore(saved: Saved)
 	end)
 end
 
--- ---- tab links and pruning ----
+-- ---- tab links ----
 
 -- Links `id` to `tab` when it isn't, unlinks it when it is; records the tab's snapshot on linking.
--- A done objective's links are fixed (linked-section D3). Returns "linked", "unlinked", "done" when
--- nothing changed because it is done, or nil when the objective is gone.
+-- Done objectives' links change the same way (custom-order-and-direct-controls, design D10). Returns
+-- "linked", "unlinked", or nil when the objective is gone.
 function M.toggle_link(id: string, tab: number, facts: TabFacts?, window: string): string?
 	local result: string? = nil
 	change(id, function(o, s)
-		if o.done then
-			result = "done"
-			return false
-		end
 		local idx = table.find(o.tabs, tab)
 		if idx ~= nil then
 			table.remove(o.tabs, idx)
@@ -681,46 +658,6 @@ function M.refresh_snapshots(s: State, live: { [number]: TabFacts }, window: str
 	for key, snap in stale do
 		s.tabs[key] = snap
 	end
-end
-
--- Removes open objectives' links to the tabs in `closed` (close-linked-tabs D7), and the snapshot
--- and saved chats of each tab no done objective links; returns how many links went.
-function M.prune(closed: { number }): number
-	local gone = 0
-	local set: { [number]: boolean } = {}
-	for _, tab in closed do
-		set[tab] = true
-	end
-	M.mutate(function(s)
-		local kept: { [number]: boolean } = {}
-		for _, o in s.objectives do
-			for i = #o.tabs, 1, -1 do
-				local tab = o.tabs[i]
-				if set[tab] then
-					if o.done then
-						kept[tab] = true
-					else
-						table.remove(o.tabs, i)
-						gone += 1
-					end
-				end
-			end
-		end
-		for tab in set do
-			if not kept[tab] then
-				local snap = s.tabs[tostring(tab)]
-				if snap ~= nil then
-					-- A pruned tab is closed, so its panes aren't live: their saved sessions go with it.
-					for _, p in snap.panes do
-						s.agents[tostring(p.pane)] = nil
-					end
-				end
-				s.tabs[tostring(tab)] = nil
-			end
-		end
-		return true
-	end)
-	return gone
 end
 
 -- ---- saved omp chats (resume-closed-agents D3, resume-omp-chats D3) ----

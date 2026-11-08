@@ -34,6 +34,9 @@ export type Ui = {
 	-- The open objective lifted by its grip, until it is dropped or the move ends
 	-- (custom-order-and-direct-controls, design D2).
 	moving: string?,
+	-- The question an action asks in place, if one is showing (custom-order-and-direct-controls, D4):
+	-- "close" for an objective's tabs, asked in its bar or in the done notice, or "done_tabs" (D11).
+	confirm: { kind: string, id: string?, where: string? }?,
 }
 
 -- An objective's attention mark: the strongest call over its live tabs, and those tabs' labels.
@@ -99,9 +102,86 @@ local function review_chip(r: Review.Schedule, today: Dates.Day): Node
 	return span("ob-chip", string.format("review in %dd", n))
 end
 
+local function plural(n: number, word: string): string
+	return string.format("%d %s%s", n, word, if n == 1 then "" else "s")
+end
+
+-- The tabs of done objective `o` this window holds that no open objective links, which its "Close
+-- n tabs" closes, and how many of its open tabs an open objective keeps (close-linked-tabs D1). The
+-- app counts with it again when it closes them.
+function M.closable(state: Store.State, win: Model.Window, o: Store.Objective): ({ number }, number)
+	local open_links: { [number]: boolean } = {}
+	for _, other in state.objectives do
+		if not other.done then
+			for _, tab in other.tabs do
+				open_links[tab] = true
+			end
+		end
+	end
+	local tabs: { number } = {}
+	local kept = 0
+	for _, tab in o.tabs do
+		if win.tabs[tab] ~= nil then
+			if open_links[tab] then
+				kept += 1
+			else
+				table.insert(tabs, tab)
+			end
+		end
+	end
+	return tabs, kept
+end
+
+-- What the selected node's action bar offers (design D3): `close` and `kept` count a done objective's
+-- tabs, and `asking` turns the bar into "Close n tabs?" (D4).
+type Acts = { close: number, kept: number, asking: boolean }
+
+local function act_button(key: string, icon: string, label: string, act: string, tip: string): Node
+	return el("span", { class = "ob-act ob-act-" .. key, key = key, title = tip, actions = { click = act } }, {
+		{ k = "icon", p = { name = icon } } :: any,
+		span("ob-act-l", label, { key = "l" }),
+	})
+end
+
+local function action_bar(o: Store.Objective, acts: Acts): Node
+	local kids: { Node }
+	if acts.asking then
+		local q = "Close " .. plural(acts.close, "tab") .. "?"
+		local shown = q
+		local tip = q
+		if acts.kept > 0 then
+			shown ..= " · " .. acts.kept .. (if acts.kept == 1 then " stays" else " stay") .. " open"
+			tip ..= " " .. plural(acts.kept, "tab") .. " linked to an open objective " .. (if acts.kept == 1 then "stays" else "stay") .. " open."
+		end
+		tip ..= " Closing ends their programs; omp chats come back with Resume."
+		kids = {
+			span("ob-ask", shown, { key = "q", title = tip }),
+			act_button("cfm", "x-circle", "Close", "cfm=", "Close " .. plural(acts.close, "tab")),
+			act_button("cfx", "x", "Cancel", "cfx=", "Keep them open"),
+		}
+	elseif o.done then
+		kids = {
+			act_button("note", "note", "Note", "note=" .. o.id, "Side note"),
+			act_button("tags", "tag", "Tags", "tags=" .. o.id, "Tags"),
+		}
+		if acts.close > 0 then
+			table.insert(kids, act_button("close", "x-circle", "Close " .. plural(acts.close, "tab"), "close=" .. o.id, "Close its open tabs no open objective links; asks first"))
+		end
+	else
+		kids = {
+			act_button("note", "note", "Note", "note=" .. o.id, "Side note"),
+			act_button("due", "clock", "Due", "due=" .. o.id, "Due date"),
+			act_button("tags", "tag", "Tags", "tags=" .. o.id, "Tags"),
+			act_button("del", "trash", "Delete", "del=" .. o.id, "Delete; Undo brings it back"),
+		}
+	end
+	return el("div", { class = "ob-acts" .. (if acts.asking then " ob-acts-ask" else ""), key = "acts" }, kids)
+end
+
 -- `title`: the title's lines (Text.wrap). `mark`: its attention mark, if any (D3). `review`: review
--- mode's node, with Hard, Good and Easy under it (review-done-objectives, design D4).
-local function objective_node(o: Store.Objective, ui_state: Ui, first: string, title: { string }, mark: Mark?, review: boolean?): Node
+-- mode's node, with Hard, Good and Easy under it (review-done-objectives, design D4). `acts`: the
+-- selected node's action bar (custom-order-and-direct-controls, design D3).
+local function objective_node(o: Store.Objective, ui_state: Ui, first: string, title: { string }, mark: Mark?, review: boolean?, acts: Acts?): Node
 	local selected = ui_state.selected == o.id
 	local cls = "ob-obj ob-o-" .. o.id .. first
 	if #title > 1 then
@@ -109,6 +189,9 @@ local function objective_node(o: Store.Objective, ui_state: Ui, first: string, t
 	end
 	if selected then
 		cls ..= " ob-sel"
+	end
+	if acts ~= nil then
+		cls ..= " ob-acts-on"
 	end
 	if o.done then
 		cls ..= " ob-obj-done"
@@ -184,7 +267,6 @@ local function objective_node(o: Store.Objective, ui_state: Ui, first: string, t
 			{ k = "icon", p = { name = "trash" } } :: any,
 		}))
 	end
-	table.insert(l1, span("ob-more", "⋯", { key = "more", title = "Rename, note, due date, tags, delete", actions = { click = "menu=" .. o.id } }))
 	local lines: { Node } = {
 		el("div", { class = "ob-l1", key = "l1" }, l1),
 		el("div", { class = "ob-l2", key = "l2" }, line2),
@@ -202,6 +284,9 @@ local function objective_node(o: Store.Objective, ui_state: Ui, first: string, t
 		end
 		table.insert(lines, el("div", { class = "ob-l3", key = "l3" }, row))
 	end
+	if acts ~= nil then
+		table.insert(lines, action_bar(o, acts))
+	end
 	if movable and ui_state.moving ~= nil and ui_state.moving ~= o.id then
 		-- Over the node's content, so they take the click; their :hover draws the insertion line.
 		table.insert(lines, el("div", { class = "ob-drop ob-drop-top", key = "dropt", actions = { click = "drop=" .. o.id .. ":before" } }))
@@ -212,7 +297,7 @@ end
 
 type Shown = { tab: Model.Tab, status: string }
 
--- The link bar a tab node shows while an open objective is selected (design P6).
+-- The link bar a tab node shows while an objective, open or done, is selected (design P6, D10).
 type Link = { unlink: boolean, title: string }
 
 -- `resume`: a closed tab with a saved omp chat shows "Resume" (resume-omp-chats, design D4).
@@ -309,7 +394,7 @@ local function tab_node(t: Model.Tab, status: string, first: string, linked_open
 end
 
 -- A closed or elsewhere tab drawn from its snapshot; a link without one (written by hand or lost to
--- a race) still shows, so it can be seen and pruned.
+-- a race) still shows, so it can be seen and unlinked.
 local function ghost(id: number, snap: Store.TabSnap?, status: string): Model.Tab
 	local rows: { Model.Row } = {}
 	if snap == nil then
@@ -334,7 +419,9 @@ export type Built = {
 	view: Node,
 	css: string,
 	closed: { number }, -- linked closed tabs shown
-	prunable: { number }, -- the shown closed tabs an open objective links, which Prune touches
+	-- The live tabs shown that only done objectives link: "Close n done tabs" closes them
+	-- (custom-order-and-direct-controls, design D11).
+	done_tabs: { number },
 	due: number, -- done objectives due for review under the filters; 0 ends review mode
 }
 
@@ -344,10 +431,13 @@ function M.build(state: Store.State, win: Model.Window, ui_state: Ui): Built
 
 	-- Link facts.
 	local linked_open: { [number]: boolean } = {}
+	local linked_done: { [number]: boolean } = {}
 	local status_of: { [number]: string } = {}
 	for _, o in state.objectives do
 		for _, tab in o.tabs do
-			if not o.done then
+			if o.done then
+				linked_done[tab] = true
+			else
 				linked_open[tab] = true
 			end
 			if status_of[tab] == nil then
@@ -466,8 +556,18 @@ function M.build(state: Store.State, win: Model.Window, ui_state: Ui): Built
 	local function add_node(o: Store.Objective, review: boolean?)
 		local first = Layout.first(left)
 		local title = Text.wrap(o.title, Layout.title.width, Layout.title.lines)
-		obj_cy[o.id] = Layout.add_obj(left, review, #title)
-		table.insert(left_kids, objective_node(o, ui_state, first, title, mark_of(o), review))
+		local acts: Acts? = nil
+		if o.id == selected then
+			local tabs, kept = {}, 0
+			if o.done then
+				tabs, kept = M.closable(state, win, o)
+			end
+			local c = ui_state.confirm
+			local asking = c ~= nil and c.kind == "close" and c.where == "bar" and c.id == o.id and #tabs > 0
+			acts = { close = #tabs, kept = kept, asking = asking }
+		end
+		obj_cy[o.id] = Layout.add_obj(left, review, #title, acts ~= nil)
+		table.insert(left_kids, objective_node(o, ui_state, first, title, mark_of(o), review, acts))
 		if o.id == selected then
 			sel_obj = o
 		end
@@ -517,9 +617,10 @@ function M.build(state: Store.State, win: Model.Window, ui_state: Ui): Built
 			sel_tabs[tab] = true
 		end
 	end
-	-- A done objective's links are fixed, so it gets no bar (linked-section D3).
+	-- Open or done, the selected objective's links change through these bars
+	-- (custom-order-and-direct-controls, design D10).
 	local function link_of(tab: number): Link?
-		if sel_obj == nil or sel_obj.done then
+		if sel_obj == nil then
 			return nil
 		end
 		return { unlink = sel_tabs[tab] == true, title = sel_obj.title }
@@ -548,6 +649,7 @@ function M.build(state: Store.State, win: Model.Window, ui_state: Ui): Built
 		end
 		return rows
 	end
+	local done_tabs: { number } = {}
 	local function add_tab(t: Model.Tab, status: string)
 		local first = Layout.first(right)
 		local link = link_of(t.id)
@@ -565,6 +667,9 @@ function M.build(state: Store.State, win: Model.Window, ui_state: Ui): Built
 		local node, details = tab_node(t, status, first, linked_open[t.id] == true, link, menu_of(t.id), ui_state, view_state.expanded, resume)
 		tab_cy[t.id] = Layout.add_tab(right, #t.rows, details, link ~= nil)
 		table.insert(right_kids, node)
+		if status == "live" and linked_done[t.id] and not linked_open[t.id] then
+			table.insert(done_tabs, t.id)
+		end
 	end
 	-- The origin's session comes first, and its tab first inside it (design R1).
 	local origin_tab: Model.Tab? = nil
@@ -613,14 +718,10 @@ function M.build(state: Store.State, win: Model.Window, ui_state: Ui): Built
 		end
 	end
 	local closed: { number } = {}
-	local prunable: { number } = {}
 	local elsewhere: { number } = {}
 	for tab, st in status_of do
 		if st == "closed" and (view_state.scope == "all" or in_session[tab]) and (linked_open[tab] or kept_closed[tab]) then
 			table.insert(closed, tab)
-			if linked_open[tab] then
-				table.insert(prunable, tab)
-			end
 		elseif st == "elsewhere" and view_state.scope == "all" then
 			table.insert(elsewhere, tab)
 		end
@@ -772,7 +873,7 @@ function M.build(state: Store.State, win: Model.Window, ui_state: Ui): Built
 		table.insert(gap_kids, el("div", { class = cls, key = "e" .. i }))
 	end
 
-	-- Header: scope, tag filter, prune, new.
+	-- Header: scope, tag filter, notices, review, new.
 	local head: { Node } = {
 		el("div", { class = "ob-seg", key = "scope" }, {
 			span("ob-segb" .. (if view_state.scope == "all" then " ob-on" else ""), "All", { key = "all", actions = { click = "scope=all" } }),
@@ -808,10 +909,24 @@ function M.build(state: Store.State, win: Model.Window, ui_state: Ui): Built
 			span("ob-undo-btn", "Undo", { key = "btn", actions = { click = "undo=" } }),
 		}
 		local close = ui_state.undo_close
-		if close ~= nil then
-			-- After marking done, the tabs "Close linked tabs" would close (close-linked-tabs D8).
+		local c = ui_state.confirm
+		local target = if close ~= nil then Store.find(state, close.id) else nil
+		local n = if target ~= nil then #(M.closable(state, win, target)) else 0
+		if close ~= nil and target ~= nil and n > 0 and c ~= nil and c.kind == "close" and c.where == "notice" and c.id == close.id then
+			-- The notice's "Close n tabs" asks in place (D4); Cancel brings the notice back as it was.
+			kids = {
+				span("ob-undo-text", "Close " .. plural(n, "tab") .. " of “" .. target.title .. "”? ·", {
+					key = "text",
+					title = "Closing ends their programs; omp chats come back with Resume.",
+				}),
+				span("ob-undo-btn ob-undo-close", "Close", { key = "cfm", actions = { click = "cfm=" } }),
+				span("ob-undo-sep", "·", { key = "sep" }),
+				span("ob-undo-btn", "Cancel", { key = "cfx", actions = { click = "cfx=" } }),
+			}
+		elseif close ~= nil and n > 0 then
+			-- After marking done, the tabs "Close n tabs" would close (close-linked-tabs D8).
 			table.insert(kids, span("ob-undo-sep", "·", { key = "sep" }))
-			table.insert(kids, span("ob-undo-btn ob-undo-close", string.format("Close %d tab%s", close.n, if close.n == 1 then "" else "s"), {
+			table.insert(kids, span("ob-undo-btn ob-undo-close", "Close " .. plural(n, "tab"), {
 				key = "close",
 				title = "Close this objective's tabs; asks first",
 				actions = { click = "closetabs=" .. close.id },
@@ -819,18 +934,33 @@ function M.build(state: Store.State, win: Model.Window, ui_state: Ui): Built
 		end
 		table.insert(head, el("div", { class = "ob-undo", key = "undo" }, kids))
 	end
+	if #done_tabs > 0 then
+		-- The live tabs shown that only done objectives link (D11); it asks in place first (D4).
+		local what = plural(#done_tabs, "done tab")
+		local c = ui_state.confirm
+		if c ~= nil and c.kind == "done_tabs" then
+			table.insert(head, el("div", { class = "ob-undo ob-ask-head", key = "closedone" }, {
+				span("ob-undo-text", "Close " .. what .. "? ·", {
+					key = "text",
+					title = "Closing ends their programs; omp chats come back with Resume. No link changes.",
+				}),
+				span("ob-undo-btn ob-undo-close", "Close", { key = "cfm", actions = { click = "cfm=" } }),
+				span("ob-undo-sep", "·", { key = "sep" }),
+				span("ob-undo-btn", "Cancel", { key = "cfx", actions = { click = "cfx=" } }),
+			}))
+		else
+			table.insert(head, span("ob-btn ob-btn-quiet ob-closedone", "Close " .. what, {
+				key = "closedone",
+				title = "Close the " .. what .. ", which only done objectives link; asks first",
+				actions = { click = "closedone=" },
+			}))
+		end
+	end
 	if #due_list > 0 then
 		table.insert(head, span("ob-btn ob-btn-quiet ob-revbtn" .. (if reviewing then " ob-on" else ""), string.format("Review (%d)", #due_list), {
 			key = "review",
 			title = if reviewing then "Back to all objectives" else "Review the done objectives that are due",
 			actions = { click = "rev=" },
-		}))
-	end
-	if #prunable > 0 then
-		table.insert(head, span("ob-btn ob-btn-quiet", "Prune closed tabs", {
-			key = "prune",
-			title = string.format("Remove the links of %d closed tab%s", #prunable, if #prunable == 1 then "" else "s"),
-			actions = { click = "prune=" },
 		}))
 	end
 	table.insert(head, span("ob-btn ob-btn-primary", "＋ New objective", { key = "new", actions = { click = "new=" } }))
@@ -843,7 +973,7 @@ function M.build(state: Store.State, win: Model.Window, ui_state: Ui): Built
 			el("div", { class = "ob-col ob-col-r", key = "r" }, right_kids),
 		}),
 	})
-	return { view = view, css = css, closed = closed, prunable = prunable, due = #due_list }
+	return { view = view, css = css, closed = closed, done_tabs = done_tabs, due = #due_list }
 end
 
 return M

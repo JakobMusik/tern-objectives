@@ -105,7 +105,7 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
 
 ## 3. Action bar and questions in place
 
-- [ ] 3.1 Action bar (D3):
+- [x] 3.1 Action bar (D3):
   - `div.ob-acts` on the selected node, with Note, Due, Tags and Delete on open nodes, and Note, Tags and "Close n tabs" on done ones;
   - `closable` moved into the view;
   - `px.acts_h` and the layout CSS;
@@ -120,7 +120,29 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
   - a selected node's lines still meet its vertical centre: `edgecheck.py` on a shot at 1400 and at 460 px. At 460 px, read whether the labels clip and the icons show;
   - objective-store "Delete from the bar", and objective-review "Undo deleting an open objective" (its place comes back);
   - objective-review "Picker from review mode", from the bar's Tags.
-- [ ] 3.2 Questions in place (D4): `confirm`, its bar and notice drawings, and the `cfm` and `cfx` clicks; the header drawing comes with 3.4. The confirmation picker in `confirm_close` is removed. Update the README's "Finish cleanly" line if its wording assumes a picker.
+
+  Result (harness; "Write slides" etc. as in 2.1, tab ids from 1.1):
+  - **Open objective's bar:** a click beside o1's title selected it, and its row read Note, Due, Tags and Delete. No other node had a row, and the graph had no `.ob-more`. o1 was 78 px tall, the others 48.
+  - **Note directly:** Note opened Tern's field (`picker.mode` "prompt") with no picker before it. "check the session cookie" became o1's side note, and the graph came back with o1 still selected. Due and Tags opened their pickers directly ("Today" and "New tag…" first).
+  - **Dismissed field:** Note, then Escape, left the kv dump unchanged and the graph shown.
+  - **Done objective with tabs to close:** done o4, linked to App build (8) and Components (10), which no open objective links, read Note, Tags and "Close 2 tabs". Open o1's row had no Close. When o4's only open tab was also linked to open o1, its row read Note and Tags only.
+  - **Select and clear:** selecting o1 gave `ob-sel`, its row, a link bar on all 6 tab nodes, and two edge layers (shot `sel_on`). A click on empty space removed all three (shot `sel_off`).
+  - **Objective node content:** a 200-character note left the node 48 px tall, with the whole note in the tooltip. Done o2 (due today) showed a trash icon and only a "review in 1d" chip, and its tooltip ended "Reviewed 0× · next 2026-11-10".
+  - **Dismissing by clicking the graph:** Note, then a click into the field (the glimpse closed), then a click where the graph was: the field closed, the kv dump was unchanged, and the graph was back.
+  - **Rename key:** ⌥R (`key Alt+r`) with o1 selected opened the field holding "Fix login bug". "Fix login timeout" was stored and shown, and o1 stayed selected. With nothing selected, ⌥R opened no field and the toast read "Select an objective in the graph to rename it".
+  - **Rename by clicking the title:**
+    - a click on o1's title opened the field with its title, without selecting;
+    - with o3 selected, a click on o1's title and Escape left o3 selected;
+    - a click beside o2's short title selected o2 with no field;
+    - a click on the second line of "Write the onboarding guide for new / contributors to the API" opened the field with the whole title.
+  - **Hit areas:** with o1 selected, grips and done boxes were 22 × 18 px, a done node's trash icon 22 × 18, bar buttons 22 px tall, jump buttons 28 × 22, and pane rows 22. Unselected one-line nodes were 48 px tall, the selected one 78, and the selected two-line one 96.
+  - **Review nodes:** Hard, Good and Easy were 22 px tall. Both listed nodes were 78 px tall, and the selected one 108, with its row (Note, Tags, "Close 1 tab") under the rating row.
+  - **Lines:** with a two-line o2 selected (its node 96 px tall), the ends of the 3 left and 4 right lines sat within 0.05 px of the node and tab-header centres at 1400 px (shot `eb_1400_sel`) and at 460 px (`eb_460_sel`). The check compares the shot's pixels at the gap column's edges with the layout rects; it replaces the lost `edgecheck.py`. In review mode with o4 selected, the result was the same (`rev_sel`). At 460 px each button showed only its icon, its label hidden; at 1400 px the icons and labels "Note", "Due", "Tags" and "Delete" showed (crops `eb_460_bar.png`, `eb_1400_bar.png`).
+  - **Delete from the bar:** with "Write the onboarding guide…" (o2) selected between o1 and o3, Delete opened no picker. It removed o2 from the column and the kv dump, and the header read "Removed “…” ·" with Undo.
+  - **Undo deleting an open objective:** Undo brought o1, o2, o3 back, with o2's link to tab 8.
+  - **Picker from review mode:** with review mode listing o4 and o5, o4 selected and Tags in its bar, Escape left review mode on with both listed.
+  - **README:** the Features "Organize." line names your own order and the bar's buttons, and "Use" says what selecting an objective shows. The commands table's rename row never named ⋯, so it stays as it is.
+- [x] 3.2 Questions in place (D4): `confirm`, its bar and notice drawings, and the `cfm` and `cfx` clicks; the header drawing comes with 3.4. The confirmation picker in `confirm_close` is removed. Update the README's "Finish cleanly" line if its wording assumes a picker.
 
   Verify:
   - objectives-graph "Inline confirmation" ("Asked in the bar": `ctl state` shows no picker; "Another click cancels");
@@ -129,7 +151,26 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
   - a click on "All" while the notice asks ends both the question and the notice, as any click but Undo ends the notice today;
   - "Direct controls don't select text": "Drag across the action bar", plus a drag across the questions' buttons;
   - render times, and no errors.
-- [ ] 3.3 Link bars for done objectives (D10): `Store.toggle_link` without its done check, `link_of` for any selected objective, and the "Link this tab…" picker's "done" toast removed. Remove Prune entirely: `prune()`, `Store.prune`, `Built.prunable`, the header button and its CSS. Update the README's link line: link bars work for done objectives too.
+
+  Result (harness; tabs "Alpha" 44, "Bravo" 47 and "Charlie" 49 added to docs; Alpha ran omp, which answered "ok"):
+  - **Asked in the bar:** done o4 "Ship release" linked Alpha, Bravo and Charlie, and open o1 linked Charlie. A click on "Close 2 tabs" opened no picker, and the row read `Close 2 tabs? · 1 stays open`, Close and Cancel. Its tooltip, after a wording fix, reads "Close 2 tabs? 1 tab linked to an open objective stays open. Closing ends their programs; omp chats come back with Resume."
+  - **Another click cancels:** a click on empty space removed the question, all three tabs stayed open, and selecting o4 again showed "Close 2 tabs".
+  - **Cancelled:** "Close 2 tabs", then Cancel, brought the row's buttons back, left all three tabs open, and left `kv.json` byte for byte unchanged.
+  - **Close two, keep one:** "Close 2 tabs", then Close, saved the chats ("chat capture … 1 saved"). The headless serve runs plugin callbacks only with window activity, so `pump 5` followed. Alpha and Bravo were then gone, Charlie stayed, the graph was shown, and o4 still linked 44, 47 and 49.
+  - **Chat ready to resume:** with o4 selected, the column read `{Linked to “Ship release”} [docs] Charlie {Closed tabs} Alpha Bravo {Other tabs} …`. Alpha's node had "Resume", and its row read `omp`.
+  - **The graph's own tab:** with the graph opened over the new tab "Delta", which only done o4 linked, "Close 1 tab" and Close closed Delta and showed the graph again, with no tab left holding only the graph.
+  - **Closing tabs from the done notice:**
+    - **Offered after marking done:** marking o2 "Ship release" (tabs Echo, Foxtrot) done gave `Marked done “Ship release” · Undo · Close 2 tabs`, with both tabs open.
+    - **Asking:** "Close 2 tabs" turned the notice into `Close 2 tabs of “Ship release”? · Close · Cancel`, with no picker.
+    - **Cancel keeps Undo:** Cancel brought the notice back as it was, and Undo made o2 open again, with both tabs open.
+    - **Confirmed from the notice:** done again, then "Close 2 tabs", then Close (and `pump 5`): both tabs closed, o2 stayed done and still linked both, and the header showed no notice.
+    - **Nothing to close:** "Write slides", with no tabs, gave `Marked done “Write slides” · Undo`.
+  - **A click elsewhere:** with the notice asking, a click on "All" removed the question and the notice. Both tabs stayed open, and o2 stayed done.
+  - **No text selected:** a drag from o1's note across its Note, Due and Tags buttons left the buttons and the note unchanged against a clean shot (0.0), and opened no field.
+    - A drag across the question's row left the question's text unchanged (0.0).
+    - Close and Cancel differed only by their hover look (crops), with no highlight. The pointer had just clicked where Close sits, and Close lost its red under the pointer, so `.ob-act-cfm:hover` now keeps it red.
+  - **Log:** 142 renders, the longest 6.5 ms, and no errors.
+- [x] 3.3 Link bars for done objectives (D10): `Store.toggle_link` without its done check, `link_of` for any selected objective, and the "Link this tab…" picker's "done" toast removed. Remove Prune entirely: `prune()`, `Store.prune`, `Built.prunable`, the header button and its CSS. Update the README's link line: link bars work for done objectives too.
 
   Verify:
   - tab-links "Links of done objectives": "Unlink from a done objective", "Link a done objective" (kv dump, `ctl tree` for the bars and the divider, a shot for the green line) and "Resume moves a done objective's link";
@@ -139,7 +180,22 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
   - agent-resume "Unlinked with its tab": close a tab holding an omp chat, wait past the saved chat's 10 s grace, unlink it, and read the kv dump after the next redraw;
   - no "Prune closed tabs" in the header, even with a closed tab linked to an open objective (`ctl tree '.ob-head'`), and `grep` finds no `prune` in `lib/` or `styles.css`;
   - the tab menu and "Link this tab…" still list open objectives only (`ctl state`).
-- [ ] 3.4 "Close n done tabs" (D11): `done_tabs` in `View.build`, the header button and its question (D4's header drawing), the `closedone` click, and `close_tabs` split to take a counter. Add a README "Finish cleanly" line on closing every tab that only done objectives link.
+
+  Result (harness):
+  - **Selecting a done objective:** done o4 "Ship release", linked to "Release notes" (5) and "Charlie" (49), showed a link bar on all 9 tab nodes. The column read `{Linked to “Ship release”} [docs] Release notes Charlie {Other tabs} …`.
+  - **Unlink from a done objective:** "× Unlink" on Release notes left o4 linking 49 only, still done and selected. Release notes moved below the divider with "＋ Link".
+  - **Link a done objective:** "＋ Link" on "App build" (8) stored `[49, 8]` and turned that bar to "× Unlink". A green line joined o4 to App build, and both visible line ends sat within 0.05 px of their centres (shot `dl_link_done`). The edge check now ignores the glimpse's footer, which a graph taller than the window reaches.
+  - **Resume moves a done objective's link:** Alpha's snapshot and its saved chat (the chat of 3.2, whose entry earlier checks had overwritten) were stored again. With o4 linking closed Alpha (44), its node showed "Resume" and "× Unlink". After Resume (and `pump 3`), o4 linked only the new tab 115, which was live, and stayed done.
+  - **Linking from the graph:**
+    - "Add then remove a link" on App build gave `[8]`, then `[]`, with the objective still selected and the graph shown, for open o1 and for done o4.
+    - "Press that drifts across the bar": a press on Release notes' "＋ Link", moved 40 px along it and released, gave `[5]` for both.
+    - A first try on a tab below the window's fold missed, since its bar was outside the glimpse.
+  - **Closed tab in review:** done o4, due for review and linked only to closed Alpha, listed Alpha in review mode with "Resume" and no bars. Once o4 was selected, all 11 tab nodes had bars, and Alpha's read "× Unlink". The green line's ends sat within 0.05 px of their centres (shot `rv_review_sel`).
+  - **Unlinked with its tab:** with open o1 linked to closed Alpha, whose chat was saved 120 s earlier, "× Unlink" on Alpha removed its snapshot and its saved chat from the kv dump. The redraw after the click had already done it.
+  - **No Prune:** with that closed tab linked to an open objective, the header's only button was "＋ New objective", and `grep -i prune` finds nothing in `lib/` or `styles.css`.
+  - **Link choices stay open-only:** with open o1 and done o4, the tab menu read "Fix login bug · 11-07 05:21" and Copy, and "Link this tab…" listed only "Fix login bug".
+  - **Log:** 43 renders, the longest 6.5 ms, and no errors.
+- [x] 3.4 "Close n done tabs" (D11): `done_tabs` in `View.build`, the header button and its question (D4's header drawing), the `closedone` click, and `close_tabs` split to take a counter. Add a README "Finish cleanly" line on closing every tab that only done objectives link.
 
   Verify each objectives-graph "Closing tabs of done objectives" scenario, setting the links up with the bars and reading the window's tabs with `ctl state`:
   - "Button shows";
@@ -154,13 +210,18 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
   - "Controls and titles don't select text": "Drag across the header", now without Prune;
   - "Direct controls don't select text": a drag across the header button;
   - render times, and no errors.
-- [ ] 3.5 Take `docs/graph.png` and `docs/review.png` again, as their 0.16.0 versions were taken: the same harness data, crops and alt text, now with grips and no ⋯. Show both drafts to the user before committing them.
 
-  Verify:
-  - plugin-package "Screenshots match this version": open nodes in `graph.png` show grips, and neither image shows ⋯;
-  - "Graph screenshot first": the README's first image is still `docs/graph.png`;
-  - `edgecheck.py` passes on `graph.png`.
-
+  Result (harness; A = "Echo" 102, B = "Foxtrot" 105, C = "Charlie" 49):
+  - **Button shows:** done o4 linked A, done o5 and open o1 both linked B, and C was linked to nothing. The header read "Close 1 done tab" beside "＋ New objective".
+  - **Inline confirmation:** a click on it turned it into `Close 1 done tab? · Close · Cancel`, with no picker. A click on empty space ended the question and brought the button back.
+  - **Cancelled:** Cancel brought the button back, with A, B and C all open.
+  - **Closed after asking:** Close (and `pump 5`) closed A, kept B and C, and left o4 linking `[102]`. The graph stayed shown, and the header showed no "done tab" button.
+  - **Only the tabs the graph shows:** with done o4 linking App build (8, session web) and the scope "This session" in docs, the header had no "done tab" button. With All it read "Close 1 done tab".
+  - **The graph's own tab:** with the graph opened over "Delta", which only done o4 linked, Close closed Delta and showed the graph again.
+  - **A chat tab:** tab 115, running the omp chat that Resume brought back in 3.3 and linked only to done o4, was closed this way. Selecting o4 then showed it under "Closed tabs" with "Resume", its row reading `omp`.
+  - **No text selected:** drags across the header both ways, over "Close 1 done tab", "＋ New objective", "All" and the tag chip, left all four unchanged against a clean shot (0.0 each). That is "Drag across the header" without Prune, plus the new button.
+  - **README:** "Finish cleanly" names "Close n tabs", the notice, "Close n done tabs" and their asking in place. It never assumed a picker, the check 3.2 left open.
+  - **Log:** 44 renders, the longest 5.4 ms, and no errors.
 ## 4. ⌥N
 
 - [ ] 4.1 The `new` command on `alt+n`, or the spelling 1.1 settled on, with `App.new_key` (D5). Add the README commands table row and the known limit: Option+N runs the command in every pane, and Configure moves or removes the key.
@@ -194,6 +255,13 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
   - plugin-package "Palette commands", all three scenarios with six commands;
   - plugin-package "README contents" and "Direct controls explained": `grep` the README for ⌥N, Configure, grip and keybinds;
   - `openspec validate --strict custom-order-and-direct-controls` passes.
+- [ ] 5.3 Take `docs/graph.png` and `docs/review.png` again, as their 0.16.0 versions were taken: the same harness data, crops and alt text, now with grips, no ⋯, and the header's gear button. Show both drafts to the user before committing them. (This was 3.5; it moved here because group 5 adds the gear button to the header, which a group 3 shot would miss.)
+
+  Verify:
+  - plugin-package "Screenshots match this version": open nodes in `graph.png` show grips, and neither image shows ⋯;
+  - "Graph screenshot first": the README's first image is still `docs/graph.png`;
+  - every line end in `graph.png` sits within 2 px of its node and tab-header centres (the edge check of 3.1).
+
 
 ## 6. Release 0.17.0
 

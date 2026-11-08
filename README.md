@@ -6,12 +6,12 @@ A [Tern](https://docs.stencil.so/tern) plugin for keeping track of what you are 
 
 ## Features
 
-- **Link tabs to objectives.** Select an objective and click **＋ Link** on a tab, or right-click a tab and pick one.
+- **Link tabs to objectives.** Select an objective, open or done, and click **＋ Link** or **× Unlink** on a tab, or right-click a tab and pick one. Links change only when you change them.
 - **See what needs you.** An objective turns amber, with a **needs you** chip, when an omp chat in one of its tabs asks you something, and green, with **replied**, when one finished a reply you haven't seen yet.
 - **Review what you finished.** Marking an objective done puts it on a spaced-repetition schedule. When it's due, **Review (n)** brings it back to rate **Hard**, **Good** or **Easy**, which sets when you see it next.
 - **Jump anywhere.** Click a tab header or a pane's **→** to go there. Click a pane row to see what it is doing: an omp agent's last message and reply, a shell's last or running command, a file's path.
-- **Organize.** Priorities P0–P3, due dates, tags and a side note; filter by tag or by the current session.
-- **Finish cleanly.** Mark an objective done, then close its tabs in one go. Closed tabs stay in the graph, and **Resume** brings their omp chats back.
+- **Organize.** Put objectives in your own order, and give them priorities P0–P3, due dates, tags and a side note; filter by tag or by the current session. The selected objective shows its buttons right under it: **Note**, **Due**, **Tags** and **Delete** (with Undo).
+- **Finish cleanly.** Mark an objective done, then close its tabs in one go, from its **Close n tabs** button or the notice that marking done shows; or close every tab that only done objectives link with **Close n done tabs** in the header. Both ask first, right where you clicked. Closed tabs stay in the graph, and **Resume** brings their omp chats back.
 
 ## Reviewing done objectives
 
@@ -43,6 +43,8 @@ It needs nothing on `PATH` but `git`, which `tern plugin install` already uses. 
 Close the graph with ⌃⌘O, its ×, a click outside it, or Esc after clicking its title bar.
 
 Open objectives stay in the order you give them; priorities and due dates don't reorder them. New objectives go on top. To move one, click its grip (the six dots at its left), then click the upper or lower half of the objective it should go above or below. Cancel in the header, or a click anywhere else, puts it back.
+
+Click an objective to select it: its lines stand out, every tab offers **＋ Link** or **× Unlink**, and a row of buttons appears under it. Click its title to rename it.
 
 ⌥R works in every pane, so Option+R no longer types "®". To change either key, bind `plugin.objectives.open` or `plugin.objectives.rename` in Tern's keybind settings.
 
