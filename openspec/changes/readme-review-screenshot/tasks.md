@@ -20,6 +20,8 @@ Design is skipped: the change adds an image and a spec line, with no technical d
   - `docs/review.png` is the user-approved draft, unchanged: 1838 × 753 px, 114,986 bytes. It sits after step 3 of "Reviewing done objectives", with alt text naming Hard · 1d / Good · 3d / Easy · 4d and Hard · 2d / Good · 9d / Easy · 14d.
   - `gh api markdown` on the README renders two images in order: `docs/graph.png`, then `docs/review.png`.
   - `openspec validate --specs --strict`: 8 passed. The change validates strictly.
+  - After the push (`9469457`): the README fetched from GitHub holds two images, `docs/graph.png` first, then `docs/review.png`.
+  - Both images are served from `main`: `graph.png` 200 `image/png` 362,250 bytes, and `review.png` 200 `image/png` 114,986 bytes.
 
 ## Workflow follow-up
 
