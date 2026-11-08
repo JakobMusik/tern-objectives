@@ -54,6 +54,7 @@ Alternative: keep the loader at 2. Rejected: two defaults for the same field, fo
 - **End:**
   - At the top of `M.action`, any act other than `prio` sets `held = nil`, beside the existing `drop_undo`.
   - `bg` no longer returns early when it cleared a hold, so a click on empty space re-renders sorted.
+  - `menu`, `new`, `tab`, `resume`, `pane` and `prune` leave drawing to their own flow, or close the graph, and returned before `M.render`. They now set a `later` flag instead. `M.action` ends with `M.render` unless `later` is set and no hold just ended, so the click that ends a hold always draws the column sorted. `M.render` does nothing once the graph is closed, as after a jump.
   - A fresh `M.open` clears it, like `reviewing`. A plugin reload clears it, as for every module local.
 - **View:** `View.Ui` gets `held: { string }?`, passed by `build`. After `M.sort_open(open_list)`, when `held` is set:
   - objectives whose id is in `held` take the held order;

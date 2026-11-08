@@ -109,7 +109,7 @@ local function normalize(raw: any): State
 	for _, o in s.objectives do
 		o.tags = array(o.tags or {})
 		o.tabs = array(o.tabs or {})
-		o.priority = o.priority or 2
+		o.priority = o.priority or 3
 		o.done = o.done == true
 		-- Done before 0.10.0: scheduled as if marked done on its done date, so it is due the day
 		-- after; with no done date, today (design D1).
@@ -268,7 +268,7 @@ function M.create(title: string, tab: number?, facts: TabFacts?, window: string?
 			id = id,
 			title = clean,
 			done = false,
-			priority = 2,
+			priority = 3,
 			created = os.time(),
 			tags = array({}),
 			tabs = array(if tab ~= nil then { tab } else {}),
@@ -370,7 +370,8 @@ end
 
 function M.cycle_priority(id: string): boolean
 	return change(id, function(o)
-		o.priority = (o.priority + 1) % 4
+		-- Up one step, P0 wrapping back to P3 (raise-priority-in-place D1).
+		o.priority = (o.priority + 3) % 4
 		return true
 	end)
 end

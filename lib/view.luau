@@ -28,6 +28,9 @@ export type Ui = {
 	undo_close: { id: string, n: number }?,
 	-- Review mode: the due done objectives with their rating buttons (review design D4).
 	reviewing: boolean,
+	-- While priorities change, the open objectives' order before the first badge click
+	-- (raise-priority-in-place D3).
+	held: { string }?,
 }
 
 -- An element as a plain TSP wire node {k, p, c} (tern.d.luau Node), which `cx.canvas:set` takes as
@@ -363,6 +366,22 @@ function M.build(state: Store.State, win: Model.Window, ui_state: Ui): Built
 		end
 	end
 	M.sort_open(open_list)
+	-- A held order keeps every held objective in its place; the rest follow, sorted.
+	local held = ui_state.held
+	if held ~= nil then
+		local place: { [string]: number } = {}
+		for i, id in held do
+			place[id] = i
+		end
+		for i, o in open_list do
+			if place[o.id] == nil then
+				place[o.id] = #held + i
+			end
+		end
+		table.sort(open_list, function(a, b)
+			return place[a.id] < place[b.id]
+		end)
+	end
 	sort_done(done_list)
 
 	-- Review mode's list (review-done-objectives, design D4): the done objectives the filters show whose

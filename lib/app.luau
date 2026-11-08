@@ -15,6 +15,10 @@ local M = {}
 
 local selected: string? = nil
 
+-- The open objectives' ids in the order shown before the first priority badge click, kept while
+-- only badges are clicked so a clicked node stays put (raise-priority-in-place D3); never stored.
+local held: { string }? = nil
+
 -- The pane that had focus when the graph was last opened fresh (design P5); never stored.
 local origin: number? = nil
 local edges_css = ""
@@ -91,6 +95,7 @@ local function build(cx: WindowCx): View.Built
 		undo = if undo ~= nil then undo.text else nil,
 		undo_close = if undo ~= nil then undo.close else nil,
 		reviewing = reviewing,
+		held = held,
 	})
 	if built.due == 0 then
 		reviewing = false
@@ -134,6 +139,7 @@ function M.open(cx: WindowCx, keep_origin: boolean?)
 	if not keep_origin then
 		drop_undo()
 		reviewing = false
+		held = nil
 		local focused = cx.session:focused()
 		if focused ~= nil and focused ~= Surface.find(cx) then
 			origin = focused
@@ -774,10 +780,18 @@ function M.action(ev: Action, cx: WindowCx)
 	if act ~= "undo" and act ~= "closetabs" then
 		drop_undo()
 	end
+	-- Any click but a badge's ends a held order, and the column is drawn sorted again even after
+	-- the verbs that otherwise leave drawing to their own flow (raise-priority-in-place D3).
+	local resort = act ~= "prio" and held ~= nil
+	if resort then
+		held = nil
+	end
+	-- Set by verbs whose own flow draws the graph later, or closes it.
+	local later = false
 	if act == "sel" then
 		selected = if selected == value then nil else value
 	elseif act == "bg" then
-		if selected == nil and not had_undo then
+		if selected == nil and not had_undo and not resort then
 			return
 		end
 		selected = nil
@@ -828,15 +842,24 @@ function M.action(ev: Action, cx: WindowCx)
 			end
 		end
 	elseif act == "prio" then
+		-- The first badge click holds the order on screen: filters hide objectives but never
+		-- reorder the rest (D3).
+		if held == nil then
+			local ids = {}
+			for _, o in sorted_open(Store.read()) do
+				table.insert(ids, o.id)
+			end
+			held = ids
+		end
 		if not Store.cycle_priority(value) then
 			toast_gone(cx)
 		end
 	elseif act == "menu" then
 		menu(cx, value)
-		return
+		later = true
 	elseif act == "new" then
 		new_objective(cx, nil, nil, "", true)
-		return
+		later = true
 	elseif act == "link" then
 		local tab = tonumber(value)
 		if selected == nil or tab == nil then
@@ -862,19 +885,19 @@ function M.action(ev: Action, cx: WindowCx)
 		if tab ~= nil then
 			jump_tab(cx, tab)
 		end
-		return
+		later = true
 	elseif act == "resume" then
 		local tab = tonumber(value)
 		if tab ~= nil then
 			resume(cx, tab)
 		end
-		return
+		later = true
 	elseif act == "pane" then
 		local pane = tonumber(value)
 		if pane ~= nil then
 			jump_pane(cx, pane)
 		end
-		return
+		later = true
 	elseif act == "exp" then
 		Store.set_view(function(v)
 			v.expanded[value] = if v.expanded[value] then nil else true
@@ -900,11 +923,13 @@ function M.action(ev: Action, cx: WindowCx)
 		end)
 	elseif act == "prune" then
 		prune(cx)
-		return
+		later = true
 	else
 		return
 	end
-	M.render(cx)
+	if not later or resort then
+		M.render(cx)
+	end
 end
 
 return M
