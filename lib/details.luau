@@ -119,7 +119,7 @@ end
 
 -- An omp row's call on the user (attention-marks-and-titles D3): "wait" while its chat waits for
 -- input, "replied" while it sits idle with a reply the user hasn't seen (Tern's unseen alert, cleared
--- by viewing the tab), else nil. Other agents never call.
+-- once that pane gets focus, not by focusing another pane of its tab), else nil. Other agents never call.
 function M.attention(row: Model.Row): string?
 	local a = agents[row.pane]
 	local info = row.info

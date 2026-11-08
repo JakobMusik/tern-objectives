@@ -167,19 +167,27 @@ Other agents, closed tabs and other windows' tabs SHALL NOT mark it. The chip's 
 - **WHEN** an objective links one tab whose omp chat waits for input and another whose omp chat has an unseen reply
 - **THEN** its node shows the amber ring and the "needs you" chip only
 
+#### Scenario: Two chats in one tab
+- **WHEN** tab "Split", linked to "Fix login bug", holds two omp chats side by side, one waiting for input and the other with a reply the user hasn't seen
+- **THEN** "Fix login bug" shows the amber ring and the "needs you" chip only, naming "Split" once
+
 #### Scenario: Not linked
 - **WHEN** the omp chat in tab "Server" waits for input, and "Write slides" doesn't link "Server"
 - **THEN** "Write slides" has no ring and no chip of either kind
 
 ### Requirement: Attention marks clear
-A "replied" mark SHALL go once the user has viewed the tab. A "needs you" mark SHALL stay until the chat stops waiting for input, even after the user has viewed the tab. Marks SHALL show on open, done and review nodes. A selected node SHALL show its selection ring and its mark together.
+A "replied" mark SHALL go once the user has focused the omp pane that replied, as Tern's own unseen-reply marker does. Looking at its tab while another pane there has focus SHALL NOT clear it. A "needs you" mark SHALL stay until the chat stops waiting for input, even after the user has focused it. Marks SHALL show on open, done and review nodes. A selected node SHALL show its selection ring and its mark together.
 
-#### Scenario: Viewing clears a reply
-- **WHEN** "Fix login bug" shows "replied" for tab "Server", and the user views "Server" and opens the graph again
+#### Scenario: Focusing the pane clears a reply
+- **WHEN** "Fix login bug" shows "replied" for tab "Server", and the user focuses the omp pane there and opens the graph again
 - **THEN** "Fix login bug" has no ring and no chip of either kind
 
-#### Scenario: Viewing keeps a question
-- **WHEN** "Fix login bug" shows "needs you" for tab "Server", and the user views "Server" without answering and opens the graph again
+#### Scenario: Another pane of the tab focused
+- **WHEN** tab "Split", linked to "Fix login bug", holds two omp chats side by side, the right one finished a reply the user hasn't seen, and the user focuses the left one and opens the graph again
+- **THEN** "Fix login bug" still shows "replied"
+
+#### Scenario: Focusing keeps a question
+- **WHEN** "Fix login bug" shows "needs you" for tab "Server", and the user focuses the omp pane there without answering and opens the graph again
 - **THEN** "Fix login bug" still shows "needs you"
 
 #### Scenario: Selected and marked

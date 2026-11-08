@@ -25,9 +25,10 @@
 | A double-click on the title was unreliable live (0.7.0, dropped in 0.8.0) | archived rename-and-linked-tabs-first design D1 |
 | `PaneInfo.alert` is a window-only "unseen alert"; `AgentBlock.state` is `idle`, `working`, `waiting_input` or `exited` | `tern.d.luau` L549–551, L772 |
 | An omp reply that finishes in an unviewed tab sets that pane's `alert` (the tab reads `finished`), and the state goes `idle` | harness spike 2026-11-08: pane 4 in tab 5, "Reply with the single word ok." while tab 3 was shown; `working`/alert false, then `idle`/alert true after 3 s |
-| Viewing the tab clears the alert | same spike: focusing pane 4 gave alert false at once |
+| Focusing the pane clears its alert | same spike: focusing pane 4 gave alert false at once |
+| Focusing another pane of the same tab leaves a reply's alert set, and Tern keeps the tab marked `finished` | harness 2026-11-08, after the user's question about split tabs: tab "Split" with omp panes 4 (left) and 6 (right); after 6 replied unseen, focusing 4 left 6's alert true, and only focusing 6 cleared it |
 | An omp question sets `waiting_input` and the alert (the tab reads `waiting`) | same spike: "Use your ask tool to ask me one yes/no question" gave `waiting_input`/alert true |
-| Viewing a tab whose chat waits clears the alert but not the state | [INFERENCE] from the two results above; checked in task 3.1 |
+| Focusing a pane whose chat waits clears its alert but not the state | task 3.1, "Focusing keeps a question" |
 | `--warn` and `--ok` are theme colours already used for Hard and Easy | `styles.css:206–220` |
 
 ## Goals / Non-Goals

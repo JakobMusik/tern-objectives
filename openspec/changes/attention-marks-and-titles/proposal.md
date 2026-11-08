@@ -16,9 +16,9 @@ Settled with the user on 2026-11-08:
 
 1. **Attention marks.** An objective node is marked when a live tab it links, in this window, holds an omp chat that needs you:
    - **needs you:** the chat waits for your input (it asked a question). Amber ring, and a "needs you" chip first on the node's second line.
-   - **replied:** the chat finished a reply in a tab you haven't viewed since. Green ring and a "replied" chip.
+   - **replied:** the chat finished a reply you haven't seen. Green ring and a "replied" chip.
 
-   If both apply, "needs you" wins. "Replied" goes once you view the tab, and "needs you" once the chat stops waiting. The chip's tooltip names the tab or tabs. Done and review nodes get marks too, and a selected node keeps its selection ring alongside the mark.
+   If both apply, "needs you" wins, in one tab or across tabs. "Replied" goes once you focus the pane that replied, as Tern's own unseen-reply marker does; looking at a split tab while another pane there has focus doesn't clear it. "Needs you" goes once the chat stops waiting. The chip's tooltip names the tab or tabs. Done and review nodes get marks too, and a selected node keeps its selection ring alongside the mark.
 2. **Titles wrap.** A title breaks at spaces into lines of at most 36 characters, up to three lines.
    - A title needing more ends its third line in "…", and the node's tooltip still holds it whole.
    - Each extra line makes the node 18 px taller, and its link lines still meet it at its vertical centre.

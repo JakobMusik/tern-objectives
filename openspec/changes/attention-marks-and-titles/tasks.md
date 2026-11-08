@@ -69,10 +69,11 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
 - [x] 3.1 Attention marks (D3): `Details.attention`, the per-objective mark and chip in `View.build`, the rings and chips in `styles.css`, and alerts in the refresh signature. README: the Features line.
 
   Verify with omp chats in harness tabs, read through the `agents` and `pane` helper ops, `ctl tree` classes and texts, and shots:
-  - "Attention marks": "Question waiting" (chip tooltip from `ctl tree`), "Reply unseen", "Needs you wins" (two omp tabs), and "Not linked".
+  - "Attention marks": "Question waiting" (chip tooltip from `ctl tree`), "Reply unseen", "Needs you wins" (two omp tabs), "Two chats in one tab", and "Not linked".
   - "Attention marks clear":
-    - "Viewing clears a reply";
-    - "Viewing keeps a question". This checks the design's inference. If Tern drops `waiting_input` on viewing, stop and ask the user;
+    - "Focusing the pane clears a reply";
+    - "Another pane of the tab focused";
+    - "Focusing keeps a question". This checks the design's inference. If Tern drops `waiting_input` on focus, stop and ask the user;
     - "Selected and marked" (shot).
   - "Live refresh": with the graph shown, a reply finishing in a linked tab marks the node within a second, with no click.
   - "Light and dark themes": "Both appearances" under `ctl appearance light` and `ctl appearance dark`. Also compare the amber ring with the P1 badge's orange; if they look alike, apply the design's fallback and say so here.
@@ -86,13 +87,18 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
     - Harness note: without window activity the harness runs no plugin timers, and the first mark (o1) showed only 5 s after the state change. This run kept `/tmp/tobj/bin/pump` going, as earlier changes did.
   - **Needs you wins:** with o2 linked to Docs (replied) and Server (waiting), o2 showed only `ob-att-wait` and `needs you` for “Server”.
   - **Selected and marked:** o1 selected had `ob-sel ob-att-wait`. The shot shows the accent ring outside the amber ring, with the `needs you` chip (`t3_marks`).
-  - **Viewing clears a reply:** focusing pane 6 set its alert false. After the graph opened again, o4 had no mark, while o2 and o1 kept `needs you`.
-  - **Viewing keeps a question:** focusing pane 4 set its alert false, but its state stayed `waiting_input`, which confirms the design's inference. After a fresh open, o1 still showed `needs you` for “Server”.
+  - **Focusing the pane clears a reply:** focusing pane 6 set its alert false. After the graph opened again, o4 had no mark, while o2 and o1 kept `needs you`.
+  - **Focusing keeps a question:** focusing pane 4 set its alert false, but its state stayed `waiting_input`, which confirms the design's inference. After a fresh open, o1 still showed `needs you` for “Server”.
   - **Light and dark themes:** shots `t3_light` and `t3_dark`, with o3 at P1 for comparison. `edgecheck.py` passed on both.
     - Sampled rings: needs-you amber `(154,115,38)`, hue 40°, in light and `(255,179,71)`, hue 35°, in dark; replied green `(88,132,88)`, hue 120°, and `(0,255,136)`, hue 152°.
     - The P1 badge's orange is `(247,107,21)`, hue 23°, and reads clearly apart from the amber in both, so no fallback was needed.
     - Not re-checked here, and untouched by this change: no objective was P0 in these shots, and the one unlinked tab was also the origin tab.
   - **Done and review nodes:** omp in tab 3's shell asked a question. Done o5 got `ob-att-wait` and `needs you` in the Done group, and in review mode its 96 px review node kept both (`t3_review`), with the tooltip naming tab 3's label `omp`.
+  - **Split tabs (after the user asked about them; the spec first said a reply cleared when its tab was viewed):** tab 5 "Split" held omp panes 4 (left) and 6 (right), linked to o1 and o2.
+    - **Two chats in one tab:** with 6's reply unseen and 4 waiting for input, o1 showed only `ob-att-wait`, with `needs you` and tooltip `omp is waiting in “Split”`.
+    - **Another pane of the tab focused:** in a second run, 6 replied unseen while 4 sat idle. Focusing 4 left 6's alert true and Tern's tab marker `finished`. After a fresh open, o1 still showed `replied` (`omp replied in “Split”`). Focusing 6 cleared its alert and the mark.
+    - The spec, proposal and design now say "replied" goes once the replying pane gets focus, matching Tern's own marker (user's choice). The code was already doing that and is unchanged.
+    - Both runs' chats were closed, the serve stopped, and the chat folders removed.
   - **Log:** renders took at most 7.2 ms; no errors. All three chats were closed, the serve stopped, and `~/.omp/agent/sessions/--private-tmp-tobj-*` was removed.
 
 ## 4. Release 0.16.0
@@ -108,7 +114,7 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
 - [ ] 4.3 **(live)** With the user:
   - a long title wraps onto up to three lines, and its lines stay on the node;
   - a click on a title opens Rename, and a click beside it selects;
-  - an objective linked to a tab whose omp chat asks a question shows "needs you", and one whose chat replied while you were elsewhere shows "replied" until you view that tab.
+  - an objective linked to a tab whose omp chat asks a question shows "needs you", and one whose chat replied while you were elsewhere shows "replied" until you click into the pane that replied.
 
   Record the result here.
 
