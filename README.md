@@ -2,7 +2,7 @@
 
 A [Tern](https://docs.stencil.so/tern) plugin for keeping track of what you are working on across sessions. It keeps one list of objectives and links each one to the tabs where its work happens, shown as a graph: objectives on the left, tabs on the right, a line for every link. Click a tab or pane to jump straight to it, in any session.
 
-![The objectives graph: objectives with priorities, due dates and tags on the left; tabs grouped by session on the right, with a line for each link](docs/graph.png)
+![The objectives graph: objectives with priorities, due dates and tags on the left, two of them with titles wrapped onto two lines; "Fix login bug" ringed in amber with a "needs you" chip, and "Write release notes" in green with "replied"; tabs grouped by session on the right, with a line for each link, an omp chat waiting for input in the Server tab and an open chat row showing "you:" and "omp:"](docs/graph.png)
 
 ## Features
 
