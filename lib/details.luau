@@ -117,6 +117,23 @@ function M.type(row: Model.Row): (string, string?)
 	return kind, nil
 end
 
+-- An omp row's call on the user (attention-marks-and-titles D3): "wait" while its chat waits for
+-- input, "replied" while it sits idle with a reply the user hasn't seen (Tern's unseen alert, cleared
+-- by viewing the tab), else nil. Other agents never call.
+function M.attention(row: Model.Row): string?
+	local a = agents[row.pane]
+	local info = row.info
+	if a == nil or agent_name(a, if info ~= nil then info.program else nil) ~= "omp" then
+		return nil
+	end
+	if a.state == "waiting_input" then
+		return "wait"
+	elseif a.state == "idle" and info ~= nil and info.alert == true then
+		return "replied"
+	end
+	return nil
+end
+
 -- "you: …" and "<agent>: …", each kept whole up to SQUEEZE characters and split before its last
 -- TAIL characters for the view's middle cut. Only omp has a chat to read "you:" from, so other agents
 -- get the reply line alone and no transcript read (fix-spec-drift D2).

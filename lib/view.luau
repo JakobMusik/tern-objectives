@@ -32,7 +32,15 @@ export type Ui = {
 	-- While priorities change, the open objectives' order before the first badge click
 	-- (raise-priority-in-place D3).
 	held: { string }?,
+	-- An omp row's call on the user: "wait", "replied" or nil (attention-marks-and-titles D3).
+	attention: (row: Model.Row) -> string?,
 }
+
+-- An objective's attention mark: the strongest call over its live tabs, and those tabs' labels.
+type Mark = { kind: string, tabs: { string } }
+
+local MARK_CHIP = { wait = "needs you", replied = "replied" }
+local MARK_TIP = { wait = "omp is waiting in ", replied = "omp replied in " }
 
 -- An element as a plain TSP wire node {k, p, c} (tern.d.luau Node), which `cx.canvas:set` takes as
 -- is. tern.ui.el would convert every subtree again at each level of nesting: with every row open that
@@ -113,9 +121,9 @@ local function review_chip(r: Review.Schedule, today: Dates.Day): Node
 	return span("ob-chip", string.format("review in %dd", n))
 end
 
--- `title`: the title's lines (Text.wrap). `review`: review mode's node, with Hard, Good and Easy
--- under it (review-done-objectives, design D4).
-local function objective_node(o: Store.Objective, ui_state: Ui, first: string, title: { string }, review: boolean?): Node
+-- `title`: the title's lines (Text.wrap). `mark`: its attention mark, if any (D3). `review`: review
+-- mode's node, with Hard, Good and Easy under it (review-done-objectives, design D4).
+local function objective_node(o: Store.Objective, ui_state: Ui, first: string, title: { string }, mark: Mark?, review: boolean?): Node
 	local selected = ui_state.selected == o.id
 	local cls = "ob-obj ob-o-" .. o.id .. first
 	if #title > 1 then
@@ -130,7 +138,16 @@ local function objective_node(o: Store.Objective, ui_state: Ui, first: string, t
 	if review then
 		cls ..= " ob-review"
 	end
+	if mark ~= nil then
+		cls ..= " ob-att-" .. mark.kind
+	end
 	local line2: { Node } = {}
+	if mark ~= nil then
+		table.insert(line2, span("ob-chip ob-attchip ob-attchip-" .. mark.kind, MARK_CHIP[mark.kind], {
+			key = "att",
+			title = MARK_TIP[mark.kind] .. "“" .. table.concat(mark.tabs, "”, “") .. "”",
+		}))
+	end
 	if o.note ~= nil then
 		table.insert(line2, span("ob-note", o.note))
 	end
@@ -422,12 +439,54 @@ function M.build(state: Store.State, win: Model.Window, ui_state: Ui): Built
 	local left_kids: { Node } = {}
 	local obj_cy: { [string]: number } = {}
 	local sel_obj: Store.Objective? = nil
+	-- Attention (attention-marks-and-titles D3): each live tab's strongest omp call, worked out once,
+	-- then per objective the strongest over its live tabs, "wait" above "replied". Closed and
+	-- elsewhere tabs have no live rows, so they never mark.
+	local tab_call: { [number]: string } = {}
+	local function call_of(tab: number): string
+		local known = tab_call[tab]
+		if known ~= nil then
+			return known
+		end
+		local call = ""
+		local t = win.tabs[tab]
+		if t ~= nil then
+			for _, row in t.rows do
+				local a = ui_state.attention(row)
+				if a == "wait" then
+					call = a
+					break
+				elseif a == "replied" then
+					call = a
+				end
+			end
+		end
+		tab_call[tab] = call
+		return call
+	end
+	local function mark_of(o: Store.Objective): Mark?
+		local waits, replies = {}, {}
+		for _, tab in o.tabs do
+			local call = call_of(tab)
+			if call == "wait" then
+				table.insert(waits, win.tabs[tab].label)
+			elseif call == "replied" then
+				table.insert(replies, win.tabs[tab].label)
+			end
+		end
+		if #waits > 0 then
+			return { kind = "wait", tabs = waits }
+		elseif #replies > 0 then
+			return { kind = "replied", tabs = replies }
+		end
+		return nil
+	end
 	-- One objective node; its title lines set its height (attention-marks-and-titles D1).
 	local function add_node(o: Store.Objective, review: boolean?)
 		local first = Layout.first(left)
 		local title = Text.wrap(o.title, Layout.title.width, Layout.title.lines)
 		obj_cy[o.id] = Layout.add_obj(left, review, #title)
-		table.insert(left_kids, objective_node(o, ui_state, first, title, review))
+		table.insert(left_kids, objective_node(o, ui_state, first, title, mark_of(o), review))
 		if o.id == selected then
 			sel_obj = o
 		end

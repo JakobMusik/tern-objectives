@@ -96,6 +96,7 @@ local function build(cx: WindowCx): View.Built
 		undo_close = if undo ~= nil then undo.close else nil,
 		reviewing = reviewing,
 		held = held,
+		attention = Details.attention,
 	})
 	if built.due == 0 then
 		reviewing = false

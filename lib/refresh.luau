@@ -26,8 +26,9 @@ local function signature(cx: WindowCx): string
 	for _, s in cx.session:sessions() do
 		table.insert(parts, string.format("s%d%s:%s", s.id, if s.current then "*" else "", table.concat(s.tabs, ",")))
 	end
+	-- An unseen alert counts too (attention-marks-and-titles D3): it comes and goes with no state change.
 	for _, p in cx.session:panes() do
-		table.insert(parts, string.format("p%d@%s%s=%s", p.pane, tostring(p.tab), if p.parked then "^" else "", p.title))
+		table.insert(parts, string.format("p%d@%s%s=%s%s", p.pane, tostring(p.tab), if p.parked then "^" else "", p.title, if p.alert then "!" else ""))
 	end
 	for _, t in cx.session:tabs() do
 		if t.name ~= nil then

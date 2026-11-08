@@ -66,7 +66,7 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
 
 ## 3. Attention marks
 
-- [ ] 3.1 Attention marks (D3): `Details.attention`, the per-objective mark and chip in `View.build`, the rings and chips in `styles.css`, and alerts in the refresh signature. README: the Features line.
+- [x] 3.1 Attention marks (D3): `Details.attention`, the per-objective mark and chip in `View.build`, the rings and chips in `styles.css`, and alerts in the refresh signature. README: the Features line.
 
   Verify with omp chats in harness tabs, read through the `agents` and `pane` helper ops, `ctl tree` classes and texts, and shots:
   - "Attention marks": "Question waiting" (chip tooltip from `ctl tree`), "Reply unseen", "Needs you wins" (two omp tabs), and "Not linked".
@@ -78,6 +78,22 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
   - "Light and dark themes": "Both appearances" under `ctl appearance light` and `ctl appearance dark`. Also compare the amber ring with the P1 badge's orange; if they look alike, apply the design's fallback and say so here.
   - A Done-group node and a review node linked to the waiting tab carry the mark.
   - The log's render times, and no errors.
+
+  Result (harness; omp chats in tab 5 "Server" (pane 4) and tab 7 "Docs" (pane 6), both started unviewed from tab 3; links made in the graph: o1 "Fix login bug" → Server, o2 → Docs and later Server, o4 → Docs; done o5, due for review, → tab 3):
+  - **Question waiting:** asked to put a yes/no question to me, the Server chat went `waiting_input`. o1 got `ob-att-wait` and a `needs you` chip with tooltip `omp is waiting in “Server”`.
+  - **Not linked:** o3, linked to nothing, had no class or chip of either kind.
+  - **Reply unseen and Live refresh:** with the graph shown and no clicks, the Docs chat answered "Reply with the single word ok.". Tern's tab alert `finished` and o4's `ob-att-replied` showed in the same 0.2 s poll, 1.7 s after the prompt. o2 and o4 had `replied` chips with tooltip `omp replied in “Docs”`, and the pane read `idle`, alert true, not focused.
+    - Harness note: without window activity the harness runs no plugin timers, and the first mark (o1) showed only 5 s after the state change. This run kept `/tmp/tobj/bin/pump` going, as earlier changes did.
+  - **Needs you wins:** with o2 linked to Docs (replied) and Server (waiting), o2 showed only `ob-att-wait` and `needs you` for “Server”.
+  - **Selected and marked:** o1 selected had `ob-sel ob-att-wait`. The shot shows the accent ring outside the amber ring, with the `needs you` chip (`t3_marks`).
+  - **Viewing clears a reply:** focusing pane 6 set its alert false. After the graph opened again, o4 had no mark, while o2 and o1 kept `needs you`.
+  - **Viewing keeps a question:** focusing pane 4 set its alert false, but its state stayed `waiting_input`, which confirms the design's inference. After a fresh open, o1 still showed `needs you` for “Server”.
+  - **Light and dark themes:** shots `t3_light` and `t3_dark`, with o3 at P1 for comparison. `edgecheck.py` passed on both.
+    - Sampled rings: needs-you amber `(154,115,38)`, hue 40°, in light and `(255,179,71)`, hue 35°, in dark; replied green `(88,132,88)`, hue 120°, and `(0,255,136)`, hue 152°.
+    - The P1 badge's orange is `(247,107,21)`, hue 23°, and reads clearly apart from the amber in both, so no fallback was needed.
+    - Not re-checked here, and untouched by this change: no objective was P0 in these shots, and the one unlinked tab was also the origin tab.
+  - **Done and review nodes:** omp in tab 3's shell asked a question. Done o5 got `ob-att-wait` and `needs you` in the Done group, and in review mode its 96 px review node kept both (`t3_review`), with the tooltip naming tab 3's label `omp`.
+  - **Log:** renders took at most 7.2 ms; no errors. All three chats were closed, the serve stopped, and `~/.omp/agent/sessions/--private-tmp-tobj-*` was removed.
 
 ## 4. Release 0.16.0
 
