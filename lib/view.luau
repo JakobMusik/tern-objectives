@@ -8,6 +8,7 @@ local Layout = require("./layout")
 local Edges = require("./edges")
 local Dates = require("./dates")
 local Review = require("./review")
+local Text = require("./text")
 
 local M = {}
 
@@ -112,10 +113,14 @@ local function review_chip(r: Review.Schedule, today: Dates.Day): Node
 	return span("ob-chip", string.format("review in %dd", n))
 end
 
--- `review`: review mode's node, with Hard, Good and Easy under it (review-done-objectives, design D4).
-local function objective_node(o: Store.Objective, ui_state: Ui, first: string, review: boolean?): Node
+-- `title`: the title's lines (Text.wrap). `review`: review mode's node, with Hard, Good and Easy
+-- under it (review-done-objectives, design D4).
+local function objective_node(o: Store.Objective, ui_state: Ui, first: string, title: { string }, review: boolean?): Node
 	local selected = ui_state.selected == o.id
 	local cls = "ob-obj ob-o-" .. o.id .. first
+	if #title > 1 then
+		cls ..= " ob-n" .. #title
+	end
 	if selected then
 		cls ..= " ob-sel"
 	end
@@ -151,14 +156,19 @@ local function objective_node(o: Store.Objective, ui_state: Ui, first: string, r
 			actions = { click = "prio=" .. o.id },
 		}),
 	}
-	-- The title and its creation time, which tells same-titled objectives apart, share a box that
-	-- clips the time only once the title is down to 3em (creation-time-suffix D2).
-	local name: { Node } = { span("ob-title", o.title, { key = "title" }) }
+	-- The title's lines, one row each (attention-marks-and-titles D1). The creation time, which tells
+	-- same-titled objectives apart, follows the last line, clipped only once that line is down to
+	-- 3em (creation-time-suffix D2).
 	local created = Dates.short(o.created)
-	if created ~= nil then
-		table.insert(name, span("ob-created", created, { key = "created" }))
+	local rows: { Node } = {}
+	for i, line in title do
+		local row: { Node } = { span("ob-title", line, { key = "title" }) }
+		if i == #title and created ~= nil then
+			table.insert(row, span("ob-created", created, { key = "created" }))
+		end
+		table.insert(rows, el("div", { class = "ob-tline", key = "t" .. i }, row))
 	end
-	table.insert(l1, el("div", { class = "ob-name", key = "name" }, name))
+	table.insert(l1, el("div", { class = "ob-name", key = "name" }, rows))
 	if o.done then
 		table.insert(l1, el("span", { class = "ob-trash", key = "trash", title = "Remove", actions = { click = "rm=" .. o.id } }, {
 			{ k = "icon", p = { name = "trash" } } :: any,
@@ -410,14 +420,19 @@ function M.build(state: Store.State, win: Model.Window, ui_state: Ui): Built
 	local left_kids: { Node } = {}
 	local obj_cy: { [string]: number } = {}
 	local sel_obj: Store.Objective? = nil
+	-- One objective node; its title lines set its height (attention-marks-and-titles D1).
+	local function add_node(o: Store.Objective, review: boolean?)
+		local first = Layout.first(left)
+		local title = Text.wrap(o.title, Layout.title.width, Layout.title.lines)
+		obj_cy[o.id] = Layout.add_obj(left, review, #title)
+		table.insert(left_kids, objective_node(o, ui_state, first, title, review))
+		if o.id == selected then
+			sel_obj = o
+		end
+	end
 	if reviewing then
 		for _, o in due_list do
-			local first = Layout.first(left)
-			obj_cy[o.id] = Layout.add_obj(left, true)
-			table.insert(left_kids, objective_node(o, ui_state, first, true))
-			if o.id == selected then
-				sel_obj = o
-			end
+			add_node(o, true)
 		end
 	elseif #state.objectives == 0 then
 		local first = Layout.first(left)
@@ -434,12 +449,7 @@ function M.build(state: Store.State, win: Model.Window, ui_state: Ui): Built
 		}))
 	end
 	for _, o in (if reviewing then {} else open_list) :: { Store.Objective } do
-		local first = Layout.first(left)
-		obj_cy[o.id] = Layout.add_obj(left)
-		table.insert(left_kids, objective_node(o, ui_state, first))
-		if o.id == selected then
-			sel_obj = o
-		end
+		add_node(o)
 	end
 	if #done_list > 0 and not reviewing then
 		local first = Layout.first(left)
@@ -450,12 +460,7 @@ function M.build(state: Store.State, win: Model.Window, ui_state: Ui): Built
 		}))
 		if view_state.done_open then
 			for _, o in done_list do
-				local f = Layout.first(left)
-				obj_cy[o.id] = Layout.add_obj(left)
-				table.insert(left_kids, objective_node(o, ui_state, f))
-				if o.id == selected then
-					sel_obj = o
-				end
+				add_node(o)
 			end
 		end
 	end

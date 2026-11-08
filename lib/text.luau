@@ -64,4 +64,45 @@ function M.split_end(s: string, n: number): (string, string)
 	return string.sub(s, 1, start - 1), string.sub(s, start)
 end
 
+local function length(s: string): number
+	return utf8.len(s) or #s
+end
+
+-- `s` broken at spaces into lines of at most `width` characters, onto at most `max` lines
+-- (attention-marks-and-titles D1). Only a word longer than a line is split; a text that needs more
+-- lines ends its last line in "…".
+function M.wrap(s: string, width: number, max: number): { string }
+	local words: { string } = {}
+	for word in string.gmatch(M.one_line(s), "%S+") do
+		while length(word) > width do
+			local head = M.cut(word, width)
+			table.insert(words, head)
+			word = string.sub(word, #head + 1)
+		end
+		table.insert(words, word)
+	end
+	local lines: { string } = {}
+	local line, n = "", 0
+	for _, word in words do
+		local w = length(word)
+		if n == 0 then
+			line, n = word, w
+		elseif n + 1 + w <= width then
+			line, n = line .. " " .. word, n + 1 + w
+		else
+			table.insert(lines, line)
+			line, n = word, w
+		end
+	end
+	if n > 0 then
+		table.insert(lines, line)
+	end
+	if #lines > max then
+		local last = M.cut(lines[max], width - 1)
+		lines = table.move(lines, 1, max - 1, 1, {})
+		table.insert(lines, last .. "…")
+	end
+	return lines
+end
+
 return M

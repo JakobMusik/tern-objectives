@@ -8,6 +8,7 @@ local M = {}
 M.px = {
 	obj_h = 48, -- objective node, border included
 	obj_m = 8,
+	title_line_h = 18, -- each title line past the first (attention-marks-and-titles D1)
 	review_h = 30, -- review mode's button row under an objective node: 8 px gap and 22 px buttons
 	group_h = 24, -- "Done (n)", "Closed tabs", "Other windows"
 	group_m = 14,
@@ -26,6 +27,15 @@ M.px = {
 	first_m = 4, -- margin above the first item of a column
 	gap_w = 120, -- the edge column between the two node columns
 }
+
+-- Title lines: at most `width` characters each, at most `lines` of them (D1). Fixed, since a canvas
+-- never learns its width and the edges need each node's exact height.
+M.title = { width = 36, lines = 3 }
+
+-- An objective node's height: 48 px, review mode's button row, and 18 px per extra title line.
+local function obj_height(review: boolean?, lines: number?): number
+	return M.px.obj_h + (if review then M.px.review_h else 0) + ((lines or 1) - 1) * M.px.title_line_h
+end
 
 -- Priority colours P0..P3: red, orange, blue, grey. Mid tones that read on light and dark pages;
 -- shared by the badges (CSS below) and the lines drawn inside the edge SVGs.
@@ -57,6 +67,13 @@ function M.css(): string
 		string.format("%s .ob-col > .ob-first { margin-top: %dpx; }", SCOPE, p.first_m),
 		string.format("%s .ob-gap { width: %dpx; }", SCOPE, p.gap_w),
 	}
+	-- Two- and three-line titles: taller nodes, and line 1 grown to hold the title's rows.
+	for n = 2, M.title.lines do
+		local extra = (n - 1) * p.title_line_h
+		table.insert(rules, string.format("%s .ob-obj.ob-n%d { height: %dpx; }", SCOPE, n, p.obj_h + extra))
+		table.insert(rules, string.format("%s .ob-obj.ob-review.ob-n%d { height: %dpx; }", SCOPE, n, p.obj_h + p.review_h + extra))
+		table.insert(rules, string.format("%s .ob-obj.ob-n%d .ob-l1 { height: %dpx; }", SCOPE, n, n * p.title_line_h))
+	end
 	for i, color in M.palette do
 		table.insert(rules, string.format("%s .ob-p%d { color: %s; background: %s1f; }", SCOPE, i - 1, color, color))
 	end
@@ -82,9 +99,10 @@ local function add(s: Stack, m: number, h: number): number
 	return top
 end
 
--- Objective node, taller with review mode's button row; returns its vertical centre.
-function M.add_obj(s: Stack, review: boolean?): number
-	local h = M.px.obj_h + (if review then M.px.review_h else 0)
+-- Objective node, taller with review mode's button row and with each title line past the first;
+-- returns its vertical centre.
+function M.add_obj(s: Stack, review: boolean?, lines: number?): number
+	local h = obj_height(review, lines)
 	return add(s, M.px.obj_m, h) + h / 2
 end
 
