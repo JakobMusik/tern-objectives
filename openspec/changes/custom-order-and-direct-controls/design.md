@@ -45,7 +45,11 @@ The SDK's line numbers below refer to a text extraction of the SDK book: `https:
 | `alt+n` is not in Tern's default action table, nor in the user's `keybinds` | SDK built-in actions (no ⌥N); live `settings.json`, read only, 2026-11-09 |
 | The user layer replaces every binding of its keys, Tern's and plugins' alike, and `[]` removes a plugin's chord without replacing it | SDK "Keymap layering" (L4917–4919) |
 | `cx.settings` reads and writes keybinds. `set("keybinds", t)` replaces the whole override map. A headless session applies changes but doesn't save them | `tern.d.luau` L940–963; SDK "Settings cx" (L37168, L37171) |
-| `cx.actions:keys()` gives the effective chord → action ids, spelling modifiers in the order `alt`, `ctrl`, `shift`, `cmd` | `tern.d.luau` L879–880; archived rename-and-linked-tabs-first design, source record |
+| `cx.actions:keys()` gives the effective chord → action ids. It spells each chord as its source does: Tern's defaults as `shift+cmd+r`, a keybinds entry exactly as written (`ctrl+alt+l` stays `ctrl+alt+l`, and `alt+ctrl+l` finds nothing). An entry of `[]` shows as an empty list | `tern.d.luau` L879–880; spike, task 1.1 |
+| `cx.settings:set("keybinds", t)` with `[]` made by `tern.json.array({})` is read back as written and takes effect at once. A chord that doesn't parse raises (`` `alt+`: names no key ``) and changes nothing. `cmd+t` set there takes ⌘T from `new_tab` | spike, task 1.1 |
+| Any keybinds write, `set` or `bind`, rebuilds the window's keymap without every plugin's binds, ours and other plugins' alike, until a plugin reload. A run-time `tern.command` call, even one registering an existing command again, or a run-time `tern.bind`, brings every plugin's binds back | spike, task 1.1 |
+| In the harness, `key Alt+n` runs a command bound to `alt+n`, and to `alt+key_n` too, with a canvas or a shell focused, and the shell gets no character. The harness doesn't model a real keyboard's dead-key composition | spike, task 1.1 |
+| Drop zones absolutely positioned over a node's halves take the click, over the node's own inner controls too, and their `:hover` bar draws | spike, task 1.1 (shot `ds_hover_bot`) |
 | `:hover`, `position: absolute` and `cursor: grab` work in plugin CSS | SDK "Supported CSS" (L22460); `:hover` on the jump button since 0.6 (refine-graph-rows, R7); the edge layers are absolutely positioned (add-objectives-plugin, D4) |
 | The harness can rest the pointer with `move X Y` or `hover <selector>`, press `key <combo>`, and click with real hit-testing | SDK harness commands (L29654–29668, L29692); `openspec/config.yaml` |
 
@@ -159,21 +163,22 @@ Alternative: closing without asking, with no undo. Rejected: closing ends progra
 - **Parse:**
   - The text is lowercased and trimmed, split on `>` into chords, and each chord on `+`.
   - Every part but the last must be a modifier (`ctrl`, `alt`/`opt`, `shift`, `cmd`/`super`), and the last must be a key.
-  - The chord is canonicalized to `cx.actions:keys()`'s order for comparison.
+  - The chord is canonicalized: modifiers in one fixed order. Every chord `cx.actions:keys()` lists is canonicalized the same way before comparing, since it keeps each source's own spelling.
   - It is refused when a chord lacks `ctrl`, `alt` and `cmd`, unless its key is f1–f20.
 - **Conflict:** the canonical chord's actions in `cx.actions:keys()`, minus this command's own, must be empty. Otherwise the toast names the first one, by its palette label when `cx.actions:describe` knows it, else its id.
-- **Write:** a copy of `cx.settings:keybinds()` is edited, then written with `cx.settings:set("keybinds", kb)`, empty lists made with `tern.json.array({})`.
+- **Write:** a copy of `cx.settings:keybinds()` is edited, then written with `cx.settings:set("keybinds", kb)` inside `pcall`, empty lists made with `tern.json.array({})`. A raise means Tern refused the chord: the toast says it isn't a shortcut, and nothing changed.
   - **First, every change:** this action leaves every entry. A string entry naming it is deleted. A list entry loses it, and is deleted if that leaves it empty. Other entries, the user's own `[]` included, stay.
   - **Change:** `kb[new] = action`. When the command has a default that differs, `kb[default] = []`.
   - **Remove:** `kb[default] = []` when there is a default.
   - **Reset:** delete `kb[default]` if it is an empty list.
-- **Verify:** `cx.actions:keys()` is read again and must show the intended result. If it doesn't, the previous map goes back and an error toast says the change didn't take.
+- **Plugin keys come back:** every keybinds write drops all plugins' binds from the keymap (source record). Right after the write, `window.luau`'s registration runs again: it re-registers the plugin's commands, which rebuilds the keymap with every plugin's binds. `Keys.write` takes it as a callback, so `lib/keys.luau` doesn't require `window.luau`.
+- **Verify:** `cx.actions:keys()` is read again and must show the intended result. If it doesn't, the previous map goes back, the commands are registered again, and an error toast says the change didn't take.
 - **Why the conflict check matters:** the user layer replaces Tern's own bindings (source record), so binding `cmd+t` there would take ⌘T from "New tab". The check is what stops Configure from doing that.
 
 Alternative: keep the shortcuts in `kv.json` and register the commands' `keys` from them at load. Rejected:
-- re-registering a command at run time is undocumented;
+- the commands' keys would still sit in the plugin layer, under the user layer, so Tern's own Keyboard page and any user entry would override them;
 - Tern's Keyboard page would disagree with Configure;
-- the user layer would still override it.
+- every keybinds write still drops the plugin layer (source record), so it would need the same re-registration anyway.
 
 ### D8. New-objective defaults
 - **Storage:** `state.settings = { start_priority = 0..3, new_place = "top" | "bottom" }`. `normalize` fills 3 and "top" and replaces invalid values.
@@ -219,8 +224,8 @@ Alternative: count every live tab of the window, whatever the filter. Rejected w
 ## Risks / Trade-offs
 
 - **[⌥N is a dead key]** On a US layout, Option+N starts a "˜" composition. If Tern composes before matching the chord, ⌥N won't run the command. → Task 1.1 presses `key Alt+n` in the harness. The live check (task 6.3) is the real test. If it fails, a patch switches to `alt+key_n`.
-- **[Drop zones must win the click]** The zones are children of the node, positioned over its content. If Tern routed the click to an inner control or to the node's own `sel=`, drops would select instead. → Task 1.1 renders the zones and clicks both halves with `ctl click` before anything else is built. If it fails, stop and update D2. The fallback is to make the whole node the drop target, dropping before it when moving up and after it when moving down.
-- **[Writing keybinds]** It is untested whether `set("keybinds", …)` takes `[]` entries as `tern.json.array({})`, and whether other windows rebuild their keymaps at once. → Task 1.1 sets, reads back and presses keys in the harness. The live check covers other windows, and the user's `settings.json` is read only afterwards.
+- **[Drop zones must win the click]** Settled by task 1.1: the zones take both halves' clicks, over inner controls too.
+- **[Writing keybinds]** Settled for this window by task 1.1: `[]` entries work, an unparsable chord raises, and the plugin layer comes back after a run-time registration. Still untested: whether a write in one window drops the plugin layer in the user's other Tern windows, which run their own VMs and won't re-register. → The live check (task 6.3) changes a shortcut with two windows open and presses a plugin key in the other one. If its keys are gone, a follow-up has each window re-register when it sees the keybinds change, for example on `focus`.
 - **[Headless settings aren't saved]** The harness can't show persistence. → Persistence is checked live, by reading the user's `settings.json` after a change made with the user.
 - **[Selecting moves the nodes below]** The bar adds 30 px under the selected node, so the nodes below it, and their lines, shift down. → Accepted. Selection already adds link bars to tab nodes, and the bar disappears with the selection.
 - **[Narrow graphs]** At 460 px, four buttons share about 150 px. → Labels give way to icons, with each button's tooltip naming it. Task 3.1 takes a 460 px shot.

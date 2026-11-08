@@ -21,12 +21,30 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
 
 ## 1. Spikes
 
-- [ ] 1.1 Rebuild the harness scripts, then probe the three untested assumptions in a throwaway copy of the plugin in the fixtures folder, not in the repo:
+- [x] 1.1 Rebuild the harness scripts, then probe the three untested assumptions in a throwaway copy of the plugin in the fixtures folder, not in the repo:
   - **Drop zones (D2):** two absolutely positioned children with click actions over one node's halves. `ctl click` on each half delivers its own action, not the node's `sel=`, and `ctl hover` on a half shows its `:hover` bar in a shot.
   - **⌥N (D5):** a command with `keys = { "alt+n" }`, then `ctl key Alt+n` with the graph focused and with a shell focused. Read `op keys_all`, and look in the log for `bind left out`. Try `alt+key_n` the same way.
   - **Keybinds (D7):** `cx.settings:set("keybinds", …)` with one string entry and one `tern.json.array({})` entry. Read back `cx.settings:keybinds()` and `op keys_all`, and press both chords with `ctl key`. Also try an unparsable chord and a chord Tern binds (`cmd+t`), and see what `set` and `keys()` do. Then restore the original map.
 
   If a probe fails, stop and update design D2, D5 or D7 before group 2.
+
+  Result (harness; throwaway plugin `dspike`, kept at `/tmp/tobj/spike-dspike` and removed from the fixtures afterwards):
+  - **Harness:** a cleanup of `/tmp` had removed `/tmp/tobj/bin/{serve,sync,ctl,op,kv}` and `crates/app`. They were written again, with `STENCIL_FIXTURE_ROOT=/tmp/tobj/crates/app`, since Tern looks for the fixtures in `<root>/../plugins/fixtures`. A fresh serve was built to the demo layout: docs ("Guides" 3, "Release notes" 5), web ("App build" 8, "Components" 10) and api ("Server" 13, "Benchmarks" 15). The 0.16.0 demo store was remapped to those tab ids and saved as `/tmp/tobj/kv.demo-0170.json`.
+  - **Drop zones:** on a node with zones, clicks on its upper and lower halves delivered `drop=1:before` (node `…n1.zt`) and `drop=1:after` (`…n1.zb`). A click on the node's inner button also gave `drop=1:before`, since the zone covers it. A node without zones gave `sel=2`. With the pointer resting on the lower half, the bottom bar showed (shot `ds_hover_bot`). D2 stands.
+  - **⌥N:**
+    - `alt+n` bound with no `bind left out` warning (`keys`: `alt+n → plugin.dspike.nkey`).
+    - `key Alt+n` ran it with the spike canvas focused (focused 17) and with the docs shell focused (focused 2), and the shell's text was unchanged.
+    - `alt+key_n` also bound, and `key Alt+n` ran it.
+    - The harness sends a synthetic key, so the dead key stays for the live check. D5 keeps `alt+n`.
+  - **Keybinds:**
+    - `set("keybinds", {["ctrl+alt+l"] = …, ["alt+n"] = []})` read back as written. ⌥N then did nothing, and ⌃⌥L ran the command.
+    - `keys()` listed `ctrl+alt+l` as written: `alt+ctrl+l` found nothing, and `alt+n` showed `[]`. Chords keep their source's spelling, against design D7's assumption, so D7 now canonicalizes both sides.
+    - `alt+` raised `` `alt+`: names no key `` and changed nothing.
+    - `cmd+t` replaced `new_tab` in `keys()`, so the conflict check is needed.
+    - `describe("new_tab").label` is "New tab".
+    - New: after any keybinds write, `set` or `bind`, every plugin's binds were gone from `keys()`, `plugin.objectives.open` and `.rename` included, until a plugin reload. A run-time `tern.command` call registering an existing command again, or a run-time `tern.bind`, brought them all back.
+    - D7 and its risks were updated: the plugin registers its commands again after each write. The other-window question goes to the live check.
+    - The map was restored to `{}`, and the harness has no `settings.json`, because a headless session doesn't save.
 
 ## 2. Custom order and moving
 
@@ -160,7 +178,8 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
   - Option+N (left Option) creates an objective in the graph, from the graph and from a shell. If it doesn't, follow design D5's fallback in a patch;
   - moving with the grip, the insertion line, and the order kept after reopening;
   - the action bar's buttons, Delete with Undo, and "Close n tabs" asked in place;
-  - Configure: change a shortcut, then check `settings.json` (read only) and Tern's Keyboard page, then Reset; and the new-objective defaults.
+  - Configure: change a shortcut, then check `settings.json` (read only) and Tern's Keyboard page, then Reset; and the new-objective defaults;
+  - with a second Tern window open, change a shortcut in one window, then press ⌃⌘O in the other. If the other window's plugin keys are gone, follow design D7's risk.
 
   Record the result here.
 
