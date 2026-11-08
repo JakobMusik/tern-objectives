@@ -82,12 +82,14 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
   Verify `tern plugin list` shows `objectives 0.15.0 … ready`, with `tabnav 0.1.0` and `omp-narration 0.1.0` untouched.
 
   Result: `installed objectives 0.15.0 → ~/Library/Application Support/Tern/plugins/objectives`; `tern plugin list` shows `objectives 0.15.0 … ready`, `omp-narration 0.1.0 … ready` and `tabnav 0.1.0 … ready`. The tag is `v0.15.0` (`fdb1a45`), signed.
-- [ ] 2.3 **(live)** With the user:
+- [x] 2.3 **(live)** With the user:
   - a badge click raises the priority, and P0 wraps to P3;
   - the node stays in place across several badge clicks, and a click elsewhere sorts the column;
   - a new objective starts at P3.
 
   Record the result here.
+
+  Result (user, 0.15.0): "it works", after checking the badge raising and wrapping, the node staying in place until a click elsewhere, and P3 for a new objective.
 
 ## Workflow follow-up
 
