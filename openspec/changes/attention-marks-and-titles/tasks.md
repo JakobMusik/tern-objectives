@@ -111,12 +111,14 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
   Verify `tern plugin list` shows `objectives 0.16.0 … ready`, with `tabnav 0.1.0` and `omp-narration 0.1.0` untouched.
 
   Result: `installed objectives 0.16.0 → ~/Library/Application Support/Tern/plugins/objectives`; `tern plugin list` shows `objectives 0.16.0 … ready`, `omp-narration 0.1.0 … ready` and `tabnav 0.1.0 … ready`. The tag is `v0.16.0` (`80cb667`), signed.
-- [ ] 4.3 **(live)** With the user:
+- [x] 4.3 **(live)** With the user:
   - a long title wraps onto up to three lines, and its lines stay on the node;
   - a click on a title opens Rename, and a click beside it selects;
   - an objective linked to a tab whose omp chat asks a question shows "needs you", and one whose chat replied while you were elsewhere shows "replied" until you click into the pane that replied.
 
   Record the result here.
+
+  Result (user, 0.16.0): "it works", after checking wrapped titles, click-to-rename and selecting beside a title, and the "needs you" and "replied" marks.
 
 ## Workflow follow-up
 
