@@ -32,6 +32,6 @@ rules:
 operations:
   apply:
     guidance:
-      - Keep screenshots and scratch files under /tmp; only the README screenshot enters the repo.
+      - Keep screenshots and scratch files under /tmp; only the README's screenshots enter the repo.
       - When a spike assumption fails (for example the glimpse after a cross-session jump), stop and update the change artifacts before continuing.
       - Commit after each task group, with its tasks.md checkboxes ticked in the same commit; push only in the publish group.
