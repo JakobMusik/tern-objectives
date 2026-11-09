@@ -88,7 +88,7 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
 
 ## 3. The README screenshot
 
-- [ ] 3.1 Take `docs/graph.png` again (design D5), as 0.17.0 took it:
+- [x] 3.1 Take `docs/graph.png` again (design D5), as 0.17.0 took it:
   - the demo layout and `/tmp/tobj/kv.readme-0170.json`, its dates moved so the chips read as in the current image;
   - the same window size and crop;
   - opened from "Guides", with nothing selected and the Done group open.
@@ -100,6 +100,19 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
   - "Graph screenshot first": the README's first image is still `docs/graph.png`;
   - every line end sits within 2 px of its node and tab-header centres, checked as custom-order-and-direct-controls task 3.1 did: shot pixels at the gap column's edges against the layout rects (`edgecheck.py` is gone);
   - the user approved the draft.
+
+  Result:
+  - **Harness data:**
+    - a fresh serve started in `/tmp/tobj/w/demo/guides`, rebuilt as in 0.17.0: docs (Guides 3; Release notes 5, with omp in pane 4, idle, its reply unseen), web (App build 8, split into app and tests; Components 12, with a shell and `todo.md`) and api (Server 17, with a shell and omp in pane 18 waiting for input; Benchmarks 21);
+    - `kv.readme-0170.json` went in with its tab ids remapped to these and the open row on pane 4 (`/tmp/tobj/kv.readme-0220.json`);
+    - its dates already read as in the current image today, so none moved: "overdue 2d", "overdue 4d", "due tomorrow", "overdue 1d", "due today", "review due", "review in 4d".
+  - **Window and crop:** `ctl resize 1045 928`, the glimpse cropped at 914 × 808, so `graph.png` is 1828 × 1616 as before. The first shot had Tern's notice for the Server chat's question over the header; the shot taken once it went is the one kept.
+  - **Content:** opened from pane 2 in Guides with nothing selected and the Done group open. "Read about rate limiting" (`ob-lit`) is tinted, with its thick grey line to Guides, and the other lines are faded. Every open node has a grip, and no node has ⋯. The omp chats' titles and replies were generated anew, so they read slightly differently from the old image.
+  - **Line ends:** at the gap column's edges, all 7 left ends sit within 0.3 px of their objective nodes' centres, and all 6 right ends within 0.3 px of their tab headers' centres.
+  - **Alt text** now starts "The objectives graph, opened from the Guides tab", and names "Read about rate limiting", tinted, with a thick line to Guides while the other lines fade.
+  - **Graph screenshot first:** the README's first image is still `docs/graph.png` (line 5).
+  - **Approval:** the user approved the draft before it was committed.
+  - **Cleanup:** the harness serve was stopped, and this group's chat folders `--private-tmp-tobj-w-demo-notes--` and `--private-tmp-tobj-w-demo-serverchat--` were removed.
 
 ## 4. Release 0.22.0
 
