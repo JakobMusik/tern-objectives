@@ -97,9 +97,11 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
 - [x] 2.1 Version `0.23.0` in `plugin.toml`. Verify that an isolated `tern plugin install` of the repo folder prints `installed objectives 0.23.0`. Tick this box, then commit, push `main` and tag `v0.23.0` (annotated, message "objectives 0.23.0").
 
   Result: the install into `/tmp/tobj-inst230/config` printed `installed objectives 0.23.0 → /tmp/tobj-inst230/config/plugins/objectives`.
-- [ ] 2.2 **(live)** After the push has finished, run `tern plugin install github.com/JakobMusik/tern-objectives --force` from a shell with no harness variables.
+- [x] 2.2 **(live)** After the push has finished, run `tern plugin install github.com/JakobMusik/tern-objectives --force` from a shell with no harness variables.
 
   Verify `tern plugin list` shows `objectives 0.23.0 … ready`, with the other plugins untouched.
+
+  Result: `installed objectives 0.23.0 → ~/Library/Application Support/Tern/plugins/objectives`. `tern plugin list` shows `objectives 0.23.0 … window ready`, beside `omp-narration 0.1.0`, `open-below 0.2.0`, `reply-selection 0.1.0` and `tabnav 0.1.0`, all ready and not touched by this install. The tag `v0.23.0` (`eaec131`) is signed and on GitHub.
 - [ ] 2.3 **(live)** With the user:
   - pointing at a tab node shows the trash icon, and only on that node;
   - clicking it asks "Close tab?" in the header, and Cancel leaves the tab open;
