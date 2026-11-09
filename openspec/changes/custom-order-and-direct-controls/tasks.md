@@ -319,7 +319,9 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
 
 ## 6. Release 0.17.0
 
-- [ ] 6.1 Version `0.17.0` in `plugin.toml`. Verify that an isolated `tern plugin install` of the repo folder prints `installed objectives 0.17.0`. Tick this box, then commit, push `main` and tag `v0.17.0` (annotated, message "objectives 0.17.0").
+- [x] 6.1 Version `0.17.0` in `plugin.toml`. Verify that an isolated `tern plugin install` of the repo folder prints `installed objectives 0.17.0`. Tick this box, then commit, push `main` and tag `v0.17.0` (annotated, message "objectives 0.17.0").
+
+  Result: the install into `/tmp/tobj-inst170/config` printed `installed objectives 0.17.0 → /tmp/tobj-inst170/config/plugins/objectives`, and `tern plugin list` there shows `objectives 0.17.0 … 0 blocks, 0 lenses, window ready`.
 - [ ] 6.2 **(live)** After the push has finished, run `tern plugin install github.com/JakobMusik/tern-objectives --force` from a shell with no harness variables.
 
   Verify that `tern plugin list` shows `objectives 0.17.0 … ready`, with `tabnav 0.1.0` and `omp-narration 0.1.0` untouched.
