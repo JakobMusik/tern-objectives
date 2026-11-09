@@ -64,12 +64,14 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
   Verify `tern plugin list` shows `objectives 0.19.0 … ready`, with `tabnav 0.1.0` and `omp-narration 0.1.0` untouched.
 
   Result: `installed objectives 0.19.0 → ~/Library/Application Support/Tern/plugins/objectives`. `tern plugin list` shows `objectives 0.19.0 … window ready`, beside `omp-narration 0.1.0`, `open-below 0.2.0` and `tabnav 0.1.0`, all ready and not touched by this install. The tag `v0.19.0` (`5434a0f`) is signed and on GitHub.
-- [ ] 2.3 **(live)** With the user:
+- [x] 2.3 **(live)** With the user:
   - a done objective's box asks "Reopen “<title>”?" above Keep review, Reset review and Cancel, and Cancel leaves it done;
   - Keep review puts it last in the open list, and marking it done again shows its old "review in Nd" chip, or "review in 1d" if that date had passed;
   - Reset review, then marking done again, shows "review in 1d".
 
   Record the result here.
+
+  Result (user, 0.19.0): "it works", in reply to the three checks listed above. The user reported nothing more specific, so no single check is recorded on its own.
 
 ## Workflow follow-up
 
