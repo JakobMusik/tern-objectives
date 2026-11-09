@@ -48,7 +48,7 @@ Close the graph with ⌃⌘O, its ×, a click outside it, or Esc after clicking 
 
 Open objectives stay in the order you give them; priorities and due dates don't reorder them. New objectives go on top, unless Configure puts them at the bottom. To move one, click its grip (the six dots at its left), then click the upper or lower half of the objective it should go above or below. Cancel in the header, or a click anywhere else, puts it back.
 
-Click an objective to select it: its lines stand out, every tab offers **＋ Link** or **× Unlink**, and a row of buttons appears under it. Click its title to rename it.
+Click an objective to select it: its lines stand out, every tab offers **＋ Link** or **× Unlink**, and a row of buttons appears under it. Click its title to rename it. Each time you open the graph, nothing is selected.
 
 ⌥⇧R and ⌥N work in every pane, with either Option key, so Option+Shift+R no longer types "‰" and Option+N no longer starts "˜" anywhere in Tern. Change or remove them in Configure.
 

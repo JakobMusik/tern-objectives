@@ -26,6 +26,8 @@ function M.on_keybinds(fn: () -> ())
 	reregister = fn
 end
 
+-- The selected objective's id. A fresh open clears it; the reopen after one of the graph's pickers
+-- keeps it (highlight-origin-tab-links, design D1).
 local selected: string? = nil
 
 -- The open objective lifted by its grip (custom-order-and-direct-controls, design D2); never stored.
@@ -170,10 +172,12 @@ function M.render(cx: WindowCx)
 end
 
 -- Shows the graph over the current tab (design G1). A fresh open takes the focused pane as the
--- origin; `keep_origin` (the reopen after one of the graph's pickers) keeps the one it had.
+-- origin and clears the selection; `keep_origin` (the reopen after one of the graph's pickers) keeps
+-- both.
 function M.open(cx: WindowCx, keep_origin: boolean?)
 	if not keep_origin then
 		drop_undo()
+		selected = nil
 		moving = nil
 		confirm = nil
 		page = "graph"

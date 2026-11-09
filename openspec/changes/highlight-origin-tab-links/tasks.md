@@ -15,12 +15,25 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
 
 ## 1. Selection on a fresh open
 
-- [ ] 1.1 `M.open` clears `selected` on a fresh open (design D1), with the comment above `selected` saying so. The README's "Click an objective to select it" paragraph says each open starts with nothing selected.
+- [x] 1.1 `M.open` clears `selected` on a fresh open (design D1), with the comment above `selected` saying so. The README's "Click an objective to select it" paragraph says each open starts with nothing selected.
 
   Verify with `ctl key`, `ctl click` and `ctl tree`, opening from the tab no objective links:
   - objectives-graph "Selection on a fresh open": "Closed and opened again" (no `ob-sel`, no `.ob-acts`, the ⌥⇧R toast), "Kept after a picker" (the Note field with a click into it), "Review mode kept" and "New objective by key";
   - "Origin highlight" "Kept after a picker" still holds;
   - the README paragraph, read back.
+
+  Result (harness, today 2026-11-09). One session, tabs 3 "Scratch" (pane 2, linked to nothing, focused), 5 "Server" (panes 4 and 10), 7 "Benchmarks" (pane 6) and 9 "Guides" (pane 8). The store held:
+  - open o1 "Fix login bug" → Server and Benchmarks, o2 "Speed up search" → Server, o3 "Write slides" → Guides;
+  - done o4 "Set up CI" → Server (review in 11d), o5 "Profile slow queries" → Benchmarks and o6 "Restyle the docs site", both due.
+
+  The graph was opened from Scratch each time.
+  - **Closed and opened again:** o1 selected had `ob-sel ob-acts-on` and one `.ob-acts`. After ⌃⌘O twice, no node had `ob-sel`, no `.ob-acts` showed, and ⌥⇧R gave the info toast "Select an objective in the graph to rename it" with no field.
+  - **Kept after a picker:** with o1 selected, Note opened the field. A click into it closed the glimpse. "check the logs" and Enter showed the graph again with o1 `ob-sel ob-acts-on` and its bar, and the kv dump held the note.
+  - **Review mode kept:** "Review (2)" listed o5 and o6. With o5 selected, ⌃⌘O twice showed both still listed, neither selected, and "Review (2)" still `ob-on`.
+  - **New objective by key:** with o1 selected, ⌃⌘O closed the graph and focus went back to pane 2. ⌥N opened the graph with the title field. "Write slides" and Enter selected the new o7, and o1 was not selected.
+  - **Origin highlight "Kept after a picker":** "＋ New objective", a click into the field, "Plan the demo" and Enter showed the graph again with Scratch's node `ob-origin` and pane 2's row `ob-row-origin`, the same as before. After the Note field too.
+  - **README:** the paragraph now ends "Each time you open the graph, nothing is selected."
+  - **Log:** 13 renders, the longest 5.3 ms, and no objectives warnings or errors.
 
 ## 2. The origin tab's links
 
