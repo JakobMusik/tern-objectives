@@ -11,9 +11,15 @@ Clicking a live tab node's header SHALL:
 - show the tab;
 - focus the pane that was last focused in it.
 
+Its trash icon, and the header while it asks "Close tab?", SHALL NOT jump.
+
 #### Scenario: Tab in another session
 - **WHEN** session "misc" is shown and the user clicks the header of tab 2 of session "web"
 - **THEN** session "web" is shown, tab 2 is the visible tab, and its last focused pane has focus
+
+#### Scenario: Trash icon doesn't jump
+- **WHEN** session "misc" is shown and the user clicks the trash icon on tab 2 of session "web"
+- **THEN** session "misc" is still shown, focus is unchanged, and tab 2's header asks "Close tab?"
 
 ### Requirement: Jump to a pane
 Each pane row in a live tab SHALL end in a jump button, an arrow icon at the row's right end. Clicking it SHALL switch to that pane's session and tab and focus that exact pane. Clicking the rest of the row SHALL NOT jump.
