@@ -21,6 +21,8 @@ Marking an objective done schedules its first review for the next day, on the SM
 2. Click **Review (n)** in the header. The left column lists the n objectives that are due; select one to see the tabs it was linked to.
 3. Rate each one **Hard**, **Good** or **Easy**. Every button shows the days until it comes back: Hard soon, Easy furthest out. A rated objective leaves the list, and review mode ends when the list is empty.
 
+Review mode stays on when you close the graph: the next time you open it in the same window, it lists what is due then. Click the active **Review (n)** to leave it. ⌥N leaves it too, so the new objective shows in the list. Restarting Tern forgets it.
+
 ![Review mode: two done objectives due for review, each with Hard, Good and Easy buttons showing the days until its next review (Hard · 1d, Good · 3d, Easy · 4d for one, Hard · 2d, Good · 9d, Easy · 14d for the other); the selected one shows its Note and Tags buttons and has a green line to the tab it was linked to, listed under "Linked to" at the top of the right column, where every tab offers "× Unlink" or "＋ Link"](docs/review.png)
 
 ## Install

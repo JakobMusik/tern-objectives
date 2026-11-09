@@ -11,7 +11,7 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
 
 ## 1. Remember review mode
 
-- [ ] 1.1 Keep the window's flag across opens (design D1, D2): `M.open` no longer clears `reviewing`. Update the comments on `reviewing` in `lib/app.luau`.
+- [x] 1.1 Keep the window's flag across opens (design D1, D2): `M.open` no longer clears `reviewing`. Update the comments on `reviewing` in `lib/app.luau`.
 
   Verify each objective-review "Leaving review mode" scenario, toggling the graph with `plugins run plugin.objectives.open` and reading `ctl tree`:
   - "Reopened in review mode": "Review (2)" has `ob-on` and only the two due objectives are listed;
@@ -21,7 +21,19 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
   - "Last one rated", "Button clicked again" and "Picker from review mode", unchanged.
 
   Also check that a fresh open in review mode still clears the Undo notice, and that the settings page's "Next open shows the graph" still holds: ⌃⌘O twice from the settings page shows the columns.
-- [ ] 1.2 ⌥N ends review mode (design D3) in `M.new_key`.
+
+  Result (harness): the store had open o1 "Fix login bug", o2 "Review pull requests" and o3 "Write slides", plus done o4 (due 11-13), o5 (due 11-08) and o6 (due 11-09). Today was 2026-11-09, so two were due. The graph was toggled with `ctl key Ctrl+Cmd+o` (and `plugins run plugin.objectives.open` once).
+  - **Reopened in review mode:** after "Review (2)", the column listed o5, o6. The first press closed the graph (no `.ob-root`), and the second showed it with "Review (2)" `ob-on` and o5, o6 only.
+  - **Left before closing:** a click on the active "Review (2)" gave o1, o2, o3 and the Done group. After two presses, "Review (2)" had no `ob-on` and the column read the same.
+  - **Nothing due at the next open:** with only o6 due, the graph was closed in review mode listing o6. o6's record was then deleted from the harness `kv.json` by hand. The next open showed no Review button and o1, o2, o3, o5, o4. Then it was closed, o6 was put back, and the open after that showed "Review (1)" without `ob-on`, plus the Done group.
+  - **Forgotten on reload:** the graph was closed in review mode listing o5 and o6, and then `ctl plugins fixtures` ran. The next open showed "Review (2)" without `ob-on` and the Done group.
+  - **Last one rated:** with only o6 due, Easy on o6 left o1, o2, o3 and the Done group, with no Review button. The kv dump held o6's next review on 11-13. A reopen showed the same.
+  - **Button clicked again:** checked under "Left before closing".
+  - **Picker from review mode:** with o5 selected in review mode, Tags opened the picker (`picker.mode` "pick"), and Esc closed it. The graph showed "Review (2)" `ob-on` with o5 (selected) and o6.
+  - **Undo notice:** in review mode, the trash on o5 showed "Removed “Restyle the docs site” · Undo". After a close and an open, there was no `.ob-undo`, and the graph was in review mode with "Review (1)".
+  - **Settings page:** from review mode, ⚙ showed the settings page (two `.ob-sh` headings). The first press closed it, and the second showed the columns in review mode ("Review (2)" `ob-on`, o5 and o6), with no `.ob-sh`.
+  - **Seen on the way, not caused by this change:** after a field opened from the graph is dismissed with Esc, the first ⌃⌘O replaces the graph with a new one instead of closing it, and only the second press closes it. The same happens with the 0.17.0 `lib/app.luau` loaded (glimpse pane 52 became 60). The cause is out of scope here and wasn't looked into.
+- [x] 1.2 ⌥N ends review mode (design D3) in `M.new_key`.
 
   Verify each objectives-graph "New objective key" scenario, using `ctl key Alt+n`, typing the title, and reading `ctl tree` and the kv dump:
   - "From review mode";
@@ -29,9 +41,18 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
   - "In the graph" and "From a shell", unchanged.
 
   Also check that a dismissed title field (Esc) leaves review mode ended.
-- [ ] 1.3 README: in "Reviewing done objectives", one sentence saying review mode stays on when you close the graph and comes back at the next open in that window, until it ends or Tern restarts. Verify by reading the section.
+
+  Result (harness, same store):
+  - **From review mode:** with "Review (2)" `ob-on` listing o5 and o6, `key Alt+n` opened the title field (`picker.mode` "prompt"). Behind it, the graph already showed o1, o2, o3 and the Done group. After typing "Write slides" and Return, the column read o7 (selected), o1, o2, o3, then the Done group, and "Review (2)" had no `ob-on`. The kv dump held o7 "Write slides" at P3, first among the open records.
+  - **From a shell after review mode:** the graph was closed in review mode, so focus was in shell pane 2. `key Alt+n`, "Write slides" and Return showed the graph with o7 (selected) first, then o1, o2, o3 and the Done group, with "Review (2)" not `ob-on`. Shots of the window before and after (`rrm_shell_before`, `rrm_shell_after`, graph closed) differ only in a 4 × 32 px strip, the caret. The prompt line reads `❯` with nothing typed.
+  - **From a shell / In the graph:** with no review mode, ⌥N from the shell made o7 "Write slides", selected at the top. ⌥N in the graph then made o8 "Draft agenda", selected at the top above o7.
+  - **Dismissed field:** in review mode, ⌥N then Esc left the column with the open objectives and the Done group, and "Review (2)" without `ob-on`.
+  - **Settings page:** ⌥N on the settings page switched to the columns (no `.ob-sh`).
+- [x] 1.3 README: in "Reviewing done objectives", one sentence saying review mode stays on when you close the graph and comes back at the next open in that window, until it ends or Tern restarts. Verify by reading the section.
 
   Also check the render times in `/tmp/tobj/logs/tern-serve.log`, with no errors.
+
+  Result: the paragraph after step 3 reads: "Review mode stays on when you close the graph: the next time you open it in the same window, it lists what is due then. Click the active **Review (n)** to leave it. ⌥N leaves it too, so the new objective shows in the list. Restarting Tern forgets it." This run's log has 112 renders, the longest 5.5 ms, and no objectives errors or warnings.
 
 ## 2. Release 0.18.0
 

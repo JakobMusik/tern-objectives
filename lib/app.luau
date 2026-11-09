@@ -71,8 +71,9 @@ local function offer_undo(text: string, saved: Store.Saved, close: NoticeClose?)
 	undo = entry
 end
 
--- Review mode (review-done-objectives, design D4): never stored; a fresh open of the graph starts
--- without it, and it ends once nothing is due.
+-- Review mode (review-done-objectives, design D4): never stored, so each window has its own and a
+-- plugin reload forgets it. A fresh open keeps it (remember-review-mode, design D1); it ends once
+-- nothing is due, on the active Review button, and on ⌥N.
 local reviewing = false
 
 local function toast_gone(cx: WindowCx)
@@ -172,7 +173,6 @@ end
 function M.open(cx: WindowCx, keep_origin: boolean?)
 	if not keep_origin then
 		drop_undo()
-		reviewing = false
 		moving = nil
 		confirm = nil
 		page = "graph"
@@ -259,10 +259,13 @@ end
 
 -- ⌥N (custom-order-and-direct-controls, design D5): a new objective in the graph, as "＋ New objective"
 -- makes it, so it lands selected; when the graph isn't shown over this tab, a fresh open comes first.
+-- Review mode ends first, since it hides open objectives (remember-review-mode, design D3).
 function M.new_key(cx: WindowCx)
+	local was_reviewing = reviewing
+	reviewing = false
 	if Surface.here(cx) == nil then
 		M.open(cx)
-	elseif page ~= "graph" then
+	elseif page ~= "graph" or was_reviewing then
 		page = "graph"
 		M.render(cx)
 	end
