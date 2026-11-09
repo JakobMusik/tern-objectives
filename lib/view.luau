@@ -209,8 +209,9 @@ end
 
 -- `title`: the title's lines (Text.wrap). `mark`: its attention mark, if any (D3). `review`: review
 -- mode's node, with Hard, Good and Easy under it (review-done-objectives, design D4). `acts`: the
--- selected node's action bar (custom-order-and-direct-controls, design D3).
-local function objective_node(o: Store.Objective, ui_state: Ui, first: string, title: { string }, mark: Mark?, review: boolean?, acts: Acts?): Node
+-- selected node's action bar (custom-order-and-direct-controls, design D3). `lit`: it links the
+-- focus tab (highlight-origin-tab-links, design D4).
+local function objective_node(o: Store.Objective, ui_state: Ui, first: string, title: { string }, mark: Mark?, review: boolean?, acts: Acts?, lit: boolean?): Node
 	local selected = ui_state.selected == o.id
 	local cls = "ob-obj ob-o-" .. o.id .. first
 	if #title > 1 then
@@ -230,6 +231,9 @@ local function objective_node(o: Store.Objective, ui_state: Ui, first: string, t
 	end
 	if review then
 		cls ..= " ob-review"
+	end
+	if lit then
+		cls ..= " ob-lit"
 	end
 	-- Only "needs you" and "replied" ring the node; "working" is its chip alone (working-mark D3).
 	if mark ~= nil and mark.kind ~= "working" then
@@ -541,6 +545,25 @@ function M.build(state: Store.State, win: Model.Window, ui_state: Ui): Built
 	end)
 	local reviewing = ui_state.reviewing and #due_list > 0
 
+	-- The tab holding the origin pane, first in the right column (design R1).
+	local origin_tab: Model.Tab? = nil
+	if ui_state.origin ~= nil then
+		for _, t in win.tabs do
+			for _, r in t.rows do
+				if r.pane == ui_state.origin then
+					origin_tab = t
+				end
+			end
+		end
+	end
+	-- The focus tab (highlight-origin-tab-links, design D2): with nothing selected, outside review mode,
+	-- the origin's tab when the right column shows it. Its lines are drawn strong and the open
+	-- objectives linking it tinted.
+	local focus_tab: number? = nil
+	if selected == nil and not reviewing and origin_tab ~= nil and (view_state.scope == "all" or origin_tab.session == win.current) then
+		focus_tab = origin_tab.id
+	end
+
 	-- Left column.
 	local left = Layout.stack()
 	local left_kids: { Node } = {}
@@ -605,7 +628,8 @@ function M.build(state: Store.State, win: Model.Window, ui_state: Ui): Built
 			acts = { close = #tabs, kept = kept, ask = ask }
 		end
 		obj_cy[o.id] = Layout.add_obj(left, review, #title, acts ~= nil, acts ~= nil and acts.ask ~= nil)
-		table.insert(left_kids, objective_node(o, ui_state, first, title, mark_of(o), review, acts))
+		local lit = focus_tab ~= nil and not o.done and table.find(o.tabs, focus_tab) ~= nil
+		table.insert(left_kids, objective_node(o, ui_state, first, title, mark_of(o), review, acts, lit))
 		if o.id == selected then
 			sel_obj = o
 		end
@@ -710,16 +734,6 @@ function M.build(state: Store.State, win: Model.Window, ui_state: Ui): Built
 		end
 	end
 	-- The origin's session comes first, and its tab first inside it (design R1).
-	local origin_tab: Model.Tab? = nil
-	if ui_state.origin ~= nil then
-		for _, t in win.tabs do
-			for _, r in t.rows do
-				if r.pane == ui_state.origin then
-					origin_tab = t
-				end
-			end
-		end
-	end
 	local placed: { { s: Model.Session, tabs: { Model.Tab } } } = {}
 	for _, s in win.sessions do
 		if view_state.scope == "all" or s.id == win.current then
@@ -878,7 +892,8 @@ function M.build(state: Store.State, win: Model.Window, ui_state: Ui): Built
 	end
 
 	-- Edges: open objectives' lines outside review mode, and the selected objective's when it is done,
-	-- in review mode too (linked-section D4).
+	-- in review mode too (linked-section D4). Strong: the selected objective's, or those ending at the
+	-- focus tab (highlight-origin-tab-links, design D3).
 	local edges: { Edges.Edge } = {}
 	local function add_edges(o: Store.Objective)
 		local from = obj_cy[o.id]
@@ -891,7 +906,7 @@ function M.build(state: Store.State, win: Model.Window, ui_state: Ui): Built
 					priority = o.priority,
 					done = o.done,
 					dashed = status_of[tab] ~= "live",
-					selected = o.id == selected,
+					strong = o.id == selected or (focus_tab ~= nil and tab == focus_tab),
 				})
 			end
 		end

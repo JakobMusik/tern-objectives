@@ -37,7 +37,7 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
 
 ## 2. The origin tab's links
 
-- [ ] 2.1 The focus tab, strong lines and tinted nodes (design D2–D4):
+- [x] 2.1 The focus tab, strong lines and tinted nodes (design D2–D4):
   - the origin lookup moved up, the focus tab and `ob-lit` in `lib/view.luau`;
   - `strong` in `lib/edges.luau`;
   - `.ob-obj.ob-lit` before the attention rules in `styles.css`.
@@ -55,6 +55,36 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
   - "Light and dark themes": shots under `ctl appearance light` and `ctl appearance dark` of a tinted node beside a selected one (select it, clear, then compare) and beside a plain card: the tint reads as different from the selection ring and from a plain card in both;
   - render times in `/tmp/tobj/logs/tern-serve.log`, with no objectives warnings or errors;
   - the README paragraph, read back.
+
+  Result (harness, today 2026-11-09). Layout and store as in 1.1, saved in `/tmp/tobj/kv.hl.json`. "Server" holds pane 4 and, for the marked check, pane 10.
+  - **Opened from a linked tab:** opened from pane 4 in Server:
+    - o1 and o2 had `ob-lit`, and o3–o6 didn't;
+    - the layers were `ob-e-all ob-e-dim`, then `ob-e-sel`;
+    - no node had `ob-sel`, no `.ob-acts` and no `.ob-linkbar` showed;
+    - shot `hl_open`: the tinted o1 and o2 have thick red and blue lines to Server, and the lines o1 → Benchmarks and o3 → Guides are faded. Zoomed in, the thick blue o2 → Server line runs over the faded pink o1 → Benchmarks line where they cross (`/tmp/tobj/shots/hl_cross.png`).
+  - **Done objectives:** done o4 → Server had no `ob-lit` in any open from Server, and no green line shows in `hl_open`.
+  - **Selecting takes over:** a click on o3 left only its line to Guides thick and every other line faded (`hl_sel`). o1 and o2 lost `ob-lit`, and Guides moved under `Linked to “Write slides”`.
+  - **Clearing brings it back:** a click in empty graph space brought back `ob-lit` on o1 and o2 and the same layers. Shot `hl_clear` is pixel for pixel `hl_open`.
+  - **Origin tab unlinked:** opened from Scratch, no node had `ob-lit` and the only layer was `ob-e-all`, with no `ob-e-dim`.
+  - **Selection "Select and clear":** from Scratch, o1 selected gave its bar, `ob-e-dim` plus `ob-e-sel`, and 4 link bars. Empty space then left no bar, no link bar and only `ob-e-all`.
+  - **Origin pane moves:** opened from pane 4, then `move_to_tab` 4 → Guides. Within 1.2 s:
+    - the ring and pane 4's row mark moved to Guides;
+    - o3 had `ob-lit` and o1 and o2 didn't;
+    - shot `hl_moved` shows o3's grey line thick and the lines to Server faded.
+
+    Pane 4 went back to Server afterwards.
+  - **Review mode:** opened from Server, "Review (2)" listed o5 and o6 with no `ob-lit` and no line layer. Selecting o5 drew only its strong layer. Leaving review mode kept o5 selected, so no node was tinted.
+  - **Link lines, done objective:** from Scratch, done o5 selected (→ Benchmarks, live) drew `ob-e-dim` plus `ob-e-sel`, and empty space left only `ob-e-all`. There was no closed tab in this run; the dashed path is unchanged code.
+  - **Highlighted and marked:**
+    - `omp` in pane 10 was asked through the `ask` op to put a yes/no question, and went `waiting_input` within 3 s;
+    - opened from Server, o1 and o2 had `ob-lit ob-att-wait` and "needs you";
+    - shot `hl_marked` shows both with the amber ring on the tint, and done o4 with "needs you" and no tint.
+
+    Pane 10 was closed afterwards, and this run's chat folder `~/.omp/agent/sessions/--private-tmp-tobj-w-extra--` removed.
+  - **Node size unchanged:** in `hl_marked`'s layout data, o1–o6 are all 48 px tall, tinted or not.
+  - **Light and dark:** in light, the tinted nodes read grey-teal with an accent border. In dark, they read dark blue with a blue border. In both, a selected o3 is a plain card with the outer ring and its bar, and o3 unselected is a plain card. All three look different (`/tmp/tobj/shots/hl_themes.png`, from `hl_light_*` and `hl_dark_*`).
+  - **README:** the paragraph now ends "While nothing is selected, the lines of the tab you opened the graph from stand out instead, and the objectives they lead to are tinted."
+  - **Log:** since the serve started, 48 renders, the longest 7.0 ms, and no objectives warnings or errors.
 
 ## 3. The README screenshot
 

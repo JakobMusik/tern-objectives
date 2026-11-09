@@ -13,7 +13,7 @@ export type Edge = {
 	priority: number, -- 0..3
 	done: boolean, -- a done objective's line, drawn in Layout.done_color (linked-section D4)
 	dashed: boolean, -- closed or elsewhere tab
-	selected: boolean, -- belongs to the selected objective
+	strong: boolean, -- the selected objective's, or one ending at the focus tab (highlight-origin-tab-links D3)
 }
 
 local SCOPE = Layout.SCOPE
@@ -70,14 +70,15 @@ local function layer_rule(class: string, paths: { string }, w: number, h: number
 end
 
 -- Builds the edge sheet and the classes of the layers to draw. `height` is the graph height in px.
--- Edges of the selected objective go on their own thicker layer; the rest dim while one is selected.
+-- Strong edges go on their own thicker layer, drawn last so it lies over the rest, which dim while
+-- any edge is strong.
 function M.build(edges: { Edge }, height: number): (string, { string })
 	local w = Layout.px.gap_w
 	local h = math.max(1, math.ceil(height))
-	local normal, selected = {}, {}
+	local normal, strong = {}, {}
 	for _, e in edges do
-		if e.selected then
-			table.insert(selected, path(e, w, 3))
+		if e.strong then
+			table.insert(strong, path(e, w, 3))
 		else
 			table.insert(normal, path(e, w, 1.5))
 		end
@@ -88,10 +89,10 @@ function M.build(edges: { Edge }, height: number): (string, { string })
 	local layers: { string } = {}
 	if #normal > 0 then
 		table.insert(rules, layer_rule("ob-e-all", normal, w, h))
-		table.insert(layers, if #selected > 0 then "ob-e ob-e-all ob-e-dim" else "ob-e ob-e-all")
+		table.insert(layers, if #strong > 0 then "ob-e ob-e-all ob-e-dim" else "ob-e ob-e-all")
 	end
-	if #selected > 0 then
-		table.insert(rules, layer_rule("ob-e-sel", selected, w, h))
+	if #strong > 0 then
+		table.insert(rules, layer_rule("ob-e-sel", strong, w, h))
 		table.insert(layers, "ob-e ob-e-sel")
 	end
 	return table.concat(rules, "\n"), layers

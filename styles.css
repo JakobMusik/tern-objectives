@@ -187,6 +187,13 @@
 	border-color: var(--accent);
 	box-shadow: 0 0 0 1px var(--accent);
 }
+/* Linked to the tab the graph was opened from, while nothing is selected (highlight-origin-tab-links
+   D4): the origin row's accent and tint, with no ring, so it doesn't read as selected. Before the
+   attention rules, whose border colour wins. */
+[data-surface='plugin.tern.canvas'] .ob-root .ob-obj.ob-lit {
+	border-color: var(--accent);
+	background: rgb(from var(--accent) r g b / 10%);
+}
 /* Attention rings (attention-marks-and-titles D3): amber when a linked omp chat waits for you, green
    when one replied unseen. Inset, so a selected node keeps the accent ring outside it. */
 [data-surface='plugin.tern.canvas'] .ob-root .ob-obj.ob-att-wait {
