@@ -59,9 +59,11 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
 - [x] 2.1 Version `0.18.0` in `plugin.toml`. Verify that an isolated `tern plugin install` of the repo folder prints `installed objectives 0.18.0`. Tick this box, then commit, push `main` and tag `v0.18.0` (annotated, message "objectives 0.18.0").
 
   Result: the install into `/tmp/tobj-inst180/config` printed `installed objectives 0.18.0 → /tmp/tobj-inst180/config/plugins/objectives`.
-- [ ] 2.2 **(live)** After the push has finished, run `tern plugin install github.com/JakobMusik/tern-objectives --force` from a shell with no harness variables.
+- [x] 2.2 **(live)** After the push has finished, run `tern plugin install github.com/JakobMusik/tern-objectives --force` from a shell with no harness variables.
 
   Verify `tern plugin list` shows `objectives 0.18.0 … ready`, with `tabnav 0.1.0` and `omp-narration 0.1.0` untouched.
+
+  Result: `installed objectives 0.18.0 → ~/Library/Application Support/Tern/plugins/objectives`. `tern plugin list` shows `objectives 0.18.0 … window ready`, beside `omp-narration 0.1.0 … ready` and `tabnav 0.1.0 … ready`. The tag `v0.18.0` (`3a177c2`) is signed and on GitHub.
 - [ ] 2.3 **(live)** With the user:
   - close the graph in review mode and open it again: it shows review mode;
   - ⌥N from review mode shows the new objective in the list;
