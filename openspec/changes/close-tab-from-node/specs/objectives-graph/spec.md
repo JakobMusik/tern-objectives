@@ -41,7 +41,7 @@ While the pointer is over a live tab node, it SHALL show a trash icon at the rig
 
 #### Scenario: Last tab of its session
 - **WHEN** the graph was opened over tab D, the only tab of session "docs", and the user closes D from its node
-- **THEN** D is gone, session "docs" is still listed, and no error toast shows
+- **THEN** D is gone, session "docs" is still listed with no tab, no tab holds the graph, and no error toast shows
 
 #### Scenario: Narrow graph
 - **WHEN** the window is 460 px wide and a tab node asks "Close tab?"

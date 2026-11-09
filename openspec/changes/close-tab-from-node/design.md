@@ -67,7 +67,12 @@ The rule in `M.action` stays: any click ends a question, and only `cfm` acts on 
 ### D6. The session's last tab
 The tab the graph sits over is often the one closed, and it can be its session's only tab. Closing it leaves the session empty (Source record), with no tab to show the graph over. `close_tabs` then shows the graph again only when the current session still has a tab (`cx.session:sessions()`, the current entry's `tabs`). Otherwise it just toasts.
 
-This is untested: task 1.1 probes what `finish` does today in that case, and whether the session's tab list is current right after the closes. If the reopen already ends quietly, D6 is dropped and this design says so.
+Task 1.1 probed it with 0.22.0's code. The graph sat over "Guides", the only tab of "docs", which "Close 1 done tab" then closed:
+- right after the closes, `cx.session:sessions()` listed "docs" with no tab, and the graph was closed;
+- `finish` then opened the graph again in a new tab of its own, tab 16 "Objectives", holding only the graph, with no error toast;
+- ⌃⌘O there didn't close it: it opened the graph again in another new tab, tab 18.
+
+So D6 stays, and it covers "Close n tabs" and "Close n done tabs" too, which share `close_tabs`.
 
 ### D7. Release
 0.23.0, a minor release: a new action.

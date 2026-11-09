@@ -37,8 +37,9 @@ export type Ui = {
 	-- (custom-order-and-direct-controls, design D2).
 	moving: string?,
 	-- The question an action asks in place, if one is showing (custom-order-and-direct-controls, D4):
-	-- "close" for an objective's tabs, asked in its bar or in the done notice, "done_tabs" (D11), or
-	-- "reopen" for a done objective, asked in its bar (reopen-done-objectives, D1).
+	-- "close" for an objective's tabs, asked in its bar or in the done notice, "done_tabs" (D11),
+	-- "reopen" for a done objective, asked in its bar (reopen-done-objectives, D1), or "tab" for one
+	-- tab's trash icon, asked in its header, with the tab id (close-tab-from-node, D3).
 	confirm: { kind: string, id: string?, where: string? }?,
 }
 
@@ -340,8 +341,10 @@ type Shown = { tab: Model.Tab, status: string }
 -- The link bar a tab node shows while an objective, open or done, is selected (design P6, D10).
 type Link = { unlink: boolean, title: string }
 
--- `resume`: a closed tab with a saved omp chat shows "Resume" (resume-omp-chats, design D4).
-local function tab_node(t: Model.Tab, status: string, first: string, linked_open: boolean, link: Link?, menu: { any }, ui_state: Ui, expanded: { [string]: boolean }, resume: boolean): (Node, number)
+-- `resume`: a closed tab with a saved omp chat shows "Resume" (resume-omp-chats, design D4). `linked`:
+-- any objective links it. `asking`: its trash icon's question is open (close-tab-from-node, D3).
+local function tab_node(t: Model.Tab, status: string, first: string, linked_open: boolean, link: Link?, menu: { any }, ui_state: Ui, expanded: { [string]: boolean }, resume: boolean, linked: boolean, asking: boolean): (Node, number)
+	local live = status == "live"
 	local cls = "ob-tab ob-t-" .. t.id .. first
 	if status ~= "live" then
 		cls ..= " ob-tab-ghost ob-tab-" .. status
@@ -356,26 +359,47 @@ local function tab_node(t: Model.Tab, status: string, first: string, linked_open
 	elseif status == "elsewhere" then
 		where = if place ~= nil then "other window · " .. place else "other window"
 	end
-	local th1: { Node } = { span("ob-tlabel", t.label, { key = "label" }) }
-	if resume then
-		-- Its own click, so the rest of the header still says the tab is closed.
-		table.insert(th1, span("ob-resume", "Resume", {
-			key = "resume",
-			title = "Reopen this tab's omp chats in a new tab",
-			actions = { click = "resume=" .. t.id },
-		}))
+	local th1: { Node }
+	if asking then
+		-- In place of the label line, same height (close-tab-from-node D3): the question, cut first,
+		-- then Cancel, and Close where the icon was.
+		local tip = if linked
+			then "Closing ends its programs; omp chats come back with Resume."
+			else "Closing ends its programs. No objective links it, so it won't show under Closed tabs."
+		th1 = {
+			span("ob-ask", "Close tab?", { key = "q", title = tip }),
+			span("ob-tbtn", "Cancel", { key = "cfx", title = "Keep it open", actions = { click = "cfx=" } }),
+			span("ob-tbtn ob-tbtn-close", "Close", { key = "cfm", title = "Close this tab", actions = { click = "cfm=" } }),
+		}
+	else
+		th1 = { span("ob-tlabel", t.label, { key = "label" }) }
+		if resume then
+			-- Its own click, so the rest of the header still says the tab is closed.
+			table.insert(th1, span("ob-resume", "Resume", {
+				key = "resume",
+				title = "Reopen this tab's omp chats in a new tab",
+				actions = { click = "resume=" .. t.id },
+			}))
+		end
+		if live then
+			-- Shown only while the pointer is on the node (close-tab-from-node, D2); its own click
+			-- asks, and doesn't jump.
+			table.insert(th1, el("span", { class = "ob-trash ob-tclose", key = "tclose", title = "Close this tab; asks first", actions = { click = "tclose=" .. t.id } }, {
+				{ k = "icon", p = { name = "trash" } } :: any,
+			}))
+		end
 	end
 	local head_kids: { Node } = {
-		el("div", { class = "ob-th1", key = "th1" }, th1),
+		el("div", { class = if asking then "ob-th1 ob-th1-ask" else "ob-th1", key = "th1" }, th1),
 		span("ob-line ob-dim", where, { key = "where" }),
 	}
+	-- While it asks, a click on the header ends the question instead of jumping (D3).
 	local kids: { Node } = {
-		el("div", { class = "ob-thead", key = "head", title = t.label, actions = { click = "tab=" .. t.id } }, head_kids),
+		el("div", { class = "ob-thead", key = "head", title = t.label, actions = { click = if asking then "cfx=" else "tab=" .. t.id } }, head_kids),
 	}
 	local detail_lines = 0
 	local holds_origin = false
 	for _, r in t.rows do
-		local live = status == "live"
 		local open = live and expanded[tostring(r.pane)] == true
 		local kind, kind_cls = ui_state.kind(r)
 		local row_kids: { Node } = {
@@ -726,7 +750,11 @@ function M.build(state: Store.State, win: Model.Window, ui_state: Ui): Built
 				end
 			end
 		end
-		local node, details = tab_node(t, status, first, linked_open[t.id] == true, link, menu_of(t.id), ui_state, view_state.expanded, resume)
+		-- The trash icon's question, for a live tab only (close-tab-from-node, D3).
+		local c = ui_state.confirm
+		local asking = status == "live" and c ~= nil and c.kind == "tab" and c.id == tostring(t.id)
+		local linked = linked_open[t.id] == true or linked_done[t.id] == true
+		local node, details = tab_node(t, status, first, linked_open[t.id] == true, link, menu_of(t.id), ui_state, view_state.expanded, resume, linked, asking)
 		tab_cy[t.id] = Layout.add_tab(right, #t.rows, details, link ~= nil)
 		table.insert(right_kids, node)
 		if status == "live" and linked_done[t.id] and not linked_open[t.id] then

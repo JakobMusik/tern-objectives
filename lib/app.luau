@@ -35,8 +35,9 @@ local moving: string? = nil
 
 -- The question an action is asking in place (custom-order-and-direct-controls, design D4), never
 -- stored: "close" for an objective's tabs, from its bar or from the done notice, "done_tabs" for
--- the header's "Close n done tabs" (D11), and "reopen" for a done objective's box, asked in its bar
--- (reopen-done-objectives, D1). Any other click ends it.
+-- the header's "Close n done tabs" (D11), "reopen" for a done objective's box, asked in its bar
+-- (reopen-done-objectives, D1), and "tab" for a tab's trash icon, asked in its header, with the tab
+-- id (close-tab-from-node, D3). Any other click ends it.
 type Confirm = { kind: string, id: string?, where: string? }
 local confirm: Confirm? = nil
 
@@ -541,15 +542,27 @@ local function tags(cx: WindowCx, o: Store.Objective)
 	end)
 end
 
--- ---- closing tabs (close-linked-tabs, design D1–D5; custom-order-and-direct-controls, D4) ----
+-- ---- closing tabs (close-linked-tabs, design D1–D5; custom-order-and-direct-controls, D4;
+-- close-tab-from-node, D4, D6) ----
 
 local function plural(n: number, word: string): string
 	return string.format("%d %s%s", n, word, if n == 1 then "" else "s")
 end
 
+-- Whether the current session still holds a tab (close-tab-from-node, D6).
+local function session_has_tab(cx: WindowCx): boolean
+	for _, s in cx.session:sessions() do
+		if s.current then
+			return #s.tabs > 0
+		end
+	end
+	return false
+end
+
 -- Saves the omp chats, then closes every pane of the tabs `count` gives, counted again now; the graph
 -- first when it is over one of them, since a tab holding only the graph would stay open. `count`
--- returns the tabs and the toast's ending, or nil when what it counts is gone. No link changes.
+-- returns the tabs and the toast that says they closed, or nil when what it counts is gone. No link
+-- changes.
 local function close_tabs(cx: WindowCx, count: (cx: WindowCx, state: Store.State, win: Model.Window) -> ({ number }?, string))
 	Agents.save_now(cx, function(ok: boolean, cx2: WindowCx?)
 		if cx2 == nil then
@@ -561,7 +574,7 @@ local function close_tabs(cx: WindowCx, count: (cx: WindowCx, state: Store.State
 			return
 		end
 		local win = Model.read(cx2, Surface.find(cx2))
-		local tabs, what = count(cx2, Store.read(), win)
+		local tabs, done_text = count(cx2, Store.read(), win)
 		if tabs == nil then
 			toast_gone(cx2)
 			finish(cx2, true)
@@ -582,7 +595,12 @@ local function close_tabs(cx: WindowCx, count: (cx: WindowCx, state: Store.State
 				cx2.layout:close(r.pane)
 			end
 		end
-		cx2:toast("success", "Closed " .. plural(#tabs, "tab") .. what)
+		cx2:toast("success", done_text)
+		-- A session left with no tab has nothing to show the graph over: shown again, it would take a
+		-- tab of its own there, which ⌃⌘O can't close (D6, task 1.1).
+		if Surface.find(cx2) == nil and not session_has_tab(cx2) then
+			return
+		end
 		finish(cx2, true)
 	end)
 end
@@ -594,7 +612,8 @@ local function close_objective_tabs(cx: WindowCx, id: string)
 		if o == nil then
 			return nil, ""
 		end
-		return (View.closable(state, win, o)), " of “" .. o.title .. "”"
+		local tabs = View.closable(state, win, o)
+		return tabs, "Closed " .. plural(#tabs, "tab") .. " of “" .. o.title .. "”"
 	end)
 end
 
@@ -602,7 +621,20 @@ end
 -- live tabs the graph shows that only done objectives link, counted again from a fresh build.
 local function close_done_tabs(cx: WindowCx)
 	close_tabs(cx, function(cx2, _state, _win)
-		return build(cx2).done_tabs, " that only done objectives link"
+		local tabs = build(cx2).done_tabs
+		return tabs, "Closed " .. plural(#tabs, "tab") .. " that only done objectives link"
+	end)
+end
+
+-- One tab's trash icon, once confirmed (close-tab-from-node, D4): that tab, if the window still
+-- holds it.
+local function close_tab(cx: WindowCx, tab: number)
+	close_tabs(cx, function(_cx, _state, win)
+		local t = win.tabs[tab]
+		if t == nil then
+			return {}, ""
+		end
+		return { tab }, "Closed “" .. t.label .. "”"
 	end)
 end
 
@@ -867,6 +899,11 @@ function M.action(ev: Action, cx: WindowCx)
 	elseif act == "closedone" then
 		-- The header's "Close n done tabs" asks in the header (D4, D11).
 		confirm = { kind = "done_tabs" }
+	elseif act == "tclose" then
+		-- A tab's trash icon asks in its header (close-tab-from-node, D3).
+		if tonumber(value) ~= nil then
+			confirm = { kind = "tab", id = value }
+		end
 	elseif act == "cfm" then
 		-- Close: the notice went above, with its Undo of done, as confirming always ended it.
 		if asked ~= nil and asked.kind == "close" and asked.id ~= nil then
@@ -874,6 +911,9 @@ function M.action(ev: Action, cx: WindowCx)
 			later = true
 		elseif asked ~= nil and asked.kind == "done_tabs" then
 			close_done_tabs(cx)
+			later = true
+		elseif asked ~= nil and asked.kind == "tab" and tonumber(asked.id) ~= nil then
+			close_tab(cx, tonumber(asked.id) :: number)
 			later = true
 		end
 	elseif act == "cfx" then
