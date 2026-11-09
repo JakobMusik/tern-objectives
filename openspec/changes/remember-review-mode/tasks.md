@@ -64,12 +64,14 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
   Verify `tern plugin list` shows `objectives 0.18.0 … ready`, with `tabnav 0.1.0` and `omp-narration 0.1.0` untouched.
 
   Result: `installed objectives 0.18.0 → ~/Library/Application Support/Tern/plugins/objectives`. `tern plugin list` shows `objectives 0.18.0 … window ready`, beside `omp-narration 0.1.0 … ready` and `tabnav 0.1.0 … ready`. The tag `v0.18.0` (`3a177c2`) is signed and on GitHub.
-- [ ] 2.3 **(live)** With the user:
+- [x] 2.3 **(live)** With the user:
   - close the graph in review mode and open it again: it shows review mode;
   - ⌥N from review mode shows the new objective in the list;
   - with review mode remembered in one window, the graph in a second window that hasn't been in review mode opens without it.
 
   Record the result here.
+
+  Result (user, 0.18.0): "it works", in reply to the three checks listed above. The user reported nothing more specific, so no single check, the second-window one included, is recorded on its own.
 
 ## Workflow follow-up
 
