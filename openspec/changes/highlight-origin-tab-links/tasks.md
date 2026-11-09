@@ -124,12 +124,14 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
   Verify `tern plugin list` shows `objectives 0.22.0 … ready`, with the other plugins untouched.
 
   Result: `installed objectives 0.22.0 → ~/Library/Application Support/Tern/plugins/objectives`. `tern plugin list` shows `objectives 0.22.0 … window ready`, beside `omp-narration 0.1.0`, `open-below 0.2.0`, `reply-selection 0.1.0` and `tabnav 0.1.0`, all ready and not touched by this install. The tag `v0.22.0` (`86fb84d`) is signed and on GitHub.
-- [ ] 4.3 **(live)** With the user:
+- [x] 4.3 **(live)** With the user:
   - opening the graph from a tab that open objectives link draws that tab's lines thick, fades the others, and tints those objectives;
   - selecting an objective replaces that, and clicking empty space brings it back;
   - an objective selected when the graph closed is no longer selected when it opens again, while review mode, if it was on, still is.
 
   Record the result here.
+
+  Result (user, 0.22.0): "it works", in reply to the three checks listed above. The user reported nothing more specific, so no single check is recorded on its own.
 
 ## Workflow follow-up
 
