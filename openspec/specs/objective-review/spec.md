@@ -70,7 +70,7 @@ Clicking "Review (n)" SHALL draw the button active and list in the left column o
 - **THEN** after "Review (1)", that tab shows under "Closed tabs" with "Resume" and no line; after selecting, a dashed green line joins it to the objective, every tab node has a link bar, and that tab's reads "× Unlink"
 
 ### Requirement: Leaving review mode
-Review mode SHALL end when its list becomes empty, when the active "Review (n)" button is clicked, or when the graph closes, except when one of the graph's own pickers closed it and it is shown again. It SHALL NOT be remembered across opens of the graph.
+Review mode SHALL end when its list becomes empty, an open with nothing due included, when the active "Review (n)" button is clicked, or when "Objectives: New objective" runs. Closing the graph SHALL NOT end it: the next open in the same window SHALL show review mode again, listing the objectives due then. Each window SHALL keep its own, and a plugin reload, as on every Tern restart, SHALL forget it.
 
 #### Scenario: Last one rated
 - **WHEN** review mode lists one objective and the user clicks Easy
@@ -83,6 +83,22 @@ Review mode SHALL end when its list becomes empty, when the active "Review (n)" 
 #### Scenario: Picker from review mode
 - **WHEN** review mode lists two objectives, the user selects one, clicks Tags in its action bar and dismisses the picker with Esc
 - **THEN** the graph is shown again, still in review mode with the same two objectives
+
+#### Scenario: Reopened in review mode
+- **WHEN** review mode lists two objectives and the user presses ⌃⌘O twice
+- **THEN** the first press closes the graph, and the second shows it with "Review (2)" active and only those two objectives in the left column
+
+#### Scenario: Left before closing
+- **WHEN** review mode lists two objectives, the user clicks the active "Review (2)" and then presses ⌃⌘O twice
+- **THEN** the reopened graph shows the open objectives and the Done group, with "Review (2)" not active
+
+#### Scenario: Nothing due at the next open
+- **WHEN** the graph was closed in review mode listing one objective, that objective's record is removed from `kv.json` from outside the window, the graph is opened and closed, and the record is put back
+- **THEN** the first of those opens shows no Review button, and the next shows the open objectives and the Done group with "Review (1)" not active
+
+#### Scenario: Forgotten on reload
+- **WHEN** review mode lists two objectives, the graph is closed and the plugin is reloaded
+- **THEN** opening the graph shows the open objectives and the Done group, with "Review (2)" not active
 
 ### Requirement: One-click remove
 A done objective's node SHALL show a trash icon. Clicking it SHALL remove the objective and its links at once, without asking, and offer Undo.

@@ -634,7 +634,7 @@ An action that asks before acting SHALL ask in place, never in a picker: "Close 
 - **THEN** both tabs are still open, and selecting X again shows its row with "Close 2 tabs"
 
 ### Requirement: New objective key
-"Objectives: New objective", default key ⌥N, SHALL ask for a title and create an objective as "＋ New objective" does, selected in the graph. With the graph shown over the current tab, it SHALL act there, the settings page switching back to the graph. Anywhere else it SHALL first show the graph over the current tab. Like any plugin key, ⌥N SHALL run in every pane, whichever Option key is held.
+"Objectives: New objective", default key ⌥N, SHALL ask for a title and create an objective as "＋ New objective" does, selected in the graph. It SHALL first end review mode. With the graph shown over the current tab, it SHALL act there, the settings page switching back to the graph. Anywhere else it SHALL first show the graph over the current tab. Like any plugin key, ⌥N SHALL run in every pane, whichever Option key is held.
 
 #### Scenario: In the graph
 - **WHEN** the graph is shown and the user presses ⌥N and enters "Write slides"
@@ -647,6 +647,14 @@ An action that asks before acting SHALL ask in place, never in a picker: "Close 
 #### Scenario: Letters still reach the panes
 - **WHEN** focus is in a shell prompt and the user types "n" and "N"
 - **THEN** the prompt shows "nN", and no field or toast appears
+
+#### Scenario: From review mode
+- **WHEN** review mode lists two objectives and the user presses ⌥N and enters "Write slides"
+- **THEN** the left column shows the open objectives with "Write slides" selected at the top, and the Done group, and "Review (2)" is not active
+
+#### Scenario: From a shell after review mode
+- **WHEN** the graph was closed in review mode listing two objectives, focus is in a shell, and the user presses ⌥N and enters "Write slides"
+- **THEN** the graph is shown over the current tab with the open objectives, "Write slides" selected at the top, and "Review (2)" not active
 
 ### Requirement: Closing tabs of done objectives
 The header SHALL show "Close n done tabs" while n of the live tabs the graph shows are linked only to done objectives: at least one done objective links each, and no open objective does. Clicking it SHALL ask in place. On Close it SHALL save the omp chats in those tabs, then close every pane of each, as "Close n tabs" does for one objective, and change no links. If the chats can't be saved, it SHALL close nothing and say so.
