@@ -504,11 +504,12 @@ A click on an objective's title SHALL open the one-line Rename field, filled wit
 - **THEN** the Rename field opens holding the whole title
 
 ### Requirement: Attention marks
-An objective node SHALL be marked when a live tab of this window that it links holds an omp chat that needs the user:
-- **needs you:** the chat waits for the user's input. An amber ring, and a "needs you" chip first on its second line.
-- **replied:** otherwise, the chat finished a reply the user hasn't seen yet. A green ring and a "replied" chip.
+An objective node SHALL show the first mark that applies to the omp chats in the live tabs of this window that it links:
+- **needs you:** one waits for the user's input. An amber ring, and a "needs you" chip first on its second line.
+- **replied:** one finished a reply the user hasn't seen yet. A green ring and a "replied" chip.
+- **working:** one is working. An accent-coloured "working" chip, and no ring.
 
-Other agents, closed tabs and other windows' tabs SHALL NOT mark it. The chip's tooltip SHALL name the tabs.
+Other agents SHALL NOT mark it. The chip's tooltip SHALL name the tabs.
 
 #### Scenario: Question waiting
 - **WHEN** "Fix login bug" links tab "Server", and the omp chat there asks the user a question while the user is in another tab
@@ -518,9 +519,25 @@ Other agents, closed tabs and other windows' tabs SHALL NOT mark it. The chip's 
 - **WHEN** "Fix login bug" links tab "Server", and the omp chat there finishes a reply while the user is in another tab
 - **THEN** the graph shows "Fix login bug" with a green ring and a "replied" chip
 
+#### Scenario: Chat working
+- **WHEN** "Fix login bug" links tab "Server", and the omp chat there is working on a turn
+- **THEN** the graph shows "Fix login bug" with an accent-coloured "working" chip first on its second line, whose tooltip names "Server", and no ring
+
+#### Scenario: Working turns into replied
+- **WHEN** "Fix login bug" shows "working" for tab "Server", and the omp chat there finishes its reply while the user is in another tab
+- **THEN** the "working" chip goes, and "Fix login bug" shows a green ring and a "replied" chip
+
 #### Scenario: Needs you wins
 - **WHEN** an objective links one tab whose omp chat waits for input and another whose omp chat has an unseen reply
 - **THEN** its node shows the amber ring and the "needs you" chip only
+
+#### Scenario: Needs you wins over working
+- **WHEN** an objective links tab "Server", whose omp chat waits for input, and tab "Docs", whose omp chat is working
+- **THEN** its node shows the amber ring and the "needs you" chip only, naming "Server"
+
+#### Scenario: Replied wins over working
+- **WHEN** an objective links tab "Server", whose omp chat has an unseen reply, and tab "Docs", whose omp chat is working
+- **THEN** its node shows the green ring and the "replied" chip only, naming "Server"
 
 #### Scenario: Two chats in one tab
 - **WHEN** tab "Split", linked to "Fix login bug", holds two omp chats side by side, one waiting for input and the other with a reply the user hasn't seen
@@ -528,7 +545,7 @@ Other agents, closed tabs and other windows' tabs SHALL NOT mark it. The chip's 
 
 #### Scenario: Not linked
 - **WHEN** the omp chat in tab "Server" waits for input, and "Write slides" doesn't link "Server"
-- **THEN** "Write slides" has no ring and no chip of either kind
+- **THEN** "Write slides" has no ring and no chip of any kind
 
 ### Requirement: Attention marks clear
 A "replied" mark SHALL go once the user has focused the omp pane that replied, as Tern's own unseen-reply marker does. Looking at its tab while another pane there has focus SHALL NOT clear it. A "needs you" mark SHALL stay until the chat stops waiting for input, even after the user has focused it. Marks SHALL show on open, done and review nodes. A selected node SHALL show its selection ring and its mark together.
