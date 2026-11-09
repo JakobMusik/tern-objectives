@@ -292,7 +292,7 @@ Clicking an open objective's done box SHALL mark it done. Done objectives SHALL 
 - inside it, the most recently done objective comes first;
 - a done objective draws lines only while it is selected.
 
-A done objective's box SHALL do nothing.
+Clicking a done objective's box SHALL ask whether to reopen it ("Reopening a done objective").
 
 #### Scenario: Marking done
 - **WHEN** the user clicks the done box of a linked open objective that is not selected
@@ -300,7 +300,7 @@ A done objective's box SHALL do nothing.
 
 #### Scenario: Box of a done objective
 - **WHEN** the user opens the Done group and clicks a done objective's box
-- **THEN** it stays in the Done group, the count is unchanged, and the kv dump shows it still done
+- **THEN** it stays in the Done group, the count is unchanged, the kv dump shows it still done, and its action bar asks whether to reopen it
 
 ### Requirement: Closing a done objective's tabs
 "Close n tabs" in a done objective's action bar SHALL ask in the bar, naming how many tabs it will close and how many linked tabs stay open because an open objective links them. On Close it SHALL save the omp chats in those tabs as it does at a turn, then close every pane of each of them, and change no links. A graph sitting in one of them SHALL close first and show again after. If the chats can't be saved, it SHALL close nothing and say so. Cancel SHALL change nothing.
@@ -623,7 +623,7 @@ The selected objective SHALL show a row of buttons under its lines, below the ra
 - **THEN** X's row holds Note and Tags only
 
 ### Requirement: Inline confirmation
-An action that asks before acting SHALL ask in place, never in a picker: "Close n tabs" in the action bar or the done notice, and "Close n done tabs" in the header. The control SHALL turn into the question with Close and Cancel. Cancel, or any other click in the graph, SHALL end the question and change nothing.
+An action that asks before acting SHALL ask in place, never in a picker: "Close n tabs" in the action bar or the done notice, "Close n done tabs" in the header, and a done objective's box in its action bar. The control or bar SHALL turn into the question with its answers: Close and Cancel, or Keep review, Reset review and Cancel. In an action bar, the question SHALL take its own row above its answers. Cancel, or any other click in the graph, SHALL end the question and change nothing.
 
 #### Scenario: Asked in the bar
 - **WHEN** done objective X links two open tabs that no open objective links, and the user clicks "Close 2 tabs" in X's bar
@@ -632,6 +632,14 @@ An action that asks before acting SHALL ask in place, never in a picker: "Close 
 #### Scenario: Another click cancels
 - **WHEN** the bar asks "Close 2 tabs?" and the user clicks empty graph space
 - **THEN** both tabs are still open, and selecting X again shows its row with "Close 2 tabs"
+
+#### Scenario: Another click ends the reopen question
+- **WHEN** a done objective's bar asks whether to reopen it, and the user clicks empty graph space
+- **THEN** nothing is selected, the objective is still in the Done group, and the kv dump shows it still done
+
+#### Scenario: Questions in a narrow graph
+- **WHEN** the window is 460 px wide, and a done objective's bar asks to close its tabs or to reopen it
+- **THEN** the question's row starts with "Close 2 tabs?" or "Reopen", and every answer, with its icon, sits inside the objective's node
 
 ### Requirement: New objective key
 "Objectives: New objective", default key ⌥N, SHALL ask for a title and create an objective as "＋ New objective" does, selected in the graph. It SHALL first end review mode. With the graph shown over the current tab, it SHALL act there, the settings page switching back to the graph. Anywhere else it SHALL first show the graph over the current tab. Like any plugin key, ⌥N SHALL run in every pane, whichever Option key is held.
@@ -685,3 +693,26 @@ Dragging across a grip, an action bar's buttons, an inline confirmation's button
 #### Scenario: Drag across the action bar
 - **WHEN** the user presses on the selected objective's side note, drags across its Note, Due and Tags buttons and releases beside the bar
 - **THEN** the screenshot shows no text highlight on the buttons, and no field or picker opens
+
+### Requirement: Reopening a done objective
+Clicking a done objective's box, in the Done group or in review mode, SHALL select it and turn its action bar into the question "Reopen “<title>”?" above Keep review, Reset review and Cancel. Keep review and Reset review SHALL both reopen it: it leaves the Done group, or review mode's list, and shows last among the open objectives, still selected. Cancel SHALL end the question and leave it done and selected. Reopening SHALL offer no Undo.
+
+#### Scenario: Asking to reopen
+- **WHEN** "Fix login bug" and "Review pull requests" are open, and the user opens the Done group and clicks the box of done objective "Write slides"
+- **THEN** no picker opens, "Write slides" is selected, its bar asks "Reopen “Write slides”?" above Keep review, Reset review and Cancel, and the kv dump shows it still done
+
+#### Scenario: Keep review
+- **WHEN** "Write slides" links a live tab, and the user then clicks Keep review
+- **THEN** the list reads "Fix login bug", "Review pull requests", "Write slides", with "Write slides" selected and its bar showing Note, Due, Tags and Delete; a line joins it to its tab, the Done count is one less, and the header shows no Undo notice
+
+#### Scenario: Cancelled
+- **WHEN** the user clicks the box of done objective "Write slides" and then Cancel
+- **THEN** "Write slides" is still in the Done group and selected, its bar shows its usual buttons again, and `kv.json` is unchanged
+
+#### Scenario: From review mode
+- **WHEN** review mode lists two objectives, and the user clicks the box of one of them and then Reset review
+- **THEN** review mode lists only the other one, the header shows "Review (1)" active, and the kv dump shows the reopened objective open with no schedule
+
+#### Scenario: Last one in review mode
+- **WHEN** review mode lists one objective, and the user clicks its box and then Keep review
+- **THEN** the left column shows the open objectives, the reopened one last and selected, and the header shows no Review button

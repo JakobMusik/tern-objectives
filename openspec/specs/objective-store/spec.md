@@ -122,13 +122,6 @@ Objectives, links and snapshots SHALL survive a plugin reload, a Tern restart an
 - **WHEN** the plugin is reloaded after objectives and links were made
 - **THEN** the graph shows the same objectives with the same links
 
-### Requirement: Final done state
-Marking an objective done SHALL record the done time and start its review schedule. Done SHALL be final: nothing SHALL make a done objective open again, except Undo right after it was marked done. Neither marking done nor that Undo SHALL change its links.
-
-#### Scenario: Done stays done
-- **WHEN** the user marks a linked objective done, waits for the Undo notice to go, then clicks its done box in the Done group
-- **THEN** the record is still done with the same done time, and its tab links are identical throughout
-
 ### Requirement: Missing priority
 A stored objective without a priority SHALL read as P3, whatever starting priority Configure sets for new objectives.
 
@@ -161,3 +154,18 @@ Delete in an open objective's action bar, and a done objective's trash icon, SHA
 #### Scenario: Trash icon on a done objective
 - **WHEN** the user clicks a done objective's trash icon
 - **THEN** no confirmation appears, and the objective and its links are gone from `kv.json`
+
+### Requirement: Done and reopening
+Marking an objective done SHALL record the done time and start or carry on its review schedule. A done objective SHALL become open again only through Undo right after it was marked done, or when the user reopens it. Reopening SHALL clear the done time, keep or drop the schedule as the user chose, and put the objective after every other objective in the stored order. Marking done, Undo and reopening SHALL NOT change its links.
+
+#### Scenario: Done until reopened
+- **WHEN** the user marks a linked objective done, waits for the Undo notice to go, then clicks its done box and Cancel
+- **THEN** the record is still done with the same done time, and its tab links are identical throughout
+
+#### Scenario: Reopened keeping its review
+- **WHEN** done objective "Write slides", linked to two tabs and reviewed twice, is reopened with "Keep review" while "Fix login bug" and "Review pull requests" are open
+- **THEN** the kv dump shows "Write slides" open, with no done time, the same schedule and the same two links, as the last record of the list
+
+#### Scenario: Reopened resetting its review
+- **WHEN** done objective "Write slides", linked to two tabs, is reopened with "Reset review"
+- **THEN** the kv dump shows "Write slides" open, with no done time, no schedule and the same two links
