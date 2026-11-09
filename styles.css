@@ -138,6 +138,12 @@
 [data-surface='plugin.tern.canvas'] .ob-root .ob-attchip-replied {
 	background: var(--ok);
 }
+/* "working" (working-mark D3): accent text on a tint, like "omp · working" in pane rows, and quieter
+   than the two solid chips that need the user. Still bold from .ob-attchip. */
+[data-surface='plugin.tern.canvas'] .ob-root .ob-attchip-working {
+	color: var(--accent);
+	background: rgb(from var(--accent) r g b / 12%);
+}
 /* The Undo notice after marking done or removing (review-done-objectives, design D6). */
 [data-surface='plugin.tern.canvas'] .ob-root .ob-undo {
 	display: flex;

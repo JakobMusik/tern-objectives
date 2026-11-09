@@ -119,7 +119,8 @@ end
 
 -- An omp row's call on the user (attention-marks-and-titles D3): "wait" while its chat waits for
 -- input, "replied" while it sits idle with a reply the user hasn't seen (Tern's unseen alert, cleared
--- once that pane gets focus, not by focusing another pane of its tab), else nil. Other agents never call.
+-- once that pane gets focus, not by focusing another pane of its tab), "working" while it works on a
+-- turn (working-mark D1), else nil. Other agents never call.
 function M.attention(row: Model.Row): string?
 	local a = agents[row.pane]
 	local info = row.info
@@ -130,6 +131,8 @@ function M.attention(row: Model.Row): string?
 		return "wait"
 	elseif a.state == "idle" and info ~= nil and info.alert == true then
 		return "replied"
+	elseif a.state == "working" then
+		return "working"
 	end
 	return nil
 end

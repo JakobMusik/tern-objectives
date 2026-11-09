@@ -30,7 +30,8 @@ export type Ui = {
 	undo_close: { id: string, n: number }?,
 	-- Review mode: the due done objectives with their rating buttons (review design D4).
 	reviewing: boolean,
-	-- An omp row's call on the user: "wait", "replied" or nil (attention-marks-and-titles D3).
+	-- An omp row's call: "wait", "replied", "working" or nil (attention-marks-and-titles D3,
+	-- working-mark D1).
 	attention: (row: Model.Row) -> string?,
 	-- The open objective lifted by its grip, until it is dropped or the move ends
 	-- (custom-order-and-direct-controls, design D2).
@@ -44,8 +45,10 @@ export type Ui = {
 -- An objective's attention mark: the strongest call over its live tabs, and those tabs' labels.
 type Mark = { kind: string, tabs: { string } }
 
-local MARK_CHIP = { wait = "needs you", replied = "replied" }
-local MARK_TIP = { wait = "omp is waiting in ", replied = "omp replied in " }
+local MARK_CHIP = { wait = "needs you", replied = "replied", working = "working" }
+local MARK_TIP = { wait = "omp is waiting in ", replied = "omp replied in ", working = "omp is working in " }
+-- The strongest mark wins (working-mark D2); no call ranks 0.
+local RANK: { [string]: number } = { wait = 3, replied = 2, working = 1 }
 
 -- An element as a plain TSP wire node {k, p, c} (tern.d.luau Node), which `cx.canvas:set` takes as
 -- is. tern.ui.el would convert every subtree again at each level of nesting: with every row open that
@@ -228,7 +231,8 @@ local function objective_node(o: Store.Objective, ui_state: Ui, first: string, t
 	if review then
 		cls ..= " ob-review"
 	end
-	if mark ~= nil then
+	-- Only "needs you" and "replied" ring the node; "working" is its chip alone (working-mark D3).
+	if mark ~= nil and mark.kind ~= "working" then
 		cls ..= " ob-att-" .. mark.kind
 	end
 	-- Moving (design D2): open nodes outside review mode have a grip; the lifted one is drawn lifted,
@@ -543,8 +547,8 @@ function M.build(state: Store.State, win: Model.Window, ui_state: Ui): Built
 	local obj_cy: { [string]: number } = {}
 	local sel_obj: Store.Objective? = nil
 	-- Attention (attention-marks-and-titles D3): each live tab's strongest omp call, worked out once,
-	-- then per objective the strongest over its live tabs, "wait" above "replied". Closed and
-	-- elsewhere tabs have no live rows, so they never mark.
+	-- then per objective the strongest over its live tabs, ranked by RANK (working-mark D2). Closed
+	-- and elsewhere tabs have no live rows, so they never mark.
 	local tab_call: { [number]: string } = {}
 	local function call_of(tab: number): string
 		local known = tab_call[tab]
@@ -556,11 +560,11 @@ function M.build(state: Store.State, win: Model.Window, ui_state: Ui): Built
 		if t ~= nil then
 			for _, row in t.rows do
 				local a = ui_state.attention(row)
-				if a == "wait" then
+				if a ~= nil and (RANK[a] or 0) > (RANK[call] or 0) then
 					call = a
-					break
-				elseif a == "replied" then
-					call = a
+					if a == "wait" then
+						break
+					end
 				end
 			end
 		end
@@ -568,21 +572,18 @@ function M.build(state: Store.State, win: Model.Window, ui_state: Ui): Built
 		return call
 	end
 	local function mark_of(o: Store.Objective): Mark?
-		local waits, replies = {}, {}
+		local kind = ""
+		local tabs: { string } = {}
 		for _, tab in o.tabs do
 			local call = call_of(tab)
-			if call == "wait" then
-				table.insert(waits, win.tabs[tab].label)
-			elseif call == "replied" then
-				table.insert(replies, win.tabs[tab].label)
+			local rank = RANK[call] or 0
+			if rank > (RANK[kind] or 0) then
+				kind, tabs = call, { win.tabs[tab].label }
+			elseif rank > 0 and call == kind then
+				table.insert(tabs, win.tabs[tab].label)
 			end
 		end
-		if #waits > 0 then
-			return { kind = "wait", tabs = waits }
-		elseif #replies > 0 then
-			return { kind = "replied", tabs = replies }
-		end
-		return nil
+		return if kind ~= "" then { kind = kind, tabs = tabs } else nil
 	end
 	-- One objective node; its title lines set its height (attention-marks-and-titles D1).
 	local function add_node(o: Store.Objective, review: boolean?)
