@@ -327,7 +327,7 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
   Verify that `tern plugin list` shows `objectives 0.17.0 … ready`, with `tabnav 0.1.0` and `omp-narration 0.1.0` untouched.
 
   Result: `installed objectives 0.17.0 → ~/Library/Application Support/Tern/plugins/objectives`. `tern plugin list` shows `objectives 0.17.0 … window ready`, beside `omp-narration 0.1.0 … ready` and `tabnav 0.1.0 … ready`. The tag `v0.17.0` (`fc04311`) is signed and on GitHub.
-- [ ] 6.3 **(live)** With the user:
+- [x] 6.3 **(live)** With the user:
   - Option+N (left Option) creates an objective in the graph, from the graph and from a shell. If it doesn't, follow design D5's fallback in a patch;
   - moving with the grip, the insertion line, and the order kept after reopening;
   - the action bar's buttons, Delete with Undo, and "Close n tabs" asked in place;
@@ -335,6 +335,8 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
   - with a second Tern window open, change a shortcut in one window, then press ⌃⌘O in the other. If the other window's plugin keys are gone, follow design D7's risk.
 
   Record the result here.
+
+  Result (user, 0.17.0): "it works", in reply to the five checks listed above. The user reported nothing more specific, so no single check is recorded on its own, the two-window one included.
 
 ## Workflow follow-up
 
