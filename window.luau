@@ -6,6 +6,7 @@
 local Agents = require("./lib/agents")
 local App = require("./lib/app")
 local Layout = require("./lib/layout")
+local Keys = require("./lib/keys")
 local Refresh = require("./lib/refresh")
 
 Refresh.init(App.render)
@@ -24,54 +25,72 @@ tern.timer(0, function(cx: WindowCx?)
 	end
 end)
 
-tern.command({
-	id = "open",
-	title = "Objectives: Open graph",
-	icon = "list-checks",
-	group = "Objectives",
-	keys = { "ctrl+cmd+o" },
-	run = App.toggle,
-})
+-- The palette commands, their default keys from lib/keys.luau. Registered at load, and again after
+-- Configure writes the user's keybinds, which drops every plugin's keys from the keymap until a run-time
+-- registration (custom-order-and-direct-controls, design D7).
+local function register_commands()
+	tern.command({
+		id = "open",
+		title = "Objectives: Open graph",
+		icon = "list-checks",
+		group = "Objectives",
+		keys = Keys.default_keys("open"),
+		run = App.toggle,
+	})
 
--- ⌥R, as the user asked. Like every plugin key it runs in every pane, so Option+R types nothing anywhere
--- in Tern; outside the graph it shows a hint. A plain R can't work, not even inside the graph only: Tern
--- keeps plain R for itself, a canvas gets no keys, and `available` doesn't gate a key (design D6).
-tern.command({
-	id = "rename",
-	title = "Objectives: Rename selected objective",
-	icon = "pencil",
-	group = "Objectives",
-	keys = { "alt+r" },
-	available = App.can_rename,
-	run = App.rename_selected,
-})
+	-- ⌥R, as the user asked. Like every plugin key it runs in every pane, so Option+R types nothing
+	-- anywhere in Tern; outside the graph it shows a hint. A plain R can't work, not even inside the graph
+	-- only: Tern keeps plain R for itself, a canvas gets no keys, and `available` doesn't gate a key
+	-- (design D6).
+	tern.command({
+		id = "rename",
+		title = "Objectives: Rename selected objective",
+		icon = "pencil",
+		group = "Objectives",
+		keys = Keys.default_keys("rename"),
+		available = App.can_rename,
+		run = App.rename_selected,
+	})
 
--- ⌥N, as the user asked (custom-order-and-direct-controls, design D5): a new objective, made in the graph,
--- which opens first when it isn't shown here. Like ⌥R it runs in every pane, whichever Option key.
-tern.command({
-	id = "new",
-	title = "Objectives: New objective",
-	icon = "plus",
-	group = "Objectives",
-	keys = { "alt+n" },
-	run = App.new_key,
-})
+	-- ⌥N, as the user asked (design D5): a new objective, made in the graph, which opens first when it
+	-- isn't shown here. Like ⌥R it runs in every pane, whichever Option key.
+	tern.command({
+		id = "new",
+		title = "Objectives: New objective",
+		icon = "plus",
+		group = "Objectives",
+		keys = Keys.default_keys("new"),
+		run = App.new_key,
+	})
 
-tern.command({
-	id = "link_tab",
-	title = "Objectives: Link this tab…",
-	icon = "list-checks",
-	group = "Objectives",
-	run = App.link_tab,
-})
+	tern.command({
+		id = "link_tab",
+		title = "Objectives: Link this tab…",
+		icon = "list-checks",
+		group = "Objectives",
+		run = App.link_tab,
+	})
 
-tern.command({
-	id = "new_for_tab",
-	title = "Objectives: New objective for this tab…",
-	icon = "list-checks",
-	group = "Objectives",
-	run = App.new_for_tab,
-})
+	tern.command({
+		id = "new_for_tab",
+		title = "Objectives: New objective for this tab…",
+		icon = "list-checks",
+		group = "Objectives",
+		run = App.new_for_tab,
+	})
+
+	-- The settings page: shortcuts and the new-objective defaults (design D6).
+	tern.command({
+		id = "configure",
+		title = "Objectives: Configure",
+		icon = "gear",
+		group = "Objectives",
+		run = App.configure,
+	})
+end
+
+register_commands()
+App.on_keybinds(register_commands)
 
 -- Clicks in the graph's canvas (design G3).
 tern.on("canvas_action", function(ev: CanvasAction, cx: WindowCx): boolean?

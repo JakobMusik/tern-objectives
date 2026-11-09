@@ -2,7 +2,7 @@
 
 A [Tern](https://docs.stencil.so/tern) plugin for keeping track of what you are working on across sessions, and for remembering what you finished. It keeps one list of objectives and links each one to the tabs where its work happens, shown as a graph: objectives on the left, tabs on the right, a line for every link. Click a tab or pane to jump straight to it, in any session. Finished objectives come back for review on a spaced-repetition schedule, so you revisit what you did before you forget it.
 
-![The objectives graph: objectives with priorities, due dates and tags on the left, two of them with titles wrapped onto two lines; "Fix login bug" ringed in amber with a "needs you" chip, and "Write release notes" in green with "replied"; below them the open Done group, its objectives marked "review due" or "review in 4d", and a "Review (2)" button in the header; tabs grouped by session on the right, with a line for each link, an omp chat waiting for input in the Server tab and an open chat row showing "you:" and "omp:"](docs/graph.png)
+![The objectives graph: open objectives on the left in your own order, each with a grip to move it, a priority, due date and tags, two of them with titles wrapped onto two lines; "Fix login bug" ringed in amber with a "needs you" chip, and "Write release notes" in green with "replied"; below them the open Done group, its objectives marked "review due" or "review in 4d"; the header has "Review (2)", a gear button for Configure and "＋ New objective"; tabs grouped by session on the right, with a line for each link, an omp chat waiting for input in the Server tab and an open chat row showing "you:" and "omp:"](docs/graph.png)
 
 ## Features
 
@@ -21,7 +21,7 @@ Marking an objective done schedules its first review for the next day, on the SM
 2. Click **Review (n)** in the header. The left column lists the n objectives that are due; select one to see the tabs it was linked to.
 3. Rate each one **Hard**, **Good** or **Easy**. Every button shows the days until it comes back: Hard soon, Easy furthest out. A rated objective leaves the list, and review mode ends when the list is empty.
 
-![Review mode: two done objectives due for review, each with Hard, Good and Easy buttons showing the days until its next review (Hard · 1d, Good · 3d, Easy · 4d for one, Hard · 2d, Good · 9d, Easy · 14d for the other); the selected one has a green line to the tab it was linked to, listed under "Linked to" at the top of the right column](docs/review.png)
+![Review mode: two done objectives due for review, each with Hard, Good and Easy buttons showing the days until its next review (Hard · 1d, Good · 3d, Easy · 4d for one, Hard · 2d, Good · 9d, Easy · 14d for the other); the selected one shows its Note and Tags buttons and has a green line to the tab it was linked to, listed under "Linked to" at the top of the right column, where every tab offers "× Unlink" or "＋ Link"](docs/review.png)
 
 ## Install
 
@@ -40,18 +40,26 @@ It needs nothing on `PATH` but `git`, which `tern plugin install` already uses. 
 | Objectives: New objective | ⌥N | Create an objective in the graph, opening the graph first if it isn't shown. Same as **＋ New objective**. |
 | Objectives: Link this tab… | | Link the current tab to an objective, or unlink it. |
 | Objectives: New objective for this tab… | | Create an objective already linked to the current tab. |
+| Objectives: Configure | | Open the graph's settings: shortcuts, and how new objectives start. The ⚙ button in the graph's header does the same. |
 
 Close the graph with ⌃⌘O, its ×, a click outside it, or Esc after clicking its title bar.
 
-Open objectives stay in the order you give them; priorities and due dates don't reorder them. New objectives go on top. To move one, click its grip (the six dots at its left), then click the upper or lower half of the objective it should go above or below. Cancel in the header, or a click anywhere else, puts it back.
+Open objectives stay in the order you give them; priorities and due dates don't reorder them. New objectives go on top, unless Configure puts them at the bottom. To move one, click its grip (the six dots at its left), then click the upper or lower half of the objective it should go above or below. Cancel in the header, or a click anywhere else, puts it back.
 
 Click an objective to select it: its lines stand out, every tab offers **＋ Link** or **× Unlink**, and a row of buttons appears under it. Click its title to rename it.
 
-⌥R and ⌥N work in every pane, with either Option key, so Option+R no longer types "®" and Option+N no longer starts "˜" anywhere in Tern. To change or remove a key, bind `plugin.objectives.open`, `plugin.objectives.rename` or `plugin.objectives.new` in Tern's keybind settings.
+⌥R and ⌥N work in every pane, with either Option key, so Option+R no longer types "®" and Option+N no longer starts "˜" anywhere in Tern. Change or remove them in Configure.
+
+### Configure
+
+**Objectives: Configure**, or the ⚙ button in the graph's header, shows the settings in the graph; **Back to graph** returns.
+
+- **Shortcuts:** each command's keys, with **Change**, **Remove** and, once changed, **Reset**. Type a new shortcut the way Tern's keybinds spell it, such as `ctrl+alt+n`. A shortcut something else already uses, or one without ⌃, ⌥ or ⌘, is refused, so Configure never takes a key from Tern or another plugin.
+- **New objectives:** the priority they start at (P3 unless you change it) and whether they go on top or at the bottom of your order.
 
 ## Data and removal
 
-Everything lives in one file, `<Tern config>/plugin-data/objectives/kv.json` (on macOS, `~/Library/Application Support/Tern/plugin-data/objectives/kv.json`). The plugin writes nowhere else.
+Everything lives in one file, `<Tern config>/plugin-data/objectives/kv.json` (on macOS, `~/Library/Application Support/Tern/plugin-data/objectives/kv.json`). The one exception is the shortcuts you change in Configure: Tern saves those in its own keybinds, in `settings.json`, where its Settings › Keyboard shows them too. The plugin writes nowhere else.
 
 ```sh
 tern plugin remove objectives

@@ -778,3 +778,76 @@
 	color: var(--t3);
 	font-size: 11px;
 }
+
+/* ---- Configure's settings page (custom-order-and-direct-controls, design D6) ---- */
+/* The header's gear button: an icon in the quiet button's chrome. */
+[data-surface='plugin.tern.canvas'] .ob-root .ob-gear {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 3px 7px;
+}
+[data-surface='plugin.tern.canvas'] .ob-settings {
+	max-width: 760px;
+}
+[data-surface='plugin.tern.canvas'] .ob-settings .ob-stitle {
+	font-size: 15px;
+	font-weight: 650;
+	user-select: none;
+}
+[data-surface='plugin.tern.canvas'] .ob-settings .ob-ssec {
+	display: flex;
+	flex-direction: column;
+	margin-top: 14px;
+	padding: 8px 12px 10px;
+	border: 1px solid rgb(from var(--t1) r g b / 14%);
+	border-radius: 8px;
+	background: var(--card);
+}
+[data-surface='plugin.tern.canvas'] .ob-settings .ob-sh {
+	height: 24px;
+	line-height: 24px;
+	font-size: 11px;
+	font-weight: 650;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+	color: var(--t3);
+	user-select: none;
+}
+[data-surface='plugin.tern.canvas'] .ob-settings .ob-srow {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	gap: 8px;
+	min-height: 32px;
+	border-top: 1px solid rgb(from var(--t1) r g b / 7%);
+}
+[data-surface='plugin.tern.canvas'] .ob-settings .ob-sh + .ob-srow {
+	border-top: none;
+}
+[data-surface='plugin.tern.canvas'] .ob-settings .ob-slabel {
+	flex: 1 1 auto;
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	user-select: none;
+}
+[data-surface='plugin.tern.canvas'] .ob-settings .ob-skeys {
+	flex: none;
+	min-width: 72px;
+	text-align: right;
+	font-size: 13.5px;
+	letter-spacing: 0.06em;
+	user-select: none;
+}
+[data-surface='plugin.tern.canvas'] .ob-settings .ob-sbtn {
+	flex: none;
+	padding: 2px 9px;
+	font-size: 12px;
+}
+[data-surface='plugin.tern.canvas'] .ob-settings .ob-snote {
+	margin-top: 6px;
+	font-size: 11.5px;
+	user-select: none;
+}

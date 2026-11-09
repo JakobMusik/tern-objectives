@@ -242,7 +242,7 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
 
 ## 5. Configure
 
-- [ ] 5.1 The settings page (D6) and the new-objective defaults (D8):
+- [x] 5.1 The settings page (D6) and the new-objective defaults (D8):
   - `page`;
   - the `configure` command and the header's gear button;
   - `View.build_settings`;
@@ -255,7 +255,18 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
   - plugin-settings "Settings page": all four scenarios, with `ctl click` and `ctl tree '.ob-root'`;
   - "New objective defaults": "Start at P1, at the bottom" (kv dump) and "Defaults survive a reload";
   - "Measured hit areas" still holds on the graph page afterwards.
-- [ ] 5.2 Shortcuts (D7): `lib/keys.luau` (commands table, parse, display, conflict check, keybinds edits, verify and restore), the rows' Change, Remove and Reset, and `window.luau` taking its defaults from the table. Add the README text on changing shortcuts in Configure, and the data section's note that they are saved in Tern's keybinds.
+
+  Result (harness, README layout of 4.1; o1 "Fix login bug" and o2 "Review pull requests"):
+  - **From the header:** with o2 selected, the 30 × 22 px gear button showed the settings page: "Settings", "Back to graph", the "Shortcuts" and "New objectives" sections, and no objective or tab nodes (shot `cfg_page`).
+  - **Back to graph:** the columns came back with o2 still selected.
+  - **From the palette:** with no graph shown, `plugins run plugin.objectives.configure` showed the settings page over the current tab.
+  - **Next open shows the graph:** ⌃⌘O (`key Meta+Ctrl+o`) closed the settings page, and a second ⌃⌘O showed the graph's two objectives.
+  - **⌥N from the settings page:** it showed the graph's columns and the New objective field (rerun from 4.1).
+  - **Start at P1, at the bottom:** P1 and Bottom drew active. After "Back to graph", "Write slides" came out as o3, P1, last in the column. The kv dump held priority 1 for o3 and `settings {start_priority 1, new_place "bottom"}`.
+  - **Defaults survive a reload:** after `ctl plugins fixtures` and a fresh open, P1 and Bottom were still active. They were then set back to P3 and Top.
+  - **Hit areas on the graph page:** grips and done boxes 22 × 18 px, bar buttons 22 px tall, jump buttons 28 × 22, rows 22, unselected nodes 48 px tall and the selected one 78.
+  - **Look:** the shortcut keys first used the mono face, where ⌃ and ⌥ drew small, so they now use the UI face at 13.5 px.
+- [x] 5.2 Shortcuts (D7): `lib/keys.luau` (commands table, parse, display, conflict check, keybinds edits, verify and restore), the rows' Change, Remove and Reset, and `window.luau` taking its defaults from the table. Add the README text on changing shortcuts in Configure, and the data section's note that they are saved in Tern's keybinds.
 
   Verify every scenario of plugin-settings "Shortcut rows", "Changing a shortcut", "Refused shortcuts" and "Removing and resetting a shortcut", reading the rows with `ctl tree`, the palette with `ctl state` and `op keys_all`, and pressing keys with `ctl key` in the Benchmarks shell and in the graph. After each, `cx.settings:keybinds()` (via `op`) holds only the entries D7 describes. Then reset everything and check that the map equals the starting one.
 
@@ -264,12 +275,47 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
   - plugin-package "Palette commands", all three scenarios with six commands;
   - plugin-package "README contents" and "Direct controls explained": `grep` the README for ⌥N, Configure, grip and keybinds;
   - `openspec validate --strict custom-order-and-direct-controls` passes.
-- [ ] 5.3 Take `docs/graph.png` and `docs/review.png` again, as their 0.16.0 versions were taken: the same harness data, crops and alt text, now with grips, no ⋯, and the header's gear button. Show both drafts to the user before committing them. (This was 3.5; it moved here because group 5 adds the gear button to the header, which a group 3 shot would miss.)
+
+  Result (harness; the keybinds map started as `{}`):
+  - **Defaults:** the rows read Open graph ⌃⌘O, Rename selected objective ⌥R, New objective ⌥N, and "none" for the other three, with no Reset.
+  - **New key for New objective:**
+    - Change opened the field holding `alt+n`; `ctrl+alt+n` turned the row into ⌃⌥N and the toast into "New objective: ⌃⌥N".
+    - The map became `{"alt+n": [], "ctrl+alt+n": "plugin.objectives.new"}`, and the palette listed "Objectives: New objective ⌃⌥N".
+    - In the Benchmarks shell, ⌃⌥N showed the graph and the field, while ⌥N did nothing.
+  - **Key for a command without one:** Link this tab's field opened empty, and `ctrl+alt+l` made the row ⌃⌥L. ⌃⌥L in the shell opened the "Link this tab" picker.
+  - **Field dismissed:** Change on Open graph, then Escape, left ⌃⌘O, the same map and the settings page shown. ⌃⌘O then closed and opened the graph.
+  - **Refused shortcuts:**
+    - `cmd+t` gave "⌘T is already in use · It runs “New tab”…", the row kept ⌃⌘O, and ⌘T still opened a new tab (6 tabs became 7; the extra one was closed);
+    - `n` gave "A shortcut needs ⌃, ⌥ or ⌘";
+    - `alt+` gave "“alt+” isn't a shortcut".
+
+    The map was unchanged after each.
+  - **Remove the rename key:** Remove made the row "none", with Reset, and added `"alt+r": []`. ⌥R in the shell opened nothing and showed no toast.
+  - **Reset after a change:** Reset on New objective made the row ⌥N without Reset, and left the map holding only `"alt+r": []` and `"ctrl+alt+l": …`. ⌥N in the shell then showed the graph and the field, and ⌃⌥N did nothing.
+  - **Back to the start:** Reset on Rename and on Link this tab left the map `{}`, equal to the starting one. The keymap held `alt+n`, `alt+r` and `ctrl+cmd+o` for the plugin again.
+  - **Found on the way:**
+    - The first runs drew every row "none" right after a write, and a Reset failed its own check and put the old map back. Both had the same cause: `cx.actions:keys()` lacks every plugin's keys until the keymap rebuilds, a moment after the registration.
+    - The rows and the Change field now layer the keys from the user's keybinds (`Keys.in_effect`). The check after a write only asks that nothing but the intended chord runs the command, and that a changed shortcut, a user entry, already does.
+    - Design D7 says so. A redraw timer was tried first and dropped, since the headless serve doesn't fire timers.
+  - **Where data lands:** `diff -rq` finds the fixtures' copy of the package identical to the repo. The plugin's data folder holds only `kv.json`. Nothing under the panes' folders `/tmp/tobj/w/demo` changed after the store was loaded.
+  - **Palette commands:**
+    - with no graph shown, the palette listed five commands, without Rename;
+    - with the graph shown and nothing selected, the same five;
+    - with o1 selected, all six, with ⌃⌘O, ⌥R and ⌥N.
+  - **README:** it has ⌥N (2), Configure (7), grip (1) and keybinds (2), and `openspec validate --strict custom-order-and-direct-controls` passes.
+- [x] 5.3 Take `docs/graph.png` and `docs/review.png` again, as their 0.16.0 versions were taken: the same harness data, crops and alt text, now with grips, no ⋯, and the header's gear button. Show both drafts to the user before committing them. (This was 3.5; it moved here because group 5 adds the gear button to the header, which a group 3 shot would miss.)
 
   Verify:
   - plugin-package "Screenshots match this version": open nodes in `graph.png` show grips, and neither image shows ⋯;
   - "Graph screenshot first": the README's first image is still `docs/graph.png`;
   - every line end in `graph.png` sits within 2 px of its node and tab-header centres (the edge check of 3.1).
+
+  Result:
+  - **Harness data:** the layout was rebuilt as in 0.16.0: docs (Guides; Release notes with omp idle and an unseen reply), web (App build split into app and tests; Components with a shell and `todo.md`), and api (Server with a shell and omp waiting for input; Benchmarks). The 0.16.0 demo store went in, with its due, done and review dates moved one day later, so the chips read as they did on 2026-11-08 (`/tmp/tobj/kv.readme-0170.json`). The window was 1045 × 928, so the glimpse matches the old crop's 914 × 808.
+  - **`graph.png`** (1828 × 1616): nothing selected, the Done group open. Every open node has a grip, and no node has ⋯. The header shows "Review (2)", the gear and "＋ New objective"; "Fix login bug" has the amber "needs you" ring and "Write release notes" the green "replied" ring. All 7 left and 6 right line ends sit within 0.3 px of their centres.
+  - **`review.png`** (1828 × 853): review mode with "Profile slow search queries" selected, its Note and Tags row under the ratings, and the Benchmarks tab under `Linked to` with "× Unlink". The green line's ends sit within 0.3 px. It is 100 px taller than in 0.16.0, because the selected node's row and the tabs' link bars are new.
+  - **Approval:** the user approved both drafts before they were committed. Both alt texts now name the grips, the gear button, the Note and Tags row, and the link bars.
+  - **Graph screenshot first:** the README's first image is still `docs/graph.png`, and the title bar reads `tobj/w/demo/guides` (the serve's folder) where it read `demo/guides`.
 
 ## 6. Release 0.17.0
 

@@ -9,6 +9,7 @@ local Edges = require("./edges")
 local Dates = require("./dates")
 local Review = require("./review")
 local Text = require("./text")
+local Keys = require("./keys")
 
 local M = {}
 
@@ -963,6 +964,10 @@ function M.build(state: Store.State, win: Model.Window, ui_state: Ui): Built
 			actions = { click = "rev=" },
 		}))
 	end
+	-- Configure's settings page (custom-order-and-direct-controls, design D6).
+	table.insert(head, el("span", { class = "ob-btn ob-btn-quiet ob-gear", key = "gear", title = "Configure", actions = { click = "page=settings" } }, {
+		{ k = "icon", p = { name = "gear" } } :: any,
+	}))
 	table.insert(head, span("ob-btn ob-btn-primary", "＋ New objective", { key = "new", actions = { click = "new=" } }))
 
 	local view = el("div", { class = "ob-root", key = "root", actions = { click = "bg=" } }, {
@@ -974,6 +979,78 @@ function M.build(state: Store.State, win: Model.Window, ui_state: Ui): Built
 		}),
 	})
 	return { view = view, css = css, closed = closed, done_tabs = done_tabs, due = #due_list }
+end
+
+-- A segmented choice of the settings page: `options` are {value, label}; `act` takes the value.
+local function segments(key: string, current: string, options: { { string } }, act: string): Node
+	local kids: { Node } = {}
+	for _, o in options do
+		table.insert(kids, span("ob-segb" .. (if o[1] == current then " ob-on" else ""), o[2], {
+			key = o[1],
+			actions = { click = act .. "=" .. o[1] },
+		}))
+	end
+	return el("div", { class = "ob-seg", key = key }, kids)
+end
+
+local function setting_row(key: string, label: string, kids: { Node }): Node
+	local row: { Node } = { span("ob-slabel", label, { key = "label" }) }
+	for _, k in kids do
+		table.insert(row, k)
+	end
+	return el("div", { class = "ob-srow", key = key }, row)
+end
+
+-- Configure's settings page, drawn in the graph's canvas in place of the columns (design D6): the
+-- plugin's shortcuts as Tern's keymap has them (`keys`, by command id; D7), and the new-objective
+-- defaults (D8). No edges.
+function M.build_settings(state: Store.State, keys: { [string]: { string } }): Built
+	local rows: { Node } = { el("div", { class = "ob-sh", key = "h", text = "Shortcuts" }) }
+	for _, c in Keys.COMMANDS do
+		local chords = keys[c.id] or {}
+		local shown: { string } = {}
+		for _, chord in chords do
+			table.insert(shown, Keys.display(chord))
+		end
+		local at_default = if c.default ~= nil
+			then #chords == 1 and Keys.canon(chords[1]) == Keys.canon(c.default :: string)
+			else #chords == 0
+		local kids: { Node } = {
+			span("ob-skeys" .. (if #shown == 0 then " ob-dim" else ""), if #shown > 0 then table.concat(shown, "  ") else "none", { key = "keys" }),
+			span("ob-btn ob-btn-quiet ob-sbtn", "Change", { key = "chg", title = "Type a new shortcut", actions = { click = "kchg=" .. c.id } }),
+			span("ob-btn ob-btn-quiet ob-sbtn", "Remove", { key = "rm", title = "No shortcut", actions = { click = "krm=" .. c.id } }),
+		}
+		if not at_default then
+			table.insert(kids, span("ob-btn ob-btn-quiet ob-sbtn", "Reset", {
+				key = "rst",
+				title = if c.default ~= nil then "Back to " .. Keys.display(c.default :: string) else "Back to no shortcut",
+				actions = { click = "krst=" .. c.id },
+			}))
+		end
+		table.insert(rows, setting_row("k:" .. c.id, c.label, kids))
+	end
+	table.insert(rows, span("ob-line ob-dim ob-snote", "Shortcuts are saved in Tern's keybinds, so Settings › Keyboard shows them too.", { key = "note" }))
+	local set = state.settings
+	local defaults: { Node } = {
+		el("div", { class = "ob-sh", key = "h", text = "New objectives" }),
+		setting_row("prio", "Start at", {
+			segments("seg", tostring(set.start_priority), { { "0", "P0" }, { "1", "P1" }, { "2", "P2" }, { "3", "P3" } }, "setprio"),
+		}),
+		setting_row("place", "Place", {
+			segments("seg", set.new_place, { { "top", "Top" }, { "bottom", "Bottom" } }, "setplace"),
+		}),
+	}
+	local head: { Node } = {
+		span("ob-stitle", "Settings", { key = "title" }),
+		el("div", { class = "ob-spacer", key = "sp" }),
+		span("ob-btn ob-btn-quiet", "Back to graph", { key = "back", actions = { click = "page=graph" } }),
+	}
+	local view = el("div", { class = "ob-root ob-settings", key = "root" }, {
+		el("div", { class = "ob-head", key = "head" }, head),
+		el("div", { class = "ob-ssec", key = "keys" }, rows),
+		el("div", { class = "ob-ssec", key = "defaults" }, defaults),
+	})
+	return { view = view, css = "", closed = {}, done_tabs = {}, due = 0 }
 end
 
 return M

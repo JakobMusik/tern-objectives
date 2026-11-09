@@ -158,7 +158,7 @@ Alternative: closing without asking, with no undo. Rejected: closing ends progra
   - `link_tab`, `new_for_tab` and `configure`: no default.
 
   Each runs the action `plugin.objectives.<id>`. `window.luau` takes each default from this table, so there is one source.
-- **Keys in effect:** `cx.actions:keys()`, inverted for each action.
+- **Keys in effect:** the rows and the Change field use `Keys.in_effect(cx.settings:keybinds())`. It layers the keys as Tern does: the user's entries that name the command, plus its default chord unless a user entry claims that chord. `cx.actions:keys()` is right only once the keymap has rebuilt after a write, a moment later (task 5.2), so it serves the conflict check and the check after a write.
 - **Display:** modifiers as ⌃⌥⇧⌘ in Apple's order, then the key, a letter in upper case. Sequences are joined by a space.
 - **Parse:**
   - The text is lowercased and trimmed, split on `>` into chords, and each chord on `+`.
@@ -171,8 +171,8 @@ Alternative: closing without asking, with no undo. Rejected: closing ends progra
   - **Change:** `kb[new] = action`. When the command has a default that differs, `kb[default] = []`.
   - **Remove:** `kb[default] = []` when there is a default.
   - **Reset:** delete `kb[default]` if it is an empty list.
-- **Plugin keys come back:** every keybinds write drops all plugins' binds from the keymap (source record). Right after the write, `window.luau`'s registration runs again: it re-registers the plugin's commands, which rebuilds the keymap with every plugin's binds. `Keys.write` takes it as a callback, so `lib/keys.luau` doesn't require `window.luau`.
-- **Verify:** `cx.actions:keys()` is read again and must show the intended result. If it doesn't, the previous map goes back, the commands are registered again, and an error toast says the change didn't take.
+- **Plugin keys come back:** every keybinds write drops all plugins' binds from the keymap (source record). Right after the write, `window.luau`'s registration runs again (`App.on_keybinds` holds it): it registers the plugin's commands again, which rebuilds the keymap with every plugin's binds, a moment later.
+- **Verify:** `cx.actions:keys()` is read again right after the write. Only the user layer is in it by then, so the check is that no chord but the intended one runs the command, and that a changed shortcut, a user entry, already does. If that fails, the previous map goes back, the commands are registered again, and an error toast says the change didn't take.
 - **Why the conflict check matters:** the user layer replaces Tern's own bindings (source record), so binding `cmd+t` there would take ⌘T from "New tab". The check is what stops Configure from doing that.
 
 Alternative: keep the shortcuts in `kv.json` and register the commands' `keys` from them at load. Rejected:

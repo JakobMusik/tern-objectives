@@ -1,6 +1,6 @@
 --!strict
--- The graph's behaviour: rendering, the click verbs (design D5, P4), the objective menu and the
--- palette commands. Selection lives in this VM only (design D6).
+-- The graph's behaviour: rendering, the click verbs (design D5, P4), the action bar, the settings page
+-- and the palette commands. Selection lives in this VM only (design D6).
 
 local Agents = require("./agents")
 local Store = require("./store")
@@ -10,8 +10,21 @@ local Surface = require("./surface")
 local Dates = require("./dates")
 local Details = require("./details")
 local Refresh = require("./refresh")
+local Keys = require("./keys")
 
 local M = {}
+
+-- Which page the graph's canvas shows (custom-order-and-direct-controls, design D6): "graph", or
+-- "settings" for Configure. Never stored; a fresh open shows the graph.
+local page = "graph"
+
+-- Registers the plugin's commands again: every keybinds write drops all plugins' keys from the keymap
+-- until a run-time registration (design D7). `window.luau` hands it over at load.
+local reregister: (() -> ())? = nil
+
+function M.on_keybinds(fn: () -> ())
+	reregister = fn
+end
 
 local selected: string? = nil
 
@@ -69,6 +82,16 @@ end
 -- Builds the view for the current state, refreshing tab snapshots and the edge sheet on the way.
 local function build(cx: WindowCx): View.Built
 	local state = Store.read()
+	if page == "settings" then
+		-- The settings page reads no window model and no agents (design D6). Its rows show the keys
+		-- layered from the user's keybinds, which hold at once after a write (task 5.2).
+		local built = View.build_settings(state, Keys.in_effect(cx.settings:keybinds()))
+		if built.css ~= edges_css then
+			tern.css("edges", built.css)
+			edges_css = built.css
+		end
+		return built
+	end
 	local win = Model.read(cx, Surface.find(cx))
 	Store.refresh_snapshots(state, win.tabs :: any, win.key)
 	Store.save_sessions(state, {}, win.live)
@@ -152,6 +175,7 @@ function M.open(cx: WindowCx, keep_origin: boolean?)
 		reviewing = false
 		moving = nil
 		confirm = nil
+		page = "graph"
 		local focused = cx.session:focused()
 		if focused ~= nil and focused ~= Surface.find(cx) then
 			origin = focused
@@ -238,8 +262,116 @@ end
 function M.new_key(cx: WindowCx)
 	if Surface.here(cx) == nil then
 		M.open(cx)
+	elseif page ~= "graph" then
+		page = "graph"
+		M.render(cx)
 	end
 	new_objective(cx, nil, nil, "", true)
+end
+
+-- ---- Configure (custom-order-and-direct-controls, design D6–D8) ----
+
+-- "Objectives: Configure" and the header's gear button: the settings page, over this tab.
+function M.configure(cx: WindowCx)
+	if Surface.here(cx) == nil then
+		M.open(cx)
+	end
+	page = "settings"
+	M.render(cx)
+end
+
+-- Writes `kb` as the user's keybinds, then registers the commands again so every plugin's keys come
+-- back (design D7). False, with nothing written, when Tern refuses the map.
+local function write_keybinds(cx: WindowCx, kb: { [string]: any }): boolean
+	local ok = pcall(function()
+		cx.settings:set("keybinds", kb)
+	end)
+	if reregister ~= nil then
+		reregister()
+	end
+	return ok
+end
+
+-- Change, Remove or Reset on a shortcut row: edits the user's keybinds, checks the keys now in effect,
+-- and puts the old map back when they aren't what was asked for.
+local function apply_keys(cx: WindowCx, id: string, op: string, new: string?)
+	local c = Keys.command(id)
+	if c == nil then
+		return
+	end
+	local before = cx.settings:keybinds()
+	if not write_keybinds(cx, Keys.edited(before, id, op, new)) then
+		cx:toast("error", "Tern refused that shortcut", "Nothing was changed.")
+		return
+	end
+	local want: string? = if op == "change" then new elseif op == "reset" then (if c.default ~= nil then Keys.canon(c.default :: string) else nil) else nil
+	-- The user layer shows at once, while the plugins' own keys come back with the keymap rebuild the
+	-- registration asks for, a moment later (task 5.2). So the check is that no other keys run the
+	-- command, and that a changed shortcut, which is a user entry, already does.
+	local got = Keys.effective(cx.actions:keys())[id] or {}
+	local ok = true
+	for _, chord in got do
+		if Keys.canon(chord) ~= want then
+			ok = false
+		end
+	end
+	if op == "change" and #got == 0 then
+		ok = false
+	end
+	if not ok then
+		write_keybinds(cx, before)
+		cx:toast("error", "That shortcut didn't take", "Your keybinds are back as they were.")
+		return
+	end
+	if op == "change" then
+		cx:toast("success", c.label .. ": " .. Keys.display(new :: string))
+	elseif op == "remove" then
+		cx:toast("info", c.label .. " has no shortcut now")
+	else
+		cx:toast("info", c.label .. ": " .. (if want ~= nil then Keys.display(want) else "no shortcut"))
+	end
+end
+
+-- Change on a shortcut row: a field for the new keys, spelled as Tern's keybinds spell them; refused
+-- when it doesn't parse, lacks ⌃, ⌥ or ⌘, or runs something else already (design D7).
+local function change_keys(cx: WindowCx, id: string)
+	local c = Keys.command(id)
+	if c == nil then
+		return
+	end
+	local current = Keys.in_effect(cx.settings:keybinds())[id] or {}
+	cx:prompt({
+		value = current[1] or "",
+		placeholder = "Shortcut for " .. c.label .. ", for example ctrl+alt+n",
+		icon = "keyboard",
+		action = "set",
+	}):next(function(text, _err, cx2)
+		if text == nil or cx2 == nil then
+			finish(cx2, true)
+			return
+		end
+		local canon = Keys.canon(text)
+		if canon == nil then
+			cx2:toast("error", "“" .. text .. "” isn't a shortcut", "Spell it as in Tern's keybinds, for example ctrl+alt+n.")
+		elseif not Keys.has_modifier(canon) then
+			cx2:toast("error", "A shortcut needs ⌃, ⌥ or ⌘", "Otherwise it would take that key away from typing everywhere.")
+		else
+			local action = Keys.action(id)
+			local other = Keys.in_use(cx2.actions:keys(), canon, action)
+			if other ~= nil then
+				local ok, info = pcall(function()
+					return cx2.actions:describe(other :: string)
+				end)
+				local name = if ok and info ~= nil and info.label ~= nil then info.label else other
+				cx2:toast("error", Keys.display(canon) .. " is already in use", "It runs “" .. name .. "”. Pick another shortcut.")
+			elseif c.default ~= nil and Keys.canon(c.default :: string) == canon then
+				apply_keys(cx2, id, "reset", nil)
+			else
+				apply_keys(cx2, id, "change", canon)
+			end
+		end
+		finish(cx2, true)
+	end)
 end
 
 function M.new_for_tab(cx: WindowCx)
@@ -844,6 +976,38 @@ function M.action(ev: Action, cx: WindowCx)
 			v.done_open = not v.done_open
 			return true
 		end)
+	elseif act == "page" then
+		-- The header's gear button and the settings page's "Back to graph" (design D6).
+		page = if value == "settings" then "settings" else "graph"
+	elseif act == "setprio" then
+		-- Configure: the priority new objectives start at (design D8).
+		local n = tonumber(value)
+		if n ~= nil and n >= 0 and n <= 3 then
+			Store.set_settings(function(s)
+				if s.start_priority == n then
+					return false
+				end
+				s.start_priority = n :: number
+				return true
+			end)
+		end
+	elseif act == "setplace" then
+		-- Configure: where new objectives go in the custom order (design D8).
+		local place = if value == "bottom" then "bottom" else "top"
+		Store.set_settings(function(s)
+			if s.new_place == place then
+				return false
+			end
+			s.new_place = place
+			return true
+		end)
+	elseif act == "kchg" then
+		change_keys(cx, value)
+		later = true
+	elseif act == "krm" then
+		apply_keys(cx, value, "remove", nil)
+	elseif act == "krst" then
+		apply_keys(cx, value, "reset", nil)
 	else
 		return
 	end
