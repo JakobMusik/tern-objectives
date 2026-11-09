@@ -36,7 +36,8 @@ export type Ui = {
 	-- (custom-order-and-direct-controls, design D2).
 	moving: string?,
 	-- The question an action asks in place, if one is showing (custom-order-and-direct-controls, D4):
-	-- "close" for an objective's tabs, asked in its bar or in the done notice, or "done_tabs" (D11).
+	-- "close" for an objective's tabs, asked in its bar or in the done notice, "done_tabs" (D11), or
+	-- "reopen" for a done objective, asked in its bar (reopen-done-objectives, D1).
 	confirm: { kind: string, id: string?, where: string? }?,
 }
 
@@ -134,8 +135,10 @@ function M.closable(state: Store.State, win: Model.Window, o: Store.Objective): 
 end
 
 -- What the selected node's action bar offers (design D3): `close` and `kept` count a done objective's
--- tabs, and `asking` turns the bar into "Close n tabs?" (D4).
-type Acts = { close: number, kept: number, asking: boolean }
+-- tabs, and `ask` turns the bar into a question: "close" for "Close n tabs?" (D4), "reopen" for
+-- "Reopen “<title>”?" (reopen-done-objectives, D1). A question takes its own row over the answers
+-- (reopen-done-objectives, D1a).
+type Acts = { close: number, kept: number, ask: string? }
 
 local function act_button(key: string, icon: string, label: string, act: string, tip: string): Node
 	return el("span", { class = "ob-act ob-act-" .. key, key = key, title = tip, actions = { click = act } }, {
@@ -144,9 +147,9 @@ local function act_button(key: string, icon: string, label: string, act: string,
 	})
 end
 
-local function action_bar(o: Store.Objective, acts: Acts): Node
-	local kids: { Node }
-	if acts.asking then
+-- The node's last lines: the bar, or a question's row and the answers under it.
+local function action_bar(o: Store.Objective, acts: Acts): { Node }
+	if acts.ask == "close" then
 		local q = "Close " .. plural(acts.close, "tab") .. "?"
 		local shown = q
 		local tip = q
@@ -155,12 +158,34 @@ local function action_bar(o: Store.Objective, acts: Acts): Node
 			tip ..= " " .. plural(acts.kept, "tab") .. " linked to an open objective " .. (if acts.kept == 1 then "stays" else "stay") .. " open."
 		end
 		tip ..= " Closing ends their programs; omp chats come back with Resume."
-		kids = {
-			span("ob-ask", shown, { key = "q", title = tip }),
-			act_button("cfm", "x-circle", "Close", "cfm=", "Close " .. plural(acts.close, "tab")),
-			act_button("cfx", "x", "Cancel", "cfx=", "Keep them open"),
+		return {
+			el("div", { class = "ob-askrow", key = "ask", title = tip }, { span("ob-ask", shown, { key = "q" }) }),
+			el("div", { class = "ob-acts ob-acts-ask", key = "acts" }, {
+				act_button("cfm", "x-circle", "Close", "cfm=", "Close " .. plural(acts.close, "tab")),
+				act_button("cfx", "x", "Cancel", "cfx=", "Keep them open"),
+			}),
 		}
-	elseif o.done then
+	elseif acts.ask == "reopen" then
+		-- "Reopen “" and "”?" stay whole; only the title between them is cut.
+		return {
+			el("div", {
+				class = "ob-askrow",
+				key = "ask",
+				title = "Reopen “" .. o.title .. "”. Keep review: its schedule carries on when it is done again. Reset review: it starts over.",
+			}, {
+				span("ob-ask-fix", "Reopen “", { key = "a" }),
+				span("ob-ask ob-ask-title", o.title, { key = "t" }),
+				span("ob-ask-fix", "”?", { key = "b" }),
+			}),
+			el("div", { class = "ob-acts ob-acts-ask", key = "acts" }, {
+				act_button("rkeep", "history", "Keep review", "rkeep=", "Reopen; when it is done again, its review schedule carries on"),
+				act_button("rreset", "eraser", "Reset review", "rreset=", "Reopen and drop its review schedule; done again, it starts over"),
+				act_button("cfx", "x", "Cancel", "cfx=", "Keep it done"),
+			}),
+		}
+	end
+	local kids: { Node }
+	if o.done then
 		kids = {
 			act_button("note", "note", "Note", "note=" .. o.id, "Side note"),
 			act_button("tags", "tag", "Tags", "tags=" .. o.id, "Tags"),
@@ -176,7 +201,7 @@ local function action_bar(o: Store.Objective, acts: Acts): Node
 			act_button("del", "trash", "Delete", "del=" .. o.id, "Delete; Undo brings it back"),
 		}
 	end
-	return el("div", { class = "ob-acts" .. (if acts.asking then " ob-acts-ask" else ""), key = "acts" }, kids)
+	return { el("div", { class = "ob-acts", key = "acts" }, kids) }
 end
 
 -- `title`: the title's lines (Text.wrap). `mark`: its attention mark, if any (D3). `review`: review
@@ -193,6 +218,9 @@ local function objective_node(o: Store.Objective, ui_state: Ui, first: string, t
 	end
 	if acts ~= nil then
 		cls ..= " ob-acts-on"
+		if acts.ask ~= nil then
+			cls ..= " ob-asking"
+		end
 	end
 	if o.done then
 		cls ..= " ob-obj-done"
@@ -237,11 +265,12 @@ local function objective_node(o: Store.Objective, ui_state: Ui, first: string, t
 			actions = { click = "lift=" .. o.id },
 		}, { { k = "icon", p = { name = "grip" } } :: any }))
 	end
-	-- Done is final (design D7): a done box has its own no-op click, so it doesn't select the card.
+	-- A done box asks whether to reopen (reopen-done-objectives, D1); its own click doesn't select the
+	-- card through it, the app selects it to ask in its bar.
 	table.insert(l1, span("ob-check" .. (if o.done then " ob-check-on" else ""), if o.done then "✓" else "", {
 		key = "done",
-		title = if o.done then "Done " .. stamp(o.done_at) else "Mark done",
-		actions = { click = if o.done then "noop=" else "done=" .. o.id },
+		title = if o.done then "Done " .. stamp(o.done_at) .. " · click to reopen" else "Mark done",
+		actions = { click = if o.done then "reopen=" .. o.id else "done=" .. o.id },
 	}))
 	table.insert(l1, span("ob-badge ob-p" .. o.priority, "P" .. o.priority, {
 		key = "prio",
@@ -286,7 +315,9 @@ local function objective_node(o: Store.Objective, ui_state: Ui, first: string, t
 		table.insert(lines, el("div", { class = "ob-l3", key = "l3" }, row))
 	end
 	if acts ~= nil then
-		table.insert(lines, action_bar(o, acts))
+		for _, line in action_bar(o, acts) do
+			table.insert(lines, line)
+		end
 	end
 	if movable and ui_state.moving ~= nil and ui_state.moving ~= o.id then
 		-- Over the node's content, so they take the click; their :hover draws the insertion line.
@@ -564,10 +595,15 @@ function M.build(state: Store.State, win: Model.Window, ui_state: Ui): Built
 				tabs, kept = M.closable(state, win, o)
 			end
 			local c = ui_state.confirm
-			local asking = c ~= nil and c.kind == "close" and c.where == "bar" and c.id == o.id and #tabs > 0
-			acts = { close = #tabs, kept = kept, asking = asking }
+			local ask: string? = nil
+			if c ~= nil and c.kind == "close" and c.where == "bar" and c.id == o.id and #tabs > 0 then
+				ask = "close"
+			elseif c ~= nil and c.kind == "reopen" and c.id == o.id and o.done then
+				ask = "reopen"
+			end
+			acts = { close = #tabs, kept = kept, ask = ask }
 		end
-		obj_cy[o.id] = Layout.add_obj(left, review, #title, acts ~= nil)
+		obj_cy[o.id] = Layout.add_obj(left, review, #title, acts ~= nil, acts ~= nil and acts.ask ~= nil)
 		table.insert(left_kids, objective_node(o, ui_state, first, title, mark_of(o), review, acts))
 		if o.id == selected then
 			sel_obj = o

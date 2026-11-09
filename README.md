@@ -11,7 +11,7 @@ A [Tern](https://docs.stencil.so/tern) plugin for keeping track of what you are 
 - **Review what you finished.** Marking an objective done puts it on a spaced-repetition schedule. When it's due, **Review (n)** brings it back to rate **Hard**, **Good** or **Easy**, which sets when you see it next.
 - **Jump anywhere.** Click a tab header or a pane's **→** to go there. Click a pane row to see what it is doing: an omp agent's last message and reply, a shell's last or running command, a file's path.
 - **Organize.** Put objectives in your own order, and give them priorities P0–P3, due dates, tags and a side note; filter by tag or by the current session. The selected objective shows its buttons right under it: **Note**, **Due**, **Tags** and **Delete** (with Undo).
-- **Finish cleanly.** Mark an objective done, then close its tabs in one go, from its **Close n tabs** button or the notice that marking done shows; or close every tab that only done objectives link with **Close n done tabs** in the header. Both ask first, right where you clicked. Closed tabs stay in the graph, and **Resume** brings their omp chats back.
+- **Finish cleanly.** Mark an objective done, then close its tabs in one go, from its **Close n tabs** button or the notice that marking done shows; or close every tab that only done objectives link with **Close n done tabs** in the header. Both ask first, right where you clicked. Closed tabs stay in the graph, and **Resume** brings their omp chats back. Not done after all? Click a done objective's box to reopen it: **Keep review** carries its review schedule on when it's done again, **Reset review** starts it over. It goes to the bottom of your list, with its links.
 
 ## Reviewing done objectives
 

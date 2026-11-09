@@ -38,15 +38,22 @@ The SDK line numbers below refer to `/tmp/ternsdk/book.txt`, the text of `https:
 ### D1. The box asks in the bar
 - **Click:** a done box sends `reopen=<id>`, replacing `noop=`. Its tooltip reads "Done <time> · click to reopen".
 - **State:** the `reopen` branch sets `selected = id` and `confirm = { kind = "reopen", id = id, where = "bar" }`. Selecting is what makes the bar show: the layout gives the bar's height to the selected node only, and "Larger hit areas" keeps unselected nodes 48 px tall.
-- **Drawing:** in `add_node`, the selected node asks when `confirm` is `reopen` for its id and the record is still done. `Acts.asking` becomes `Acts.ask: "close" | "reopen" | nil`. `action_bar` draws `span.ob-ask` "Reopen?" (tooltip: "Reopen “<title>”. Keep review: its schedule carries on when it is done again. Reset review: it starts over."), then:
+- **Drawing:** in `add_node`, the selected node asks when `confirm` is `reopen` for its id and the record is still done. `Acts.asking` becomes `Acts.ask: "close" | "reopen" | nil`. The question row (D1a) reads "Reopen “<title>”?" (tooltip: "Reopen “<title>”. Keep review: its schedule carries on when it is done again. Reset review: it starts over."), and the answers row holds:
   - Keep review: `rkeep=`, icon `history`;
   - Reset review: `rreset=`, icon `eraser`;
   - Cancel: `cfx=`, icon `x`.
-- **Fitting:** three answers don't fit a narrow left column whole. The bar gets `ob-acts-reopen` beside `ob-acts-ask`, and there the answers are `flex: 0 1 auto` with their labels cut with "…", so the icons always show. The two-answer "Close n tabs?" bar is unchanged.
 - **Answers:** `rkeep` and `rreset` act on `asked` when it is `reopen`: `Store.reopen(asked.id, keep)`, and `toast_gone` if the record is gone. The selection stays. Any other click has already ended the question, as for "Close n tabs?".
 - **Rejected:**
   - Asking in the header, like "Close n done tabs?": far from the box, and the header already holds the Undo and Moving notices.
   - Showing the bar on an unselected node: it breaks the 48 px rule and gives the layout a second bar to place.
+
+### D1a. A question in the bar takes two rows
+Added during apply. Task 1.2's shot at 460 px showed one row too narrow: three icon-only answers left "Reopen?" 2.8 px, and the existing "Close 2 tabs?" bar showed no question while its Cancel ran 37 px past the node's edge. The user chose two rows, for both questions.
+- **Rows:** the asking node draws `div.ob-askrow` (the question, 22 px, 8 px above it) and then `div.ob-acts.ob-acts-ask` (the answers, 22 px, 6 px above it). The answers are `flex: 1 1 0`, like the normal bar's buttons, so they share the row and their labels give way first. The `flex: none` rule for asking answers goes.
+- **Question row:** "Close n tabs? · k stay open" as one `span.ob-ask`, cut with "…". "Reopen “<title>”?" as three spans: "Reopen “" and "”?" whole, and the title between them cut with "…", so "Reopen" and "?" always show.
+- **Height:** `px.ask_h = 28`. `obj_height` and `Layout.add_obj` take an `asking` flag that adds it to the bar's 30 px, and `Layout.css` generates `.ob-obj.ob-acts-on.ob-asking` heights for one to three title lines, with and without `.ob-review`, after the other node rules. The edges are drawn from the same numbers.
+- **Why always two rows:** the canvas never learns its width, and the edges need each node's exact height (`lib/layout.luau:32–33`), so the row can't wrap only when it is narrow.
+- **Rejected:** one row, with only the icons in the narrowest graph (the user's choice).
 
 ### D2. `Store.reopen(id, keep)`
 In one `mutate`:
@@ -75,7 +82,8 @@ The box is on review nodes too, so the same question shows in the bar under the 
 ## Risks / Trade-offs
 
 - [A mis-click on the small box, then a mis-click on an answer] → two clicks are needed, and Keep review loses nothing but the done time. Reset review drops the schedule with no Undo; its tooltip says so.
-- [Labels cut in a narrow column] → icons and tooltips stay. Task 1.2 checks a screenshot at the narrowest graph.
+- [Labels cut in a narrow column] → the question keeps its own row (D1a), and the answers keep their icons and tooltips. Task 1.2 checks a screenshot at the narrowest graph.
+- [An asking node is 28 px taller, so everything under it moves down while a question shows] → it returns at the answer or the next click; the lines follow the same heights.
 - [Another window acts between the question and the answer] → the answer re-reads the store (D2): a removed objective toasts, an already open one changes nothing.
 - [An open objective carries a schedule it doesn't show] → out of scope (proposal). It shows again once the objective is done.
 - [Downgrade] → 0.18.0 ignores `review` on open records and starts a new schedule when one is marked done (Context), so nothing breaks.

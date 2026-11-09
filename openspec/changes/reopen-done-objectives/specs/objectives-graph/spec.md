@@ -14,10 +14,10 @@ Clicking a done objective's box SHALL ask whether to reopen it ("Reopening a don
 
 #### Scenario: Box of a done objective
 - **WHEN** the user opens the Done group and clicks a done objective's box
-- **THEN** it stays in the Done group, the count is unchanged, the kv dump shows it still done, and its action bar asks "Reopen?"
+- **THEN** it stays in the Done group, the count is unchanged, the kv dump shows it still done, and its action bar asks whether to reopen it
 
 ### Requirement: Inline confirmation
-An action that asks before acting SHALL ask in place, never in a picker: "Close n tabs" in the action bar or the done notice, "Close n done tabs" in the header, and a done objective's box in that objective's action bar. The control or bar SHALL turn into the question with its answers: Close and Cancel, or Keep review, Reset review and Cancel. Cancel, or any other click in the graph, SHALL end the question and change nothing.
+An action that asks before acting SHALL ask in place, never in a picker: "Close n tabs" in the action bar or the done notice, "Close n done tabs" in the header, and a done objective's box in its action bar. The control or bar SHALL turn into the question with its answers: Close and Cancel, or Keep review, Reset review and Cancel. In an action bar, the question SHALL take its own row above its answers. Cancel, or any other click in the graph, SHALL end the question and change nothing.
 
 #### Scenario: Asked in the bar
 - **WHEN** done objective X links two open tabs that no open objective links, and the user clicks "Close 2 tabs" in X's bar
@@ -28,17 +28,21 @@ An action that asks before acting SHALL ask in place, never in a picker: "Close 
 - **THEN** both tabs are still open, and selecting X again shows its row with "Close 2 tabs"
 
 #### Scenario: Another click ends the reopen question
-- **WHEN** a done objective's bar asks "Reopen?" and the user clicks empty graph space
+- **WHEN** a done objective's bar asks whether to reopen it, and the user clicks empty graph space
 - **THEN** nothing is selected, the objective is still in the Done group, and the kv dump shows it still done
+
+#### Scenario: Questions in a narrow graph
+- **WHEN** the window is 460 px wide, and a done objective's bar asks to close its tabs or to reopen it
+- **THEN** the question's row starts with "Close 2 tabs?" or "Reopen", and every answer, with its icon, sits inside the objective's node
 
 ## ADDED Requirements
 
 ### Requirement: Reopening a done objective
-Clicking a done objective's box, in the Done group or in review mode, SHALL select it and turn its action bar into "Reopen?" with Keep review, Reset review and Cancel. Keep review and Reset review SHALL both reopen it: it leaves the Done group, or review mode's list, and shows last among the open objectives, still selected. Cancel SHALL end the question and leave it done and selected. Reopening SHALL offer no Undo.
+Clicking a done objective's box, in the Done group or in review mode, SHALL select it and turn its action bar into the question "Reopen “<title>”?" above Keep review, Reset review and Cancel. Keep review and Reset review SHALL both reopen it: it leaves the Done group, or review mode's list, and shows last among the open objectives, still selected. Cancel SHALL end the question and leave it done and selected. Reopening SHALL offer no Undo.
 
 #### Scenario: Asking to reopen
 - **WHEN** "Fix login bug" and "Review pull requests" are open, and the user opens the Done group and clicks the box of done objective "Write slides"
-- **THEN** no picker opens, "Write slides" is selected, its bar reads "Reopen?" with Keep review, Reset review and Cancel, and the kv dump shows it still done
+- **THEN** no picker opens, "Write slides" is selected, its bar asks "Reopen “Write slides”?" above Keep review, Reset review and Cancel, and the kv dump shows it still done
 
 #### Scenario: Keep review
 - **WHEN** "Write slides" links a live tab, and the user then clicks Keep review

@@ -172,6 +172,10 @@ local function normalize(raw: any): State
 			o.review = if o.done_at ~= nil
 				then Review.start(Dates.day_of(o.done_at))
 				else Review.start(Dates.add(Dates.today(), -1))
+		elseif not o.done and o.review ~= nil and type(o.review) ~= "table" then
+			-- An open record keeps a table schedule only after "Keep review" (reopen-done-objectives,
+			-- design D3); anything else would reach Review.resume.
+			o.review = nil
 		end
 	end
 	s.tabs = s.tabs or {}
@@ -442,8 +446,9 @@ local function copy_objective(o: Objective): Objective
 	return c
 end
 
--- Marks an open objective done on `day` and starts its review schedule. Done is final: a done one is
--- left alone. Returns what Undo needs, or nil when the objective is gone or already done.
+-- Marks an open objective done on `day`: a fresh review schedule, or the one it kept when it was
+-- reopened, carried on (reopen-done-objectives, design D3). Returns what Undo needs, or nil when the
+-- objective is gone or already done.
 function M.mark_done(id: string, day: Dates.Day): Saved?
 	local saved: Saved? = nil
 	M.mutate(function(s)
@@ -455,13 +460,40 @@ function M.mark_done(id: string, day: Dates.Day): Saved?
 				saved = { kind = "done", record = copy_objective(o), index = i, tabs = {}, agents = {} }
 				o.done = true
 				o.done_at = os.time()
-				o.review = Review.start(day)
+				o.review = if type(o.review) == "table" then Review.resume(o.review, day) else Review.start(day)
 				return true
 			end
 		end
 		return false
 	end)
 	return saved
+end
+
+-- Reopens a done objective (reopen-done-objectives, design D2): it goes last in the list, so it is
+-- the last open objective, and loses its done time; its schedule stays only with `keep`. Links and
+-- other fields stay. An open one is left alone. Returns false when it is gone.
+function M.reopen(id: string, keep: boolean): boolean
+	local found = false
+	M.mutate(function(s)
+		for i, o in s.objectives do
+			if o.id == id then
+				found = true
+				if not o.done then
+					return false
+				end
+				table.remove(s.objectives, i)
+				o.done = false
+				o.done_at = nil
+				if not keep then
+					o.review = nil
+				end
+				table.insert(s.objectives, o)
+				return true
+			end
+		end
+		return false
+	end)
+	return found
 end
 
 -- Rates a done objective whose review is due on `today`; returns false when it is gone.

@@ -32,8 +32,9 @@ local selected: string? = nil
 local moving: string? = nil
 
 -- The question an action is asking in place (custom-order-and-direct-controls, design D4), never
--- stored: "close" for an objective's tabs, from its bar or from the done notice, and "done_tabs" for
--- the header's "Close n done tabs" (D11). Any other click ends it.
+-- stored: "close" for an objective's tabs, from its bar or from the done notice, "done_tabs" for
+-- the header's "Close n done tabs" (D11), and "reopen" for a done objective's box, asked in its bar
+-- (reopen-done-objectives, D1). Any other click ends it.
 type Confirm = { kind: string, id: string?, where: string? }
 local confirm: Confirm? = nil
 
@@ -787,7 +788,7 @@ export type Action = { act: string, value: string? }
 
 function M.action(ev: Action, cx: WindowCx)
 	local act, value = ev.act, ev.value or ""
-	-- Any click ends a question asked in place; Close and Cancel act on the one they answer (D4).
+	-- Any click ends a question asked in place; the answers act on the one they answer (D4).
 	local asked = confirm
 	confirm = nil
 	-- Any click but Undo, the notice's own "Close n tabs" and that question's Cancel drops the Undo
@@ -888,8 +889,17 @@ function M.action(ev: Action, cx: WindowCx)
 			end
 			later = true
 		end
-	elseif act == "noop" then
-		-- A done objective's box: done is final, so the click only drops the notice (design D7).
+	elseif act == "reopen" then
+		-- A done objective's box (reopen-done-objectives, D1): selected, so its bar asks.
+		selected = value
+		confirm = { kind = "reopen", id = value, where = "bar" }
+	elseif act == "rkeep" or act == "rreset" then
+		-- The bar's answers reopen it, last in the list and still selected (D2); no Undo.
+		if asked ~= nil and asked.kind == "reopen" and asked.id ~= nil then
+			if not Store.reopen(asked.id, act == "rkeep") then
+				toast_gone(cx)
+			end
+		end
 	elseif act == "rev" then
 		reviewing = not reviewing
 	elseif act == "rate" then

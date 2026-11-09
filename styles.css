@@ -440,20 +440,39 @@
 	box-shadow: inset 0 0 0 1px var(--bad);
 	background: rgb(from var(--bad) r g b / 8%);
 }
-/* The bar asking "Close n tabs?": the question takes the room, its two answers stay whole. */
-[data-surface='plugin.tern.canvas'] .ob-root .ob-ask {
-	flex: 1 1 auto;
+/* A question asked in the bar (custom-order-and-direct-controls D4; reopen-done-objectives D1a): its
+   own 22 px row, cut with "…" when the column narrows, over its answers, which share their row as
+   the bar's buttons do. */
+[data-surface='plugin.tern.canvas'] .ob-root .ob-askrow {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	height: 22px;
+	margin-top: 8px;
 	min-width: 0;
 	overflow: hidden;
-	text-overflow: ellipsis;
+	user-select: none;
+}
+[data-surface='plugin.tern.canvas'] .ob-root .ob-ask,
+[data-surface='plugin.tern.canvas'] .ob-root .ob-ask-fix {
 	white-space: nowrap;
 	font-size: 12px;
 	font-weight: 600;
 	color: var(--t1);
 	user-select: none;
 }
-[data-surface='plugin.tern.canvas'] .ob-root .ob-acts-ask .ob-act {
+[data-surface='plugin.tern.canvas'] .ob-root .ob-ask {
+	flex: 0 1 auto;
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+/* "Reopen “" and "”?" around the title stay whole. */
+[data-surface='plugin.tern.canvas'] .ob-root .ob-ask-fix {
 	flex: none;
+}
+[data-surface='plugin.tern.canvas'] .ob-root .ob-acts.ob-acts-ask {
+	margin-top: 6px;
 }
 /* A done objective's trash icon (review-done-objectives, design D7): 22 x 18 px, like the done box. */
 [data-surface='plugin.tern.canvas'] .ob-root .ob-trash {

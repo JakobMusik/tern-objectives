@@ -28,6 +28,16 @@ function M.start(day: Dates.Day): Schedule
 	return { due = Dates.key(Dates.add(day, 1)), interval = 1, ease = M.BASE_EASE, reps = 0 }
 end
 
+-- The schedule kept by a reopened objective, marked done again on `day` (reopen-done-objectives,
+-- design D3): interval, ease and count carry on, and the next review is its stored date, or the next
+-- day when that date is `day` or earlier, or unreadable.
+function M.resume(s: Schedule, day: Dates.Day): Schedule
+	local tomorrow = Dates.add(day, 1)
+	local d = if type(s.due) == "string" then Dates.parse(s.due) else nil
+	local due = if d ~= nil and Dates.diff(tomorrow, d) > 0 then d else tomorrow
+	return { due = Dates.key(due), interval = s.interval, ease = s.ease, reps = s.reps }
+end
+
 -- Whether the review is due on `today`: its date is today or earlier (an unreadable date counts).
 function M.is_due(s: Schedule, today: Dates.Day): boolean
 	local d = Dates.parse(s.due)

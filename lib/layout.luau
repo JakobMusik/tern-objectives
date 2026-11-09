@@ -11,6 +11,7 @@ M.px = {
 	title_line_h = 18, -- each title line past the first (attention-marks-and-titles D1)
 	review_h = 30, -- review mode's button row under an objective node: 8 px gap and 22 px buttons
 	acts_h = 30, -- the selected node's action bar: 8 px gap and 22 px buttons (custom-order-and-direct-controls D3)
+	ask_h = 28, -- a question asked in the bar: its own 22 px row over the answers, 6 px apart (reopen-done-objectives D1a)
 	group_h = 24, -- "Done (n)", "Closed tabs", "Other windows"
 	group_m = 14,
 	divider_h = 32, -- "Other tabs" divider after the selected objective's tabs (linked-section D2)
@@ -33,10 +34,14 @@ M.px = {
 -- never learns its width and the edges need each node's exact height.
 M.title = { width = 36, lines = 3 }
 
--- An objective node's height: 48 px, review mode's button row, the action bar while selected, and
--- 18 px per extra title line.
-local function obj_height(review: boolean?, lines: number?, acts: boolean?): number
-	return M.px.obj_h + (if review then M.px.review_h else 0) + (if acts then M.px.acts_h else 0) + ((lines or 1) - 1) * M.px.title_line_h
+-- An objective node's height: 48 px, review mode's button row, the action bar while selected, the
+-- question's row while the bar asks, and 18 px per extra title line.
+local function obj_height(review: boolean?, lines: number?, acts: boolean?, asking: boolean?): number
+	return M.px.obj_h
+		+ (if review then M.px.review_h else 0)
+		+ (if acts then M.px.acts_h else 0)
+		+ (if asking then M.px.ask_h else 0)
+		+ ((lines or 1) - 1) * M.px.title_line_h
 end
 
 -- Priority colours P0..P3: red, orange, blue, grey. Mid tones that read on light and dark pages;
@@ -80,6 +85,13 @@ function M.css(): string
 		table.insert(rules, string.format("%s .ob-obj.ob-review.ob-acts-on.ob-n%d { height: %dpx; }", SCOPE, n, p.obj_h + p.review_h + p.acts_h + extra))
 		table.insert(rules, string.format("%s .ob-obj.ob-n%d .ob-l1 { height: %dpx; }", SCOPE, n, n * p.title_line_h))
 	end
+	-- A node whose bar asks: the question's row on top of the bar, after the rules above so it wins.
+	for n = 1, M.title.lines do
+		local extra = (n - 1) * p.title_line_h
+		local lines = if n > 1 then ".ob-n" .. n else ""
+		table.insert(rules, string.format("%s .ob-obj.ob-acts-on.ob-asking%s { height: %dpx; }", SCOPE, lines, p.obj_h + p.acts_h + p.ask_h + extra))
+		table.insert(rules, string.format("%s .ob-obj.ob-review.ob-acts-on.ob-asking%s { height: %dpx; }", SCOPE, lines, p.obj_h + p.review_h + p.acts_h + p.ask_h + extra))
+	end
 	for i, color in M.palette do
 		table.insert(rules, string.format("%s .ob-p%d { color: %s; background: %s1f; }", SCOPE, i - 1, color, color))
 	end
@@ -105,10 +117,10 @@ local function add(s: Stack, m: number, h: number): number
 	return top
 end
 
--- Objective node, taller with review mode's button row, the action bar and each title line past the
--- first; returns its vertical centre.
-function M.add_obj(s: Stack, review: boolean?, lines: number?, acts: boolean?): number
-	local h = obj_height(review, lines, acts)
+-- Objective node, taller with review mode's button row, the action bar, the question's row and each
+-- title line past the first; returns its vertical centre.
+function M.add_obj(s: Stack, review: boolean?, lines: number?, acts: boolean?, asking: boolean?): number
+	local h = obj_height(review, lines, acts, asking)
 	return add(s, M.px.obj_m, h) + h / 2
 end
 
