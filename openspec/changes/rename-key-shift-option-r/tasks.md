@@ -35,13 +35,15 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
 - [x] 2.1 Version `0.21.0` in `plugin.toml`. Verify that an isolated `tern plugin install` of the repo folder prints `installed objectives 0.21.0`. Tick this box, then commit, push `main` and tag `v0.21.0` (annotated, message "objectives 0.21.0").
 
   Result: the install into `/tmp/tobj-inst210/config` printed `installed objectives 0.21.0 → /tmp/tobj-inst210/config/plugins/objectives`.
-- [ ] 2.2 **(live)** After the push has finished, run `tern plugin install github.com/JakobMusik/tern-objectives --force` from a shell with no harness variables.
+- [x] 2.2 **(live)** After the push has finished, run `tern plugin install github.com/JakobMusik/tern-objectives --force` from a shell with no harness variables.
 
   Verify `tern plugin list` shows `objectives 0.21.0 … ready`, with the other plugins untouched. Read the live `settings.json` keybinds afterwards: unchanged.
+
+  Result: `installed objectives 0.21.0 → ~/Library/Application Support/Tern/plugins/objectives`. `tern plugin list` shows `objectives 0.21.0 … window ready`, beside `omp-narration 0.1.0`, `open-below 0.2.0`, `reply-selection 0.1.0` and `tabnav 0.1.0`, all ready and not touched by this install. The live keybinds hashed the same before and after the install (`7b3f149c…`). They hold `"alt+shift+r": "plugin.objectives.rename"` and now `"alt+r": "plugin.reply-selection.reply"`. Since the proposal, the user's `[]` on ⌥R gave way to their new Reply with Selection plugin. The tag `v0.21.0` (`6672db7`) is signed and on GitHub.
 - [ ] 2.3 **(live)** With the user:
   - ⌥⇧R renames the selected objective, with the left and with the right Option key;
   - Configure shows ⌥⇧R for Rename selected objective, with no Reset;
-  - Option+R in a shell types as it does without the plugin.
+  - ⌥R runs what the user's keybinds give it (Reply with Selection), not rename;
 
   Record the result here.
 
