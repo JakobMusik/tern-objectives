@@ -13,7 +13,7 @@ An objective SHALL be linkable to any number of tabs, and a tab to any number of
 - **THEN** both objectives list that tab, and the graph draws two lines into its node
 
 ### Requirement: Linking from the graph
-While an open objective is selected, every tab node SHALL show a full-width link bar at its foot: "＋ Link" when the tab is not linked to the selected objective, "× Unlink" when it is. Clicking the bar SHALL add or remove that one link, SHALL keep the selection, and SHALL NOT jump to the tab. The bar's text SHALL NOT be selectable, so a press that drifts a little before release still counts as a click.
+While an objective is selected, open or done, every tab node SHALL show a full-width link bar at its foot: "＋ Link" when the tab is not linked to the selected objective, "× Unlink" when it is. Clicking the bar SHALL add or remove that one link, SHALL keep the selection, and SHALL NOT jump to the tab. The bar's text SHALL NOT be selectable, so a press that drifts a little before release still counts as a click.
 
 #### Scenario: Add then remove a link
 - **WHEN** the user selects an objective, clicks "＋ Link" on a tab node, then clicks "× Unlink" on the same node
@@ -35,11 +35,11 @@ While an open objective is selected, every tab node SHALL show a full-width link
 - **THEN** a toast says there are no objectives yet and nothing changes
 
 ### Requirement: New objective for this tab command
-"Objectives: New objective for this tab…" SHALL ask for a title, then create an objective at P3 already linked to the focused pane's tab.
+"Objectives: New objective for this tab…" SHALL ask for a title, then create an objective already linked to the focused pane's tab, at the starting priority and place set in Configure (P3 and the top by default).
 
 #### Scenario: Create linked
 - **WHEN** the user runs the command in tab "API Learning" and enters "Add caching layer"
-- **THEN** a new P3 objective "Add caching layer" exists, linked to that tab
+- **THEN** a new P3 objective "Add caching layer" exists, linked to that tab, first among the open objectives
 
 ### Requirement: Focused pane without a tab
 When the focused pane belongs to no tab, both tab commands SHALL show an error toast and change nothing.
@@ -99,17 +99,6 @@ Right-clicking a tab node SHALL open a menu headed "Link to", with one row per o
 - **WHEN** the store holds two open objectives and the user right-clicks a tab node
 - **THEN** the menu starts with the heading "Link to", followed by the two objectives' rows
 
-### Requirement: Done objectives' links are fixed
-A done objective's links SHALL NOT change. Selecting it SHALL show no link bar on any tab node, and the plugin SHALL refuse a link change to it from any path, such as a click on a link bar drawn before it was marked done in another window. The one exception SHALL be Resume, which hands a closed tab's links, a done objective's included, to the tab it opens ("Resuming a closed tab").
-
-#### Scenario: Done objective selected
-- **WHEN** the user opens the Done group, selects a done objective and clicks where a tab node's link bar would be
-- **THEN** no tab node shows a link bar, and the done objective's links in `kv.json` are unchanged
-
-#### Scenario: Resume moves a done objective's link
-- **WHEN** done objective X is linked to closed tab A, which held an omp chat that had replied, and the user selects X and clicks A's "Resume"
-- **THEN** the kv dump shows X linked to the new tab instead of A, and X is still done
-
 ### Requirement: Creation time in link choices
 Where the user picks an objective to link, each objective SHALL show its creation time as `MM-DD HH:MM` in local time: a tab menu row SHALL read `<title> · <time>`, and a "Link this tab" picker row SHALL show `P<priority> · <time>` as dim text after the title. Headings, toasts and confirmations SHALL keep the plain title.
 
@@ -124,3 +113,18 @@ Where the user picks an objective to link, each objective SHALL show its creatio
 #### Scenario: Plain title in a toast
 - **WHEN** the user picks one of them in "Objectives: Link this tab…"
 - **THEN** the toast reads "Linked to Write slides", without the time
+
+### Requirement: Links of done objectives
+A done objective's links SHALL change the same way as an open objective's: through the link bars while it is selected, in the Done group or in review mode. Nothing else SHALL change them: marking done, Undo, rating and closing its tabs SHALL leave them as they are, and the only exception SHALL be Resume, which hands a closed tab's links to the tab it opens ("Resuming a closed tab").
+
+#### Scenario: Unlink from a done objective
+- **WHEN** done objective X links tabs A and B, and the user opens the Done group, selects X and clicks "× Unlink" on A
+- **THEN** the kv dump shows X linked to B only, X is still done and selected, and A shows below the "Other tabs" divider with "＋ Link"
+
+#### Scenario: Link a done objective
+- **WHEN** the user then clicks "＋ Link" on tab C
+- **THEN** the kv dump shows X linked to B and C, and a green line joins X to C
+
+#### Scenario: Resume moves a done objective's link
+- **WHEN** done objective X is linked to closed tab A, which held an omp chat that had replied, and the user selects X and clicks A's "Resume"
+- **THEN** the kv dump shows X linked to the new tab instead of A, and X is still done

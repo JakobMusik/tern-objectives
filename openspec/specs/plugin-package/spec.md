@@ -22,25 +22,27 @@ Tern's install-time checks SHALL accept the package.
 - **THEN** it reports `installed objectives` with the manifest's version, and `tern plugin list` shows the plugin ready with 0 blocks and no problems
 
 ### Requirement: Palette commands
-The plugin SHALL register four palette commands under the group "Objectives":
+The plugin SHALL register six palette commands under the group "Objectives":
 - "Objectives: Open graph", default key ⌃⌘O;
 - "Objectives: Rename selected objective", default key ⌥R;
+- "Objectives: New objective", default key ⌥N;
 - "Objectives: Link this tab…";
-- "Objectives: New objective for this tab…".
+- "Objectives: New objective for this tab…";
+- "Objectives: Configure".
 
 The palette SHALL list the rename command only while an objective is selected in a graph shown over the current tab. Its key works either way.
 
 #### Scenario: Commands listed
 - **WHEN** an objective is selected in the graph shown over the current tab, and the palette is opened with the query "objectives"
-- **THEN** the four commands appear, "Open graph" with ⌃⌘O and "Rename selected objective" with ⌥R
+- **THEN** the six commands appear, "Open graph" with ⌃⌘O, "Rename selected objective" with ⌥R and "New objective" with ⌥N
 
 #### Scenario: Rename hidden without the graph
 - **WHEN** no graph is shown over the current tab, and the palette is opened with the query "objectives"
-- **THEN** "Open graph", "Link this tab…" and "New objective for this tab…" appear, and "Rename selected objective" doesn't
+- **THEN** "Open graph", "New objective", "Link this tab…", "New objective for this tab…" and "Configure" appear, and "Rename selected objective" doesn't
 
 #### Scenario: Rename hidden without a selection
 - **WHEN** the graph is shown over the current tab with nothing selected, and the palette is opened with the query "objectives"
-- **THEN** "Rename selected objective" doesn't appear, and the other three commands do
+- **THEN** "Rename selected objective" doesn't appear, and the other five commands do
 
 ### Requirement: Install from GitHub
 The plugin SHALL install with `tern plugin install github.com/JakobMusik/tern-objectives` from the public repository's default branch, with no credentials and nothing extra needed on `PATH` besides git.
@@ -60,7 +62,7 @@ The repository SHALL be public under `JakobMusik`. It SHALL carry an MIT license
 The README SHALL give:
 - the exact install command;
 - that it needs nothing on `PATH` but `git`, and nothing on the machines sessions run on;
-- the four commands with the ⌃⌘O and ⌥R keys;
+- the six commands with the ⌃⌘O, ⌥R and ⌥N keys;
 - how to close the graph: ⌃⌘O, a click outside, its ×, or Esc after a click on its title bar;
 - how reviewing done objectives works;
 - where its data lives and how to remove it;
@@ -68,7 +70,7 @@ The README SHALL give:
 
 #### Scenario: README contents
 - **WHEN** a reader opens the README
-- **THEN** it contains the install command, the commands with ⌃⌘O and ⌥R, the ways to close the graph, that nothing is installed on other machines, how to review done objectives, the data location under `plugin-data/objectives/`, a screenshot of the graph with the Done group open, and after it a screenshot of review mode with Hard, Good and Easy buttons
+- **THEN** it contains the install command, the commands with ⌃⌘O, ⌥R and ⌥N, the ways to close the graph, that nothing is installed on other machines, how to review done objectives, the data location under `plugin-data/objectives/`, a screenshot of the graph with the Done group open, and after it a screenshot of review mode with Hard, Good and Easy buttons
 
 #### Scenario: Graph screenshot first
 - **WHEN** the README is read on GitHub
@@ -80,3 +82,14 @@ The plugin SHALL never write into its own package folder, so that using it never
 #### Scenario: Clean package after use
 - **WHEN** the plugin has been used to create, link and delete objectives
 - **THEN** the installed package folder holds exactly the files that were installed
+
+### Requirement: README on the direct controls
+The README SHALL explain how to move objectives with the grip, what the action bar offers, and how Configure changes shortcuts and the new-objective defaults. It SHALL say that changed shortcuts are saved in Tern's keybinds, not in the plugin's data folder. Its screenshots SHALL show this version's nodes.
+
+#### Scenario: Direct controls explained
+- **WHEN** a reader opens the README
+- **THEN** it explains moving with the grip, the action bar's buttons, Configure, and that changed shortcuts live in Tern's keybinds
+
+#### Scenario: Screenshots match this version
+- **WHEN** a reader looks at both screenshots
+- **THEN** the graph's open objectives show grips, and no node in either shows a ⋯ button

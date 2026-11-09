@@ -5,13 +5,6 @@ Lets a closed tab's omp chats come back from the graph: the plugin saves each ch
 
 ## Requirements
 
-### Requirement: Saved sessions follow their tabs
-A saved omp chat SHALL be removed once its pane is neither live in the window nor a row of a stored tab snapshot, for example after "Prune closed tabs" removes the closed tab that held it.
-
-#### Scenario: Pruned with its tab
-- **WHEN** a linked tab holding an omp chat with a saved chat file is closed, and the user confirms "Prune closed tabs"
-- **THEN** the kv dump holds neither the tab's snapshot nor the pane's saved chat
-
 ### Requirement: Resume button
 A closed tab node SHALL show a "Resume" button on its header when at least one of its pane rows has a saved omp chat whose file still exists, and none otherwise. Tabs held by another window SHALL NOT show it. Its hit area SHALL be at least 28 × 22 px, and dragging across it SHALL NOT select its text. Clicking the rest of the header SHALL still only say the tab is closed.
 
@@ -97,3 +90,10 @@ The new tab SHALL open in the closed tab's session: the session with the id stor
 #### Scenario: Session gone
 - **WHEN** no session has the closed tab's session id or name, and the user clicks "Resume" from session "home"
 - **THEN** the new tab is the last tab of "home", and a toast names the missing session
+
+### Requirement: Saved chats follow their tabs
+A saved omp chat SHALL be removed once its pane is neither live in the window nor a row of a stored tab snapshot, for example after the user unlinks the last objective from the closed tab that held it, which drops the tab's snapshot.
+
+#### Scenario: Unlinked with its tab
+- **WHEN** a tab holding an omp chat with a saved chat file, linked only to open objective Y, is closed, and the user selects Y and clicks "× Unlink" on the closed tab
+- **THEN** once the graph has redrawn, the kv dump holds neither the tab's snapshot nor the pane's saved chat

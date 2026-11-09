@@ -67,7 +67,7 @@ Clicking "Review (n)" SHALL draw the button active and list in the left column o
 
 #### Scenario: Closed tab in review
 - **WHEN** a due objective's only linked tab was closed with "Close linked tabs", it held an omp chat that had replied, the user clicks "Review (1)" and then selects the objective
-- **THEN** after "Review (1)", that tab shows under "Closed tabs" with "Resume" and no line; after selecting, a dashed green line joins it to the objective, and no tab node has a link bar
+- **THEN** after "Review (1)", that tab shows under "Closed tabs" with "Resume" and no line; after selecting, a dashed green line joins it to the objective, every tab node has a link bar, and that tab's reads "× Unlink"
 
 ### Requirement: Leaving review mode
 Review mode SHALL end when its list becomes empty, when the active "Review (n)" button is clicked, or when the graph closes, except when one of the graph's own pickers closed it and it is shown again. It SHALL NOT be remembered across opens of the graph.
@@ -81,7 +81,7 @@ Review mode SHALL end when its list becomes empty, when the active "Review (n)" 
 - **THEN** the left column shows the open objectives and the Done group, and the header still shows "Review (2)"
 
 #### Scenario: Picker from review mode
-- **WHEN** review mode lists two objectives, the user opens one's ⋯ menu and dismisses it with Esc
+- **WHEN** review mode lists two objectives, the user selects one, clicks Tags in its action bar and dismisses the picker with Esc
 - **THEN** the graph is shown again, still in review mode with the same two objectives
 
 ### Requirement: One-click remove
@@ -101,6 +101,10 @@ After an objective is marked done or removed in the graph, the header SHALL show
 #### Scenario: Undo removing
 - **WHEN** the user removes a done objective that was the only one linked to a closed tab, and clicks Undo
 - **THEN** the kv dump holds the objective at its former place in the list, with its links, and the closed tab's snapshot is back
+
+#### Scenario: Undo deleting an open objective
+- **WHEN** the list reads "Fix login bug", "Review pull requests", "Write slides", and the user deletes "Review pull requests" from its action bar and clicks Undo
+- **THEN** the list reads "Fix login bug", "Review pull requests", "Write slides" again, and the kv dump holds its record as before, with its links
 
 #### Scenario: Notice expires
 - **WHEN** the user marks an objective done and 10 seconds pass without a click

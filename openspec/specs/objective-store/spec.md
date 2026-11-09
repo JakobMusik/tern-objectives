@@ -14,7 +14,7 @@ Each objective SHALL have:
 - an optional side note, due date and tag list;
 - once done, a review schedule: its next review date, interval in days, ease in percent and review count.
 
-A new objective SHALL start not done, at P3, with the current time as its created time, with no note, due date, tags or review schedule, and no links unless made for a tab.
+A new objective SHALL start not done, at the priority set in Configure, created now, with no note, due date, tags or review schedule, and no links unless made for a tab.
 
 #### Scenario: Creating an objective
 - **WHEN** the user creates an objective titled "  Fix login bug  "
@@ -40,7 +40,7 @@ Objectives SHALL NOT belong to a session, tab or window. Every window of the mac
 - **THEN** the objective is listed
 
 ### Requirement: Private storage
-The plugin SHALL keep all of its state as one JSON value under one key of its own `kv.json` in Tern's plugin data folder. It SHALL write no file into any pane's working folder, the home folder or its package folder.
+The plugin SHALL keep all of its state, its settings included, as one JSON value under one key of its own `kv.json` in Tern's plugin data folder. Shortcuts changed in Configure SHALL be saved by Tern in its own keybinds, through Tern's settings API, and nowhere else. It SHALL write no file into any pane's working folder, the home folder or its package folder.
 
 #### Scenario: Where data lands
 - **WHEN** the user creates, edits and links objectives
@@ -86,21 +86,6 @@ A tag SHALL be stored in lowercase, trimmed, with runs of spaces replaced by one
 - **WHEN** the only objective holding tag "api" has it removed
 - **THEN** "api" no longer appears in the tag picker or the tag filter
 
-### Requirement: Deleting an objective
-Deleting from the ⋯ menu SHALL ask for confirmation. On confirmation it SHALL remove the objective and its links. On cancel it SHALL change nothing. A done objective's trash icon SHALL remove it without asking.
-
-#### Scenario: Confirmed delete
-- **WHEN** the user chooses Delete for an objective and confirms
-- **THEN** the objective and its links are gone from `kv.json`
-
-#### Scenario: Cancelled delete
-- **WHEN** the user chooses Delete and then cancels
-- **THEN** `kv.json` is unchanged
-
-#### Scenario: Trash icon on a done objective
-- **WHEN** the user clicks a done objective's trash icon
-- **THEN** no confirmation appears, and the objective and its links are gone from `kv.json`
-
 ### Requirement: Tab snapshots
 For every linked tab the window currently holds, the store SHALL keep a snapshot so the tab can still be shown after it closes. The snapshot SHALL hold:
 - the tab's label;
@@ -114,17 +99,6 @@ The snapshot SHALL be refreshed whenever the graph sees the tab.
 #### Scenario: Snapshot written on link
 - **WHEN** the user links an objective to tab 2 of session "web"
 - **THEN** `kv.json` holds a snapshot of that tab with its label, session "web", position 2, its pane rows and the window key
-
-### Requirement: Pruning closed tabs
-"Prune closed tabs" SHALL ask for confirmation, naming how many closed tabs it will touch: the shown closed tabs that an open objective links. On confirmation it SHALL remove those tabs' links to open objectives, and the snapshot and saved chats of each one that no done objective links. Links of done objectives, live tabs, and tabs held by another window SHALL be untouched.
-
-#### Scenario: Prune after closing a tab
-- **WHEN** a tab linked only to an open objective is closed and the user confirms "Prune closed tabs"
-- **THEN** no objective links that tab, its snapshot is gone, and links to live tabs remain
-
-#### Scenario: Done objective's link kept
-- **WHEN** closed tab C is linked to open objective Y and to done objective X, and the user confirms "Prune closed tabs"
-- **THEN** Y no longer links C, X still does, and C's snapshot is still in the kv dump
 
 ### Requirement: Remembered view settings
 The store SHALL keep the scope filter, the tag filter, whether the Done group is open, and which pane rows are open. These settings SHALL be restored when the graph is reopened and after a plugin reload.
@@ -156,8 +130,34 @@ Marking an objective done SHALL record the done time and start its review schedu
 - **THEN** the record is still done with the same done time, and its tab links are identical throughout
 
 ### Requirement: Missing priority
-A stored objective without a priority SHALL read as P3, the same default a new objective gets.
+A stored objective without a priority SHALL read as P3, whatever starting priority Configure sets for new objectives.
 
 #### Scenario: Record without a priority
 - **WHEN** `kv.json` holds an open objective with no priority field and the graph is opened
-- **THEN** its badge reads P3 and it is ordered as a P3 objective
+- **THEN** its badge reads P3
+
+### Requirement: Stored order
+The store SHALL keep the open objectives' custom order, so every window shows the same order and it survives reloads and restarts. Moving an objective SHALL re-read the store first, like every change, and SHALL change no other field of any objective. A state written before this version SHALL be read in the old automatic order, which the next write stores.
+
+#### Scenario: Move saved
+- **WHEN** the user moves "Write slides" above "Fix login bug"
+- **THEN** the kv dump lists "Write slides" before "Fix login bug", and both records are otherwise unchanged
+
+#### Scenario: Order survives a reload
+- **WHEN** the user moves "Write slides" to the top and the plugin is reloaded
+- **THEN** the reopened graph lists "Write slides" first
+
+#### Scenario: Another window's objective kept
+- **WHEN** an objective is added to `kv.json` from outside this window, and the user then moves "Write slides" in this window's graph
+- **THEN** `kv.json` holds the outside objective and the new order
+
+### Requirement: Removing an objective
+Delete in an open objective's action bar, and a done objective's trash icon, SHALL remove the objective and its links at once, without asking, and offer Undo.
+
+#### Scenario: Delete from the bar
+- **WHEN** the user selects open objective "Write slides" and clicks Delete in its bar
+- **THEN** no confirmation appears, "Write slides" and its links are gone from `kv.json`, and the header shows "Removed “Write slides” · Undo"
+
+#### Scenario: Trash icon on a done objective
+- **WHEN** the user clicks a done objective's trash icon
+- **THEN** no confirmation appears, and the objective and its links are gone from `kv.json`
