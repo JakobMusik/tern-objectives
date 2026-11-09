@@ -38,10 +38,10 @@ local function register_commands()
 		run = App.toggle,
 	})
 
-	-- ⌥R, as the user asked. Like every plugin key it runs in every pane, so Option+R types nothing
-	-- anywhere in Tern; outside the graph it shows a hint. A plain R can't work, not even inside the graph
-	-- only: Tern keeps plain R for itself, a canvas gets no keys, and `available` doesn't gate a key
-	-- (design D6).
+	-- ⌥⇧R, as the user asked (rename-key-shift-option-r). Like every plugin key it runs in every pane, so
+	-- Option+Shift+R types nothing anywhere in Tern; outside the graph it shows a hint. A plain R can't
+	-- work, not even inside the graph only: Tern keeps plain R for itself, a canvas gets no keys, and
+	-- `available` doesn't gate a key (design D6).
 	tern.command({
 		id = "rename",
 		title = "Objectives: Rename selected objective",
@@ -53,7 +53,7 @@ local function register_commands()
 	})
 
 	-- ⌥N, as the user asked (design D5): a new objective, made in the graph, which opens first when it
-	-- isn't shown here. Like ⌥R it runs in every pane, whichever Option key.
+	-- isn't shown here. Like ⌥⇧R it runs in every pane, whichever Option key.
 	tern.command({
 		id = "new",
 		title = "Objectives: New objective",

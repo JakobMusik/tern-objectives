@@ -38,7 +38,7 @@ It needs nothing on `PATH` but `git`, which `tern plugin install` already uses. 
 | Command | Key | What it does |
 |---|---|---|
 | Objectives: Open graph | ⌃⌘O | Show or hide the graph. |
-| Objectives: Rename selected objective | ⌥R | Rename the objective selected in the graph. Clicking a title in the graph renames it too. |
+| Objectives: Rename selected objective | ⌥⇧R | Rename the objective selected in the graph. Clicking a title in the graph renames it too. |
 | Objectives: New objective | ⌥N | Create an objective in the graph, opening the graph first if it isn't shown. Same as **＋ New objective**. |
 | Objectives: Link this tab… | | Link the current tab to an objective, or unlink it. |
 | Objectives: New objective for this tab… | | Create an objective already linked to the current tab. |
@@ -50,7 +50,7 @@ Open objectives stay in the order you give them; priorities and due dates don't 
 
 Click an objective to select it: its lines stand out, every tab offers **＋ Link** or **× Unlink**, and a row of buttons appears under it. Click its title to rename it.
 
-⌥R and ⌥N work in every pane, with either Option key, so Option+R no longer types "®" and Option+N no longer starts "˜" anywhere in Tern. Change or remove them in Configure.
+⌥⇧R and ⌥N work in every pane, with either Option key, so Option+Shift+R no longer types "‰" and Option+N no longer starts "˜" anywhere in Tern. Change or remove them in Configure.
 
 ### Configure
 
