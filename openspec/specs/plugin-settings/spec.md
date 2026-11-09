@@ -29,7 +29,11 @@ The page SHALL list the plugin's six commands: Open graph, Rename selected objec
 
 #### Scenario: Defaults
 - **WHEN** no shortcut was changed and the user opens the settings page
-- **THEN** Open graph shows ⌃⌘O, Rename selected objective ⌥R, New objective ⌥N, the other three "none", and no row offers Reset
+- **THEN** Open graph shows ⌃⌘O, Rename selected objective ⌥⇧R, New objective ⌥N, the other three "none", and no row offers Reset
+
+#### Scenario: Rename moved to ⌥⇧R before this version
+- **WHEN** the user's keybinds hold `alt+shift+r` for "Objectives: Rename selected objective" and an empty entry on `alt+r`, as a change in an earlier version's Configure left them, and the user opens the settings page
+- **THEN** Rename selected objective shows ⌥⇧R alone and offers no Reset, and ⌥⇧R with an objective selected opens its Rename field
 
 ### Requirement: Changing a shortcut
 Change SHALL open a one-line field, filled with the command's current keys spelled as in Tern's keybinds, such as `alt+n`. A shortcut entered there SHALL become the command's only keys: its earlier keys, the plugin's default among them, SHALL stop running it and go back to what they did without it. The change SHALL be saved in Tern's keybinds, take effect at once, and be shown on the page and in the palette. Dismissing the field SHALL change nothing.
@@ -66,7 +70,7 @@ Remove SHALL leave the command with no keys, and its keys SHALL go back to what 
 
 #### Scenario: Remove the rename key
 - **WHEN** the user clicks Remove on Rename selected objective
-- **THEN** the row shows "none" and offers Reset, and Option+R in a shell shows no toast
+- **THEN** the row shows "none" and offers Reset, and ⌥⇧R in a shell shows no toast
 
 #### Scenario: Reset after a change
 - **WHEN** New objective was changed to ⌃⌥N and the user clicks Reset on its row
