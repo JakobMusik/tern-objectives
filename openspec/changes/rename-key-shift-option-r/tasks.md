@@ -40,12 +40,14 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
   Verify `tern plugin list` shows `objectives 0.21.0 … ready`, with the other plugins untouched. Read the live `settings.json` keybinds afterwards: unchanged.
 
   Result: `installed objectives 0.21.0 → ~/Library/Application Support/Tern/plugins/objectives`. `tern plugin list` shows `objectives 0.21.0 … window ready`, beside `omp-narration 0.1.0`, `open-below 0.2.0`, `reply-selection 0.1.0` and `tabnav 0.1.0`, all ready and not touched by this install. The live keybinds hashed the same before and after the install (`7b3f149c…`). They hold `"alt+shift+r": "plugin.objectives.rename"` and now `"alt+r": "plugin.reply-selection.reply"`. Since the proposal, the user's `[]` on ⌥R gave way to their new Reply with Selection plugin. The tag `v0.21.0` (`6672db7`) is signed and on GitHub.
-- [ ] 2.3 **(live)** With the user:
+- [x] 2.3 **(live)** With the user:
   - ⌥⇧R renames the selected objective, with the left and with the right Option key;
   - Configure shows ⌥⇧R for Rename selected objective, with no Reset;
-  - ⌥R runs what the user's keybinds give it (Reply with Selection), not rename;
+  - ⌥R runs what the user's keybinds give it (Reply with Selection), not rename.
 
   Record the result here.
+
+  Result (user, 0.21.0): "it works", in reply to the three checks listed above. The user reported nothing more specific, so no single check is recorded on its own.
 
 ## Workflow follow-up
 
