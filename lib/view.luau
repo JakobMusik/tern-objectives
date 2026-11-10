@@ -41,6 +41,9 @@ export type Ui = {
 	-- "reopen" for a done objective, asked in its bar (reopen-done-objectives, D1), or "tab" for one
 	-- tab's trash icon, asked in its header, with the tab id (close-tab-from-node, D3).
 	confirm: { kind: string, id: string?, where: string? }?,
+	-- While badge clicks hold the order (sort-by-priority, design D3): the priority each open objective
+	-- had at the first of them, which the sorted order keeps using until the hold ends.
+	held: { [string]: number }?,
 }
 
 -- An objective's attention mark: the strongest call over its live tabs, and those tabs' labels.
@@ -208,11 +211,15 @@ local function action_bar(o: Store.Objective, acts: Acts): { Node }
 	return { el("div", { class = "ob-acts", key = "acts" }, kids) }
 end
 
+-- While sorting by priority (sort-by-priority, design D4): `lifted` is the lifted objective's priority,
+-- the only one whose nodes take its drop.
+type Sorting = { lifted: number? }
+
 -- `title`: the title's lines (Text.wrap). `mark`: its attention mark, if any (D3). `review`: review
 -- mode's node, with Hard, Good and Easy under it (review-done-objectives, design D4). `acts`: the
 -- selected node's action bar (custom-order-and-direct-controls, design D3). `lit`: it links the
--- focus tab (highlight-origin-tab-links, design D4).
-local function objective_node(o: Store.Objective, ui_state: Ui, first: string, title: { string }, mark: Mark?, review: boolean?, acts: Acts?, lit: boolean?): Node
+-- focus tab (highlight-origin-tab-links, design D4). `sorting`: set while sorting by priority.
+local function objective_node(o: Store.Objective, ui_state: Ui, first: string, title: { string }, mark: Mark?, review: boolean?, acts: Acts?, lit: boolean?, sorting: Sorting?): Node
 	local selected = ui_state.selected == o.id
 	local cls = "ob-obj ob-o-" .. o.id .. first
 	if #title > 1 then
@@ -270,7 +277,10 @@ local function objective_node(o: Store.Objective, ui_state: Ui, first: string, t
 		table.insert(l1, el("span", {
 			class = "ob-grip",
 			key = "grip",
-			title = if ui_state.moving == o.id then "Put it back" else "Move: click, then click where it goes",
+			title = if ui_state.moving == o.id
+				then "Put it back"
+				elseif sorting ~= nil then "Move within P" .. o.priority .. ": click, then click where it goes"
+				else "Move: click, then click where it goes",
 			actions = { click = "lift=" .. o.id },
 		}, { { k = "icon", p = { name = "grip" } } :: any }))
 	end
@@ -328,7 +338,8 @@ local function objective_node(o: Store.Objective, ui_state: Ui, first: string, t
 			table.insert(lines, line)
 		end
 	end
-	if movable and ui_state.moving ~= nil and ui_state.moving ~= o.id then
+	-- While sorting, only the lifted objective's priority takes its drop (sort-by-priority, D4).
+	if movable and ui_state.moving ~= nil and ui_state.moving ~= o.id and (sorting == nil or sorting.lifted == o.priority) then
 		-- Over the node's content, so they take the click; their :hover draws the insertion line.
 		table.insert(lines, el("div", { class = "ob-drop ob-drop-top", key = "dropt", actions = { click = "drop=" .. o.id .. ":before" } }))
 		table.insert(lines, el("div", { class = "ob-drop ob-drop-bot", key = "dropb", actions = { click = "drop=" .. o.id .. ":after" } }))
@@ -538,14 +549,20 @@ function M.build(state: Store.State, win: Model.Window, ui_state: Ui): Built
 		return true
 	end
 
+	-- Open objectives in the graph's order: the user's, by priority first while sorting
+	-- (sort-by-priority, design D2); filters only leave some out. The Done group sorts by when each
+	-- was done.
 	local open_list, done_list = {}, {}
-	for _, o in state.objectives do
+	for _, o in Store.open_in_order(state, ui_state.held) do
 		if visible(o) then
-			table.insert(if o.done then done_list else open_list, o)
+			table.insert(open_list, o)
 		end
 	end
-	-- Open objectives keep the list's own order, the user's custom order, and filters only leave some
-	-- out (custom-order-and-direct-controls, design D1). The Done group sorts by when each was done.
+	for _, o in state.objectives do
+		if o.done and visible(o) then
+			table.insert(done_list, o)
+		end
+	end
 	sort_done(done_list)
 
 	-- Review mode's list (review-done-objectives, design D4): the done objectives the filters show whose
@@ -632,6 +649,12 @@ function M.build(state: Store.State, win: Model.Window, ui_state: Ui): Built
 		end
 		return if kind ~= "" then { kind = kind, tabs = tabs } else nil
 	end
+	-- While sorting by priority, the lifted objective's priority bounds its drop (sort-by-priority, D4).
+	local sorting: Sorting? = nil
+	if state.settings.sort_priority then
+		local lifted = if ui_state.moving ~= nil then Store.find(state, ui_state.moving) else nil
+		sorting = { lifted = if lifted ~= nil then lifted.priority else nil }
+	end
 	-- One objective node; its title lines set its height (attention-marks-and-titles D1).
 	local function add_node(o: Store.Objective, review: boolean?)
 		local first = Layout.first(left)
@@ -653,7 +676,7 @@ function M.build(state: Store.State, win: Model.Window, ui_state: Ui): Built
 		end
 		obj_cy[o.id] = Layout.add_obj(left, review, #title, acts ~= nil, acts ~= nil and acts.ask ~= nil)
 		local lit = focus_tab ~= nil and not o.done and table.find(o.tabs, focus_tab) ~= nil
-		table.insert(left_kids, objective_node(o, ui_state, first, title, mark_of(o), review, acts, lit))
+		table.insert(left_kids, objective_node(o, ui_state, first, title, mark_of(o), review, acts, lit, sorting))
 		if o.id == selected then
 			sel_obj = o
 		end
@@ -711,13 +734,9 @@ function M.build(state: Store.State, win: Model.Window, ui_state: Ui): Built
 		end
 		return { unlink = sel_tabs[tab] == true, title = sel_obj.title }
 	end
-	-- The tab menu's rows: every open objective in the custom order, whatever the filters (design P6).
-	local menu_objs: { Store.Objective } = {}
-	for _, o in state.objectives do
-		if not o.done then
-			table.insert(menu_objs, o)
-		end
-	end
+	-- The tab menu's rows: every open objective in the graph's order, whatever the filters (design P6;
+	-- sort-by-priority D2).
+	local menu_objs = Store.open_in_order(state, ui_state.held)
 	-- Each row's label carries the creation time; a menu row's `detail` is only a tooltip
 	-- (creation-time-suffix D3). Formatted once, not once per tab.
 	local menu_labels: { [string]: string } = {}
@@ -1082,8 +1101,8 @@ local function setting_row(key: string, label: string, kids: { Node }): Node
 end
 
 -- Configure's settings page, drawn in the graph's canvas in place of the columns (design D6): the
--- plugin's shortcuts as Tern's keymap has them (`keys`, by command id; D7), and the new-objective
--- defaults (D8). No edges.
+-- plugin's shortcuts as Tern's keymap has them (`keys`, by command id; D7), the new-objective
+-- defaults (D8) and the order (sort-by-priority, design D5). No edges.
 function M.build_settings(state: Store.State, keys: { [string]: { string } }): Built
 	local rows: { Node } = { el("div", { class = "ob-sh", key = "h", text = "Shortcuts" }) }
 	for _, c in Keys.COMMANDS do
@@ -1120,6 +1139,13 @@ function M.build_settings(state: Store.State, keys: { [string]: { string } }): B
 			segments("seg", set.new_place, { { "top", "Top" }, { "bottom", "Bottom" } }, "setplace"),
 		}),
 	}
+	local order: { Node } = {
+		el("div", { class = "ob-sh", key = "h", text = "Order" }),
+		setting_row("sort", "Sort by priority", {
+			segments("seg", if set.sort_priority then "on" else "off", { { "on", "On" }, { "off", "Off" } }, "setsort"),
+		}),
+		span("ob-line ob-dim ob-snote", "Within one priority, objectives keep your order. Off shows your order as it is.", { key = "note" }),
+	}
 	local head: { Node } = {
 		span("ob-stitle", "Settings", { key = "title" }),
 		el("div", { class = "ob-spacer", key = "sp" }),
@@ -1129,6 +1155,7 @@ function M.build_settings(state: Store.State, keys: { [string]: { string } }): B
 		el("div", { class = "ob-head", key = "head" }, head),
 		el("div", { class = "ob-ssec", key = "keys" }, rows),
 		el("div", { class = "ob-ssec", key = "defaults" }, defaults),
+		el("div", { class = "ob-ssec", key = "order" }, order),
 	})
 	return { view = view, css = "", closed = {}, done_tabs = {}, due = 0 }
 end

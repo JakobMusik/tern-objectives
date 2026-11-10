@@ -33,6 +33,10 @@ local selected: string? = nil
 -- The open objective lifted by its grip (custom-order-and-direct-controls, design D2); never stored.
 local moving: string? = nil
 
+-- While badge clicks hold the order (sort-by-priority, design D3): the priority each open objective
+-- had at the first of them. Never stored; every other click and a fresh open end it.
+local held: { [string]: number }? = nil
+
 -- The question an action is asking in place (custom-order-and-direct-controls, design D4), never
 -- stored: "close" for an objective's tabs, from its bar or from the done notice, "done_tabs" for
 -- the header's "Close n done tabs" (D11), "reopen" for a done objective's box, asked in its bar
@@ -135,6 +139,7 @@ local function build(cx: WindowCx): View.Built
 		attention = Details.attention,
 		moving = moving,
 		confirm = confirm,
+		held = held,
 	})
 	if built.due == 0 then
 		reviewing = false
@@ -180,6 +185,7 @@ function M.open(cx: WindowCx, keep_origin: boolean?)
 		drop_undo()
 		selected = nil
 		moving = nil
+		held = nil
 		confirm = nil
 		page = "graph"
 		local focused = cx.session:focused()
@@ -394,24 +400,13 @@ end
 
 -- ---- linking from the palette ----
 
--- The open objectives in the custom order (custom-order-and-direct-controls, design D1).
-local function open_in_order(state: Store.State): { Store.Objective }
-	local list = {}
-	for _, o in state.objectives do
-		if not o.done then
-			table.insert(list, o)
-		end
-	end
-	return list
-end
-
 function M.link_tab(cx: WindowCx)
 	local tab, facts, window = focused_tab(cx)
 	if tab == nil then
 		no_tab(cx)
 		return
 	end
-	local open = open_in_order(Store.read())
+	local open = Store.open_in_order(Store.read(), held)
 	if #open == 0 then
 		cx:toast("info", "No objectives yet", "Create one with Objectives: New objective for this tab…")
 		return
@@ -839,12 +834,17 @@ function M.action(ev: Action, cx: WindowCx)
 	if act ~= "lift" and act ~= "drop" then
 		moving = nil
 	end
+	-- Any click but a badge's ends the hold, so the list sorts (sort-by-priority, design D3).
+	local was_held = held ~= nil
+	if act ~= "prio" then
+		held = nil
+	end
 	-- Set by verbs whose own flow draws the graph later, or closes it.
 	local later = false
 	if act == "sel" then
 		selected = if selected == value then nil else value
 	elseif act == "bg" then
-		if selected == nil and not had_undo and not was_moving and asked == nil then
+		if selected == nil and not had_undo and not was_moving and asked == nil and not was_held then
 			return
 		end
 		selected = nil
@@ -955,7 +955,20 @@ function M.action(ev: Action, cx: WindowCx)
 			end
 		end
 	elseif act == "prio" then
-		-- Priority no longer sorts, so the node stays where it is (custom-order-and-direct-controls, D1).
+		-- With sorting on, the first badge click records every open objective's priority, which the
+		-- order keeps until another click (sort-by-priority, design D3).
+		if held == nil then
+			local state = Store.read()
+			if state.settings.sort_priority then
+				local record: { [string]: number } = {}
+				for _, o in state.objectives do
+					if not o.done then
+						record[o.id] = o.priority
+					end
+				end
+				held = record
+			end
+		end
 		if not Store.cycle_priority(value) then
 			toast_gone(cx)
 		end
@@ -1056,6 +1069,16 @@ function M.action(ev: Action, cx: WindowCx)
 				return false
 			end
 			s.new_place = place
+			return true
+		end)
+	elseif act == "setsort" then
+		-- Configure: whether open objectives are listed by priority (sort-by-priority, design D1).
+		local on = value ~= "off"
+		Store.set_settings(function(s)
+			if s.sort_priority == on then
+				return false
+			end
+			s.sort_priority = on
 			return true
 		end)
 	elseif act == "kchg" then

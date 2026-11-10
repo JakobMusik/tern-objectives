@@ -69,10 +69,12 @@ local function valid_session(a: any): boolean
 	return type(a) == "table" and a.agent == "omp" and M.is_chat_file(a.session) and type(a.cwd) == "string"
 end
 
--- Configure's defaults for new objectives (custom-order-and-direct-controls, design D8).
+-- Configure's defaults for new objectives (custom-order-and-direct-controls, design D8), and whether
+-- open objectives are listed by priority (sort-by-priority, design D1).
 export type Settings = {
 	start_priority: number, -- 0..3
 	new_place: string, -- "top" or "bottom"
+	sort_priority: boolean,
 }
 
 export type State = {
@@ -96,7 +98,7 @@ local VERSION = 1
 local array = tern.json.array
 
 local function default_settings(): Settings
-	return { start_priority = 3, new_place = "top" }
+	return { start_priority = 3, new_place = "top", sort_priority = true }
 end
 
 local function default(): State
@@ -207,6 +209,8 @@ local function normalize(raw: any): State
 	s.settings = {
 		start_priority = if type(start) == "number" and start >= 0 and start <= 3 and start % 1 == 0 then start else 3,
 		new_place = if set.new_place == "bottom" then "bottom" else "top",
+		-- Absent before 0.24.0, and On by default (sort-by-priority, design D1).
+		sort_priority = set.sort_priority ~= false,
 	}
 	if s.ordered ~= true then
 		migrate_order(s)
@@ -234,6 +238,32 @@ function M.find(s: State, id: string): Objective?
 		end
 	end
 	return nil
+end
+
+-- The open objectives in the order the graph lists them (sort-by-priority, design D2): the list's
+-- own order, the user's; with sorting on, by priority first. `held` gives the priority to sort by
+-- while badge clicks hold the order (D3); an objective it lacks sorts by its own.
+function M.open_in_order(s: State, held: { [string]: number }?): { Objective }
+	local list: { Objective } = {}
+	local index: { [string]: number } = {}
+	for _, o in s.objectives do
+		if not o.done then
+			table.insert(list, o)
+			index[o.id] = #list
+		end
+	end
+	if s.settings.sort_priority then
+		local hold = held or {}
+		-- Ties go by list index, so the result doesn't rest on table.sort being stable.
+		table.sort(list, function(a, b)
+			local pa, pb = hold[a.id] or a.priority, hold[b.id] or b.priority
+			if pa ~= pb then
+				return pa < pb
+			end
+			return index[a.id] < index[b.id]
+		end)
+	end
+	return list
 end
 
 -- ---- input rules ----

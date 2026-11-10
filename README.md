@@ -2,7 +2,7 @@
 
 A [Tern](https://docs.stencil.so/tern) plugin for keeping track of what you are working on across sessions, and for remembering what you finished. It keeps one list of objectives and links each one to the tabs where its work happens, shown as a graph: objectives on the left, tabs on the right, a line for every link. Click a tab or pane to jump straight to it, in any session. Finished objectives come back for review on a spaced-repetition schedule, so you revisit what you did before you forget it.
 
-![The objectives graph, opened from the Guides tab: open objectives on the left in your own order, each with a grip to move it, a priority, due date and tags, two of them with titles wrapped onto two lines; "Fix login bug" ringed in amber with a "needs you" chip, and "Write release notes" in green with "replied"; "Read about rate limiting", which links Guides, tinted, with a thick line to Guides while the other lines fade; below them the open Done group, its objectives marked "review due" or "review in 4d"; the header has "Review (2)", a gear button for Configure and "＋ New objective"; tabs grouped by session on the right, with a line for each link, an omp chat waiting for input in the Server tab and an open chat row showing "you:" and "omp:"](docs/graph.png)
+![The objectives graph, opened from the Guides tab: open objectives on the left by priority, P0 first, each with a grip to move it, a priority, due date and tags, two of them with titles wrapped onto two lines; "Fix login bug" ringed in amber with a "needs you" chip, and "Write release notes" in green with "replied"; "Read about rate limiting", which links Guides, tinted, with a thick line to Guides while the other lines fade; below them the open Done group, its objectives marked "review due" or "review in 4d"; the header has "Review (2)", a gear button for Configure and "＋ New objective"; tabs grouped by session on the right, with a line for each link, an omp chat waiting for input in the Server tab and an open chat row showing "you:" and "omp:"](docs/graph.png)
 
 ## Features
 
@@ -10,8 +10,8 @@ A [Tern](https://docs.stencil.so/tern) plugin for keeping track of what you are 
 - **See what needs you.** An objective turns amber, with a **needs you** chip, when an omp chat in one of its tabs asks you something, and green, with **replied**, when one finished a reply you haven't seen yet. While one is at work, it shows a **working** chip, with no colour around it.
 - **Review what you finished.** Marking an objective done puts it on a spaced-repetition schedule. When it's due, **Review (n)** brings it back to rate **Hard**, **Good** or **Easy**, which sets when you see it next.
 - **Jump anywhere.** Click a tab header or a pane's **→** to go there. Click a pane row to see what it is doing: an omp agent's last message and reply, a shell's last or running command, a file's path.
-- **Organize.** Put objectives in your own order, and give them priorities P0–P3, due dates, tags and a side note; filter by tag or by the current session. The selected objective shows its buttons right under it: **Note**, **Due**, **Tags** and **Delete** (with Undo).
-- **Finish cleanly.** Mark an objective done, then close its tabs in one go, from its **Close n tabs** button or the notice that marking done shows; or close every tab that only done objectives link with **Close n done tabs** in the header. Both ask first, right where you clicked. Point at a tab to show its trash icon, which closes that one tab after asking right there. Closed tabs stay in the graph, and **Resume** brings their omp chats back. Not done after all? Click a done objective's box to reopen it: **Keep review** carries its review schedule on when it's done again, **Reset review** starts it over. It goes to the bottom of your list, with its links.
+- **Organize.** Give objectives priorities P0–P3, which sort the list, and put them in your own order within each priority; add due dates, tags and a side note; filter by tag or by the current session. The selected objective shows its buttons right under it: **Note**, **Due**, **Tags** and **Delete** (with Undo).
+- **Finish cleanly.** Mark an objective done, then close its tabs in one go, from its **Close n tabs** button or the notice that marking done shows; or close every tab that only done objectives link with **Close n done tabs** in the header. Both ask first, right where you clicked. Point at a tab to show its trash icon, which closes that one tab after asking right there. Closed tabs stay in the graph, and **Resume** brings their omp chats back. Not done after all? Click a done objective's box to reopen it: **Keep review** carries its review schedule on when it's done again, **Reset review** starts it over. It goes last in your order (last of its priority, while sorting), with its links.
 
 ## Reviewing done objectives
 
@@ -46,7 +46,7 @@ It needs nothing on `PATH` but `git`, which `tern plugin install` already uses. 
 
 Close the graph with ⌃⌘O, its ×, a click outside it, or Esc after clicking its title bar.
 
-Open objectives stay in the order you give them; priorities and due dates don't reorder them. New objectives go on top, unless Configure puts them at the bottom. To move one, click its grip (the six dots at its left), then click the upper or lower half of the objective it should go above or below. Cancel in the header, or a click anywhere else, puts it back.
+Open objectives are listed by priority, P0 first, and in the order you give them within each priority; due dates don't reorder them. Clicking a badge changes the priority at once but moves nothing until your next click elsewhere, so you can step from P3 to P0 in place. To list them all in your own order instead, turn off **Sort by priority** in Configure; your order is kept either way. New objectives go on top, unless Configure puts them at the bottom (of their priority, while sorting). To move one, click its grip (the six dots at its left), then click the upper or lower half of the objective it should go above or below; while sorting, only objectives of its priority take it. Cancel in the header, or a click anywhere else, puts it back.
 
 Click an objective to select it: its lines stand out, every tab offers **＋ Link** or **× Unlink**, and a row of buttons appears under it. Click its title to rename it. Each time you open the graph, nothing is selected. While nothing is selected, the lines of the tab you opened the graph from stand out instead, and the objectives they lead to are tinted.
 
@@ -58,6 +58,7 @@ Click an objective to select it: its lines stand out, every tab offers **＋ Lin
 
 - **Shortcuts:** each command's keys, with **Change**, **Remove** and, once changed, **Reset**. Type a new shortcut the way Tern's keybinds spell it, such as `ctrl+alt+n`. A shortcut something else already uses, or one without ⌃, ⌥ or ⌘, is refused, so Configure never takes a key from Tern or another plugin.
 - **New objectives:** the priority they start at (P3 unless you change it) and whether they go on top or at the bottom of your order.
+- **Order:** **Sort by priority**, on unless you turn it off. Off lists the open objectives in your own order alone.
 
 ## Data and removal
 

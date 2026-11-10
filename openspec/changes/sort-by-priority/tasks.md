@@ -17,7 +17,7 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
 
 ## 1. Sorting by priority
 
-- [ ] 1.1 The setting and the shared order (design D1, D2, D5, D6):
+- [x] 1.1 The setting and the shared order (design D1, D2, D5, D6):
   - `sort_priority` in `normalize`, read as On unless it is `false`;
   - `Store.open_in_order(s, held?)`, used by the left column and the tab menu in `View.build` and by `link_tab`, replacing `open_in_order` in `lib/app.luau`;
   - the settings page's "Order" section and the `setsort` verb;
@@ -36,16 +36,46 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
   - objectives-graph "Sorting by priority": every scenario. "Link choices sorted too" is checked with shots of the picker and of the tab menu;
   - objectives-graph "Custom order": "Badge clicks don't move a node" with sorting off, and "New objective on top" with sorting on;
   - the README paragraphs and alt text, read back.
-- [ ] 1.2 The hold (design D3): `held` in `lib/app.luau`, started by `prio`, ended by every other verb and by a fresh open, and passed to `View.build` and `link_tab`. The `bg=` early return draws when a hold ended.
+
+  Result (harness, 2026-11-10). A fresh serve in `/tmp/tobj/w/web` held "web" (App build, tab 3; Components, tab 5) and "misc" (Scratch, tab 8). The helper plugin's `plugin.toml` had gone from `/tmp`, so it was written again before the layout was built. Every store had the done objectives "Set up CI" (P0) and "Read docs" (P3), with "Read docs" done an hour later.
+  - **On by default:** with the 0.23.0 store (settings without `sort_priority`), shot `sp_settings_on` shows the section "Order" after "New objectives", holding "Sort by priority" with On selected and the note "Within one priority, objectives keep your order. Off shows your order as it is."
+  - **Turned off and saved:** after a click on Off, Off was selected, and the kv dump's settings read `{"new_place": "top", "sort_priority": false, "start_priority": 3}`.
+  - **Off survives a reload:** after `ctl plugins fixtures`, the page still had Off selected (shot `sp_settings_off_reload`). The column read "Fix login bug", "Review pull requests", "Write slides", "Update dependencies", the stored order.
+  - **From the header:** the page's headings read "Shortcuts", "New objectives", "Order", with no `.ob-obj` or `.ob-tab` node.
+  - **Start at P1, at the bottom** (sorting off; P3 "Fix login bug" and "Review pull requests"): P1, Bottom and Off picked on the page, then "Write slides" was created with "＋ New objective". It was last, with a P1 badge, and the kv dump held priority 1 for it plus `start_priority` 1 and `new_place` "bottom".
+  - **Bottom of its priority** (sorting on; "Release" P1, "Fix login bug" P3): after P1 and Bottom, "Write slides" showed between them: "Release", "Write slides", "Fix login bug". In the list it was stored last.
+  - **Sorted list:** with "Fix login bug" (P3), "Review pull requests" (P1), "Write slides" (P3) and "Update dependencies" (P0) stored in that order, the column read "Update dependencies", "Review pull requests", "Fix login bug", "Write slides", and the kv dump kept o1, o2, o3, o4.
+  - **Link choices sorted too:** the "Link this tab…" picker (shot `sp_picker`, run as `plugin.objectives.link_tab` from App build) and the right-click menu of App build's node (shot `sp_menu`) both list "Update dependencies", "Review pull requests", "Fix login bug", "Write slides".
+  - **Sorting turned off:** Off, then "Back to graph", showed "Fix login bug", "Review pull requests", "Write slides", "Update dependencies".
+  - **Done group keeps its order:** "Read docs" (P3) was listed before "Set up CI" (P0) in the open Done group, with sorting on and off.
+  - **Badge clicks don't move a node** (sorting off; three P3s): "Write slides" stayed third after each of three badge clicks and after a click on empty graph space. The kv dump held priority 0 for it.
+  - **New objective on top** (sorting on; P3 "Fix login bug" and "Review pull requests"): "Write slides" was created first.
+  - **README:** besides the order paragraph, the "Order" bullet and the alt text ("open objectives on the left by priority, P0 first"), two other sentences now speak of priorities. "Organize" says priorities sort the list, and "Finish cleanly" says a reopened objective goes "last in your order (last of its priority, while sorting)".
+- [x] 1.2 The hold (design D3): `held` in `lib/app.luau`, started by `prio`, ended by every other verb and by a fresh open, and passed to `View.build` and `link_tab`. The `bg=` early return draws when a hold ended.
 
   Verify objectives-graph "Sorting waits for another click", every scenario. Read `ctl tree '.ob-obj'` after each click, and take a kv dump after the badge clicks. For "Refresh keeps the order", open a tab with `ctl` and wait 1 s, so that the live refresh redraws (a render line in the log).
-- [ ] 1.3 Drop spots while sorted (design D4): the node builder adds the drop zones only on objectives of the lifted one's priority when sorting is on, and the grip's tooltip names that priority.
+
+  Result (harness, 2026-11-10). Store: "Fix login bug" (P0), "Review pull requests" (P2), "Write slides" (P3), in that order, with sorting on. Each scenario started from this store, with the graph opened fresh.
+  - **Badge clicks hold the order:** after the first and the second click on the badge of "Write slides", the column read "Fix login bug" P0, "Review pull requests" P2, "Write slides" P2, and then the same with "Write slides" P1. The kv dump held priority 1 for it.
+  - **Another click sorts:** a click on empty graph space then gave "Fix login bug", "Write slides", "Review pull requests".
+  - **Other badges hold it too:** after the two clicks, a click on the badge of "Review pull requests" left every node in place, with its badge at P1. Then a click on empty space gave "Fix login bug", "Review pull requests", "Write slides".
+  - **Refresh keeps the order:** after the two clicks, a new tab was opened in "web" with the helper. Over the next 1.2 s the graph drew three times (render lines in the log), and "Write slides" stayed third. That tab was closed afterwards.
+  - **Fresh open sorts:** then ⌃⌘O. The first pair of presses left the graph closed, since the new tab had taken the focus, and one more press opened it. The reopened graph listed "Fix login bug", "Write slides", "Review pull requests".
+- [x] 1.3 Drop spots while sorted (design D4): the node builder adds the drop zones only on objectives of the lifted one's priority when sorting is on, and the grip's tooltip names that priority.
 
   Verify:
   - objectives-graph "Moving while sorted": both scenarios. For "Another priority takes no drop", take a shot after `ctl hover` on the lower half of "Release", and check that `ctl tree` holds no `.ob-drop` inside it;
   - the grip's tooltip, "Move within P3: click, then click where it goes", in `ctl tree`;
   - objectives-graph "Moving objectives" with sorting off: "Move to the top" and "Cancelled move" still hold;
   - render times in the serve log stay within the 20 ms target, with no objectives warnings or errors.
+
+  Result (harness, 2026-11-10). Store: "Release" (P1), "Fix login bug", "Review pull requests" and "Write slides" (P3), in that order, with sorting on.
+  - **Grip tooltips:** "Move within P1: click, then click where it goes" on "Release", and "Move within P3: …" on the other three. With sorting off, it reads "Move: click, then click where it goes".
+  - **Move within a priority:** with "Write slides" lifted, `.ob-drop` counts were 0 in "Release", 2 in "Fix login bug" and 2 in "Review pull requests". A click on the upper drop zone of "Fix login bug" gave "Release", "Write slides", "Fix login bug", "Review pull requests", nothing lifted, and kv order o1, o4, o2, o3.
+  - **Another priority takes no drop:** "Write slides" was lifted again, and the pointer was put on the lower half of "Release" with `ctl move`, since `ctl hover` aims at the centre. `ctl tree` showed no `.ob-drop` inside "Release" and one `.ob-lifted` node. In crop `sp_nodrop_crop.png`, "Write slides" is drawn lifted and no insertion line shows anywhere. A click there ended the move: no lifted node and no Moving notice, the same order, and the kv objectives identical to before.
+  - **Sorting off:** with "Fix login bug" (P3), "Review pull requests" (P1) and "Write slides" (P2), lifting "Write slides" gave drop zones on both other objectives, whatever their priority. A click on the upper half of "Fix login bug" moved it to the top (kv order o3, o1, o2). Lifting it again and clicking empty space ended the move with the order and the kv objectives unchanged.
+  - **Log:** 62 renders since the serve started, the longest 4.8 ms, and no objectives warnings or errors.
+  - **Cleanup:** the serve was stopped with `ctl quit`.
 
 ## 2. Release 0.24.0
 
