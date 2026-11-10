@@ -82,9 +82,11 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
 - [x] 2.1 Version `0.24.0` in `plugin.toml`. Verify that an isolated `tern plugin install` of the repo folder prints `installed objectives 0.24.0`. Tick this box, then commit, push `main` and tag `v0.24.0` (annotated, message "objectives 0.24.0").
 
   Result: the install into `/tmp/tobj-inst240/config` printed `installed objectives 0.24.0 → /tmp/tobj-inst240/config/plugins/objectives`.
-- [ ] 2.2 **(live)** After the push has finished, run `tern plugin install github.com/JakobMusik/tern-objectives --force` from a shell with no harness variables.
+- [x] 2.2 **(live)** After the push has finished, run `tern plugin install github.com/JakobMusik/tern-objectives --force` from a shell with no harness variables.
 
   Verify `tern plugin list` shows `objectives 0.24.0 … ready`, with the other plugins untouched.
+
+  Result: `installed objectives 0.24.0 → ~/Library/Application Support/Tern/plugins/objectives`. `tern plugin list` shows `objectives 0.24.0 … window ready`. The other plugins are all ready and untouched by this install: `external-editor 0.1.0`, which is new since 0.23.0's install and was installed by the user, `omp-narration 0.1.0`, `open-below 0.2.0`, `reply-selection 0.1.0` and `tabnav 0.1.0`. The tag `v0.24.0` (`9203207`) is signed and on GitHub.
 - [ ] 2.3 **(live)** With the user:
   - the open objectives are listed P0 first, and the settings page shows "Order" with "Sort by priority" On;
   - clicking a badge several times keeps the node in place, and the next click elsewhere sorts it;
