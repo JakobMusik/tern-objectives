@@ -87,12 +87,14 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
   Verify `tern plugin list` shows `objectives 0.24.0 … ready`, with the other plugins untouched.
 
   Result: `installed objectives 0.24.0 → ~/Library/Application Support/Tern/plugins/objectives`. `tern plugin list` shows `objectives 0.24.0 … window ready`. The other plugins are all ready and untouched by this install: `external-editor 0.1.0`, which is new since 0.23.0's install and was installed by the user, `omp-narration 0.1.0`, `open-below 0.2.0`, `reply-selection 0.1.0` and `tabnav 0.1.0`. The tag `v0.24.0` (`9203207`) is signed and on GitHub.
-- [ ] 2.3 **(live)** With the user:
+- [x] 2.3 **(live)** With the user:
   - the open objectives are listed P0 first, and the settings page shows "Order" with "Sort by priority" On;
   - clicking a badge several times keeps the node in place, and the next click elsewhere sorts it;
   - with sorting on, the grip drops only among objectives of the same priority, and Off shows your own order.
 
   Record the result here.
+
+  Result (user, 0.24.0): "it works", in reply to the three checks listed above. The user reported nothing more specific, so no single check is recorded on its own.
 
 ## Workflow follow-up
 
