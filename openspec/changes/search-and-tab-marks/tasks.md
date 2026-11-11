@@ -210,9 +210,11 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
 - [x] 4.1 Version `0.25.0` in `plugin.toml`. Verify that an isolated `tern plugin install` of the repo folder prints `installed objectives 0.25.0`. Tick this box, then commit, push `main` and tag `v0.25.0` (annotated, message "objectives 0.25.0").
 
   Result: the install into `/tmp/tobj-inst250/config` printed `installed objectives 0.25.0 → /tmp/tobj-inst250/config/plugins/objectives`.
-- [ ] 4.2 **(live)** After the push has finished, run `tern plugin install github.com/JakobMusik/tern-objectives --force` from a shell with no harness variables.
+- [x] 4.2 **(live)** After the push has finished, run `tern plugin install github.com/JakobMusik/tern-objectives --force` from a shell with no harness variables.
 
   Verify `tern plugin list` shows `objectives 0.25.0 … ready`, with the other plugins untouched.
+
+  Result: `installed objectives 0.25.0 → ~/Library/Application Support/Tern/plugins/objectives`. `tern plugin list` shows `objectives 0.25.0 … window ready`, and the other plugins ready as before: `external-editor 0.1.0`, `omp-narration 0.1.0`, `open-below 0.2.0`, `reply-selection 0.1.0` and `tabnav 0.1.0`. The tag `v0.25.0` (`c074caa`) is signed and on GitHub.
 - [ ] 4.3 **(live)** With the user:
   - the header's Search button filters the objectives by title, note and tags, the chip's × ends the search, and reopening the graph ends it too;
   - ⌃⌥F in a shell opens the graph with the search field;
