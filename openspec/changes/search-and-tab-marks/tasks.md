@@ -215,12 +215,14 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
   Verify `tern plugin list` shows `objectives 0.25.0 … ready`, with the other plugins untouched.
 
   Result: `installed objectives 0.25.0 → ~/Library/Application Support/Tern/plugins/objectives`. `tern plugin list` shows `objectives 0.25.0 … window ready`, and the other plugins ready as before: `external-editor 0.1.0`, `omp-narration 0.1.0`, `open-below 0.2.0`, `reply-selection 0.1.0` and `tabnav 0.1.0`. The tag `v0.25.0` (`c074caa`) is signed and on GitHub.
-- [ ] 4.3 **(live)** With the user:
+- [x] 4.3 **(live)** With the user:
   - the header's Search button filters the objectives by title, note and tags, the chip's × ends the search, and reopening the graph ends it too;
   - ⌃⌥F in a shell opens the graph with the search field;
   - a tab whose omp chat asks a question shows an amber ring and "needs you", and a chat that replied while you were elsewhere marks its tab "replied" until you click into its pane.
 
   Record the result here.
+
+  Result (user, 0.25.0): "it works", in reply to the three checks listed above. The user reported nothing more specific, so no single check is recorded on its own.
 
 ## Workflow follow-up
 
