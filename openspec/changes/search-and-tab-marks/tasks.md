@@ -169,7 +169,7 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
 
 ## 3. The README screenshot
 
-- [ ] 3.1 Take `docs/graph.png` again (design D8):
+- [x] 3.1 Take `docs/graph.png` again (design D8):
   - the demo layout and store rebuilt from the current image: docs (Guides; Release notes, with an omp pane whose reply is unseen), web (App build, split into app and tests; Components, with a shell and `todo.md`), api (Server, with a shell and an omp pane waiting for input; Benchmarks);
   - due dates set so that the chips read as in the current image;
   - the same window size (`ctl resize 1045 928`) and crop (914 × 808);
@@ -182,6 +182,28 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
   - "Screenshots match this version": open nodes show grips, and no node shows ⋯;
   - every line end sits within 2 px of its node and tab header centres, read from the shot's layout JSON;
   - the user approved the draft.
+
+  Result (harness, 2026-11-11):
+  - **Layout:** a fresh serve in `/tmp/tobj/w/demo/guides` held:
+    - docs: Guides 3, and Release notes 5, with omp in pane 4;
+    - web: App build 8, split into app and tests; Components 12, with the shell `ui` and `todo.md`;
+    - api: Server 15, with a shell and omp in pane 16; Benchmarks 19.
+  - **Store:** rebuilt from the old image's titles, priorities, created times, tags, notes and chips. Due dates were set from today, so the chips read "overdue 2d", "overdue 4d", "due tomorrow", "overdue 1d", "due today", "review due" and "review in 4d" as before. Release notes' omp row was stored open.
+  - **Chats:** Release notes' chat answered "In two short sentences, say what release notes for a web app should cover." while Guides had focus. Server's chat put a yes/no question about restarting the server and waited (`idle` with its alert, and `waiting_input`).
+  - **Window and crop:** `ctl resize 1045 928`, the glimpse cropped at its 914.31 × 808.08 box, so `graph.png` is 1828 × 1616 as before.
+  - **Content:**
+    - opened from pane 2 in Guides, with nothing selected and the Done group open;
+    - "Read about rate limiting" is tinted, with its thick line to Guides;
+    - Release notes is ringed green with "replied" and its "you:"/"omp:" lines; Server is ringed amber with "needs you"; "Fix login bug" and "Write release notes" keep their marks;
+    - the header shows the Search button after the scope segment;
+    - every open node has a grip, and no node has ⋯.
+  - **Line ends:** measured 3 px inside the gap column's edges against the shot's layout JSON, all 7 left ends sit within 0.3 px of their objective nodes' centres, and all 6 right ends within 0.3 px of their tab headers' centres. 1 px inside, the right column hit the tab cards' borders instead.
+  - **Alt text:** it now names the Search button, Release notes ringed green with "replied", and Server ringed amber with "needs you". "Graph screenshot first": the README's first image is still `docs/graph.png` (line 5).
+  - **Approval:** the user approved the draft before it was committed.
+  - **Cleanup:**
+    - the serve was stopped with `ctl quit`;
+    - removed the chat folders this run created: `--private-tmp-tobj-w-bench--`, `-demo-notes--`, `-demo-serverchat--` and `-split--`, and this run's chat in `--private-tmp-tobj-w-server--`;
+    - left as they were: that folder's chat from 2026-11-09, and `--private-tmp-tobj-w-docs--` (2026-11-09).
 
 ## 4. Release 0.25.0
 
