@@ -7,7 +7,7 @@ A [Tern](https://docs.stencil.so/tern) plugin for keeping track of what you are 
 ## Features
 
 - **Link tabs to objectives.** Select an objective, open or done, and click **＋ Link** or **× Unlink** on a tab, or right-click a tab and pick one. Links change only when you change them.
-- **See what needs you.** An objective turns amber, with a **needs you** chip, when an omp chat in one of its tabs asks you something, and green, with **replied**, when one finished a reply you haven't seen yet. While one is at work, it shows a **working** chip, with no colour around it.
+- **See what needs you.** An objective turns amber, with a **needs you** chip, when an omp chat in one of its tabs asks you something, and green, with **replied**, when one finished a reply you haven't seen yet. While one is at work, it shows a **working** chip, with no colour around it. Each tab is marked the same way for the omp chats in its panes, whether an objective links it or not.
 - **Review what you finished.** Marking an objective done puts it on a spaced-repetition schedule. When it's due, **Review (n)** brings it back to rate **Hard**, **Good** or **Easy**, which sets when you see it next.
 - **Jump anywhere.** Click a tab header or a pane's **→** to go there. Click a pane row to see what it is doing: an omp agent's last message and reply, a shell's last or running command, a file's path.
 - **Organize.** Give objectives priorities P0–P3, which sort the list, and put them in your own order within each priority; add due dates, tags and a side note; filter by tag or by the current session. The selected objective shows its buttons right under it: **Note**, **Due**, **Tags** and **Delete** (with Undo).

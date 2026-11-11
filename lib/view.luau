@@ -49,8 +49,9 @@ export type Ui = {
 	search: string?,
 }
 
--- An objective's attention mark: the strongest call over its live tabs, and those tabs' labels.
-type Mark = { kind: string, tabs: { string } }
+-- An attention mark: the strongest call, and what makes it: an objective's tab labels, or a tab's
+-- pane titles (search-and-tab-marks, design D6).
+type Mark = { kind: string, names: { string } }
 
 local MARK_CHIP = { wait = "needs you", replied = "replied", working = "working" }
 local MARK_TIP = { wait = "omp is waiting in ", replied = "omp replied in ", working = "omp is working in " }
@@ -73,6 +74,15 @@ local function span(class: string, text: string, extra: { [string]: any }?): Nod
 		end
 	end
 	return el("span", props)
+end
+
+-- A mark's chip (attention-marks-and-titles D3), first on its node's second line; the tooltip names
+-- the tabs or panes behind it.
+local function mark_chip(mark: Mark): Node
+	return span("ob-chip ob-attchip ob-attchip-" .. mark.kind, MARK_CHIP[mark.kind], {
+		key = "att",
+		title = MARK_TIP[mark.kind] .. "“" .. table.concat(mark.names, "”, “") .. "”",
+	})
 end
 
 local function sort_done(list: { Store.Objective })
@@ -258,10 +268,7 @@ local function objective_node(o: Store.Objective, ui_state: Ui, first: string, t
 	end
 	local line2: { Node } = {}
 	if mark ~= nil then
-		table.insert(line2, span("ob-chip ob-attchip ob-attchip-" .. mark.kind, MARK_CHIP[mark.kind], {
-			key = "att",
-			title = MARK_TIP[mark.kind] .. "“" .. table.concat(mark.tabs, "”, “") .. "”",
-		}))
+		table.insert(line2, mark_chip(mark))
 	end
 	if o.note ~= nil then
 		table.insert(line2, span("ob-note", o.note))
@@ -357,13 +364,18 @@ type Link = { unlink: boolean, title: string }
 
 -- `resume`: a closed tab with a saved omp chat shows "Resume" (resume-omp-chats, design D4). `linked`:
 -- any objective links it. `asking`: its trash icon's question is open (close-tab-from-node, D3).
-local function tab_node(t: Model.Tab, status: string, first: string, linked_open: boolean, link: Link?, menu: { any }, ui_state: Ui, expanded: { [string]: boolean }, resume: boolean, linked: boolean, asking: boolean): (Node, number)
+-- `mark`: a live tab's attention mark (search-and-tab-marks, D7).
+local function tab_node(t: Model.Tab, status: string, first: string, linked_open: boolean, link: Link?, menu: { any }, ui_state: Ui, expanded: { [string]: boolean }, resume: boolean, linked: boolean, asking: boolean, mark: Mark?): (Node, number)
 	local live = status == "live"
 	local cls = "ob-tab ob-t-" .. t.id .. first
 	if status ~= "live" then
 		cls ..= " ob-tab-ghost ob-tab-" .. status
 	elseif not linked_open then
 		cls ..= " ob-tab-unlinked"
+	end
+	-- Only "needs you" and "replied" ring the node, as on objective nodes (D7).
+	if mark ~= nil and mark.kind ~= "working" then
+		cls ..= " ob-tatt-" .. mark.kind
 	end
 	-- position 0: a ghost with no saved snapshot, so there is no place to name.
 	local place = if t.position > 0 then t.session_name .. " · tab " .. t.position else nil
@@ -403,9 +415,15 @@ local function tab_node(t: Model.Tab, status: string, first: string, linked_open
 			}))
 		end
 	end
+	-- The second line: the mark's chip first, then where the tab is (D7).
+	local line2: { Node } = {}
+	if mark ~= nil then
+		table.insert(line2, mark_chip(mark))
+	end
+	table.insert(line2, span("ob-line ob-dim", where, { key = "where" }))
 	local head_kids: { Node } = {
 		el("div", { class = if asking then "ob-th1 ob-th1-ask" else "ob-th1", key = "th1" }, th1),
-		span("ob-line ob-dim", where, { key = "where" }),
+		el("div", { class = "ob-tl2", key = "l2" }, line2),
 	}
 	-- While it asks, a click on the header ends the question instead of jumping (D3).
 	local kids: { Node } = {
@@ -620,44 +638,53 @@ function M.build(state: Store.State, win: Model.Window, ui_state: Ui): Built
 	local left_kids: { Node } = {}
 	local obj_cy: { [string]: number } = {}
 	local sel_obj: Store.Objective? = nil
-	-- Attention (attention-marks-and-titles D3): each live tab's strongest omp call, worked out once,
-	-- then per objective the strongest over its live tabs, ranked by RANK (working-mark D2). Closed
-	-- and elsewhere tabs have no live rows, so they never mark.
-	local tab_call: { [number]: string } = {}
-	local function call_of(tab: number): string
-		local known = tab_call[tab]
-		if known ~= nil then
-			return known
+	-- Attention (attention-marks-and-titles D3; search-and-tab-marks D6): each live tab's mark, worked
+	-- out once: the strongest omp call over its rows, ranked by RANK (working-mark D2), and the titles
+	-- of the rows making it. Closed and elsewhere tabs have no live rows, so they never mark.
+	local tab_marks: { [number]: Mark } = {}
+	local tab_seen: { [number]: boolean } = {}
+	local function tab_mark(tab: number): Mark?
+		if tab_seen[tab] then
+			return tab_marks[tab]
 		end
-		local call = ""
+		tab_seen[tab] = true
+		local kind = ""
+		local names: { string } = {}
 		local t = win.tabs[tab]
 		if t ~= nil then
 			for _, row in t.rows do
-				local a = ui_state.attention(row)
-				if a ~= nil and (RANK[a] or 0) > (RANK[call] or 0) then
-					call = a
-					if a == "wait" then
-						break
-					end
+				local call = ui_state.attention(row) or ""
+				local rank = RANK[call] or 0
+				if rank > (RANK[kind] or 0) then
+					kind, names = call, { row.title }
+				elseif rank > 0 and call == kind and table.find(names, row.title) == nil then
+					table.insert(names, row.title)
 				end
 			end
 		end
-		tab_call[tab] = call
-		return call
+		if kind == "" then
+			return nil
+		end
+		local mark = { kind = kind, names = names }
+		tab_marks[tab] = mark
+		return mark
 	end
+	-- An objective's mark: the strongest over its live tabs, naming the tabs that make it.
 	local function mark_of(o: Store.Objective): Mark?
 		local kind = ""
-		local tabs: { string } = {}
+		local names: { string } = {}
 		for _, tab in o.tabs do
-			local call = call_of(tab)
-			local rank = RANK[call] or 0
-			if rank > (RANK[kind] or 0) then
-				kind, tabs = call, { win.tabs[tab].label }
-			elseif rank > 0 and call == kind then
-				table.insert(tabs, win.tabs[tab].label)
+			local m = tab_mark(tab)
+			if m ~= nil then
+				local rank = RANK[m.kind] or 0
+				if rank > (RANK[kind] or 0) then
+					kind, names = m.kind, { win.tabs[tab].label }
+				elseif m.kind == kind then
+					table.insert(names, win.tabs[tab].label)
+				end
 			end
 		end
-		return if kind ~= "" then { kind = kind, tabs = tabs } else nil
+		return if kind ~= "" then { kind = kind, names = names } else nil
 	end
 	-- While sorting by priority, the lifted objective's priority bounds its drop (sort-by-priority, D4).
 	local sorting: Sorting? = nil
@@ -783,7 +810,8 @@ function M.build(state: Store.State, win: Model.Window, ui_state: Ui): Built
 		local c = ui_state.confirm
 		local asking = status == "live" and c ~= nil and c.kind == "tab" and c.id == tostring(t.id)
 		local linked = linked_open[t.id] == true or linked_done[t.id] == true
-		local node, details = tab_node(t, status, first, linked_open[t.id] == true, link, menu_of(t.id), ui_state, view_state.expanded, resume, linked, asking)
+		local mark = if status == "live" then tab_mark(t.id) else nil
+		local node, details = tab_node(t, status, first, linked_open[t.id] == true, link, menu_of(t.id), ui_state, view_state.expanded, resume, linked, asking, mark)
 		tab_cy[t.id] = Layout.add_tab(right, #t.rows, details, link ~= nil)
 		table.insert(right_kids, node)
 		if status == "live" and linked_done[t.id] and not linked_open[t.id] then

@@ -683,6 +683,25 @@
 	border-color: var(--accent);
 	box-shadow: inset 0 0 0 1.5px var(--accent);
 }
+/* A tab's attention ring (search-and-tab-marks, design D7), as on objective nodes: amber while an
+   omp chat in it waits for the user, green while one replied unseen; "working" is its chip alone.
+   On the origin tab, the accent ring stays outside and the mark's ring sits inside it. */
+[data-surface='plugin.tern.canvas'] .ob-root .ob-tab.ob-tatt-wait {
+	border-color: var(--warn);
+	box-shadow: inset 0 0 0 1px var(--warn);
+}
+[data-surface='plugin.tern.canvas'] .ob-root .ob-tab.ob-tatt-replied {
+	border-color: var(--ok);
+	box-shadow: inset 0 0 0 1px var(--ok);
+}
+[data-surface='plugin.tern.canvas'] .ob-root .ob-tab.ob-origin.ob-tatt-wait {
+	border-color: var(--accent);
+	box-shadow: inset 0 0 0 1.5px var(--accent), inset 0 0 0 3px var(--warn);
+}
+[data-surface='plugin.tern.canvas'] .ob-root .ob-tab.ob-origin.ob-tatt-replied {
+	border-color: var(--accent);
+	box-shadow: inset 0 0 0 1.5px var(--accent), inset 0 0 0 3px var(--ok);
+}
 [data-surface='plugin.tern.canvas'] .ob-root .ob-row.ob-row-origin {
 	color: var(--t1);
 	box-shadow: inset 3px 0 0 var(--accent);
@@ -692,6 +711,20 @@
 	box-sizing: border-box;
 	overflow: hidden;
 	padding: 2px 8px 0 8px;
+}
+/* The header's second line (D7): the mark's chip first, then "<session> · tab <n>", which still ends
+   in "…". 18 px, so the header keeps its height. */
+[data-surface='plugin.tern.canvas'] .ob-root .ob-tl2 {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	gap: 6px;
+	height: 18px;
+	overflow: hidden;
+}
+[data-surface='plugin.tern.canvas'] .ob-root .ob-tl2 > .ob-line {
+	flex: 0 1 auto;
+	min-width: 0;
 }
 [data-surface='plugin.tern.canvas'] .ob-root .ob-th1 {
 	display: flex;

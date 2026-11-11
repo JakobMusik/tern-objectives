@@ -126,7 +126,7 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
 
 ## 2. Marks on tab nodes
 
-- [ ] 2.1 The marks (design D6, D7):
+- [x] 2.1 The marks (design D6, D7):
   - `tab_mark` in `View.build`, replacing `call_of`, with `Mark.names`;
   - `mark_of` built on it;
   - the tab node's second line as `.ob-tl2`, its chip, and the `ob-tatt-*` classes;
@@ -139,6 +139,33 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
   - "Light and dark themes": shots under `ctl appearance light` and `ctl appearance dark`, cropped to a "needs you" tab, a "replied" tab, a "working" tab and the marked origin tab;
   - "Link lines", "Alignment at two widths": with a marked tab, at 1400 and 460 px wide, every line end sits within 2 px of its tab header's centre, read from the shots' layout JSON;
   - render times in the serve log stay within the 20 ms target, with no objectives warnings or errors.
+
+  Result (harness, 2026-11-11):
+  - **Setup:**
+    - omp ran in Server's right pane (9), in both Split panes (13, 15), and in a pane split off Benchmarks (296). They were driven through the helper's `ask` op while Benchmarks' shell (11) had focus.
+    - Store: open "Fix login bug" (P0) linked to Server, "Write slides" (P2) linked to Docs, and "Ship docs" (P1) with no link.
+  - **"Tab attention marks":**
+    - "Chat working": during `sleep 90`, the Server node had no `ob-tatt-*` class. Its second line started with a "working" chip, tooltip `omp is working in “<the pane's title>”`. Crop `tm_working_server.png`.
+    - "Reply unseen": once the turn ended (`idle`, alert set), Server got `ob-tatt-replied` and a "replied" chip, while its row still read "omp · idle". Crop `tm_replied_server.png`.
+    - "Focusing the pane clears a reply": after focusing pane 9, then 11, and opening the graph again, Server had no class and no chip.
+    - "Question waiting": asked for a yes/no question, pane 9 went `waiting_input`. Server got `ob-tatt-wait` and "needs you" before "api · tab 1", with its tooltip naming the pane's title. Crop `tm_wait_server.png`.
+    - "Objective and tab together": "Fix login bug" got `ob-att-wait` and "needs you" (`omp is waiting in “Server”`) at the same time.
+    - "Origin tab marked": opened from Server's shell (pane 7), the node had `ob-origin` and `ob-tatt-wait`. Crop `tm_origin_server.png` shows the accent ring outside and the amber ring inside.
+    - "Needs you wins": with pane 13 waiting and pane 15's reply unseen, Split showed only "needs you", whose tooltip named pane 13's title alone.
+    - "Unlinked tab": Split, then linked to nothing, kept `ob-tab-unlinked` beside `ob-tatt-wait`. Crop `tm_unlinked_split.png` shows the grey fill and the dashed border, drawn amber.
+    - "Closed tab": with Split linked to "Ship docs", panes 13 and 15 were closed. Split showed under "Closed tabs" as `ob-tab-ghost`, with Resume, no `ob-tatt-*` and no chip, and "Ship docs" lost its mark.
+  - **"Attention marks", unchanged:**
+    - "Question waiting": `omp is waiting in “Server”`.
+    - "Two chats in one tab": "Ship docs", linked to Split, named "Split" once.
+    - "Needs you wins": "Write slides" linked to Benchmarks (replied) and Server (waiting) showed "needs you" naming Server only. "Bench only", linked to Benchmarks alone, showed "replied" for Benchmarks.
+    - Benchmarks kept "replied" while its other pane (11) had focus.
+  - **Light and dark** (`ctl appearance`):
+    - `tm_themes.png`: Benchmarks as the origin tab with "replied", and Server with "needs you", in both themes.
+    - `tm_w_themes.png`: Benchmarks as the origin tab with "working" (origin ring only).
+    - The chips and rings read clearly in both themes.
+  - **"Alignment at two widths":** with Server and Benchmarks marked, at `ctl resize 1600 1000` (graph capped at 1200 px wide) and `ctl resize 560 1000` (graph 467.5 px wide), pixels at the gap column's edges placed all 4 left line ends and all 3 right line ends within 0.05 px of their node and tab-header centres.
+  - **Log:** 260 renders since the serve started, all but one at most 9.9 ms. One reached 21.0 ms (build 10.9, hand-over 10.1, both about twice the usual) while `pump` was opening and closing tabs during an omp turn. A burst of 40 renders afterwards, with three omp chats and the marks shown, peaked at 12.6 ms. No objectives errors.
+  - **README:** "See what needs you" now says each tab is marked the same way for its own omp chats, linked or not.
 
 ## 3. The README screenshot
 
