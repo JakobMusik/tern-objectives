@@ -33,7 +33,8 @@ See proposal.md, "Why".
 | `cx:prompt` takes `value` (selected), `placeholder`, `icon` and `action`, and resolves nil when dismissed | `tern.d.luau:1894–1896`, `1933–1943` |
 | A command's default chords are `CommandDef.keys` | `tern.d.luau:1185–1200` |
 | `search` and `x` are Tern icon names | SDK "Icon names", fetched 2026-11-11 from `https://docs.stencil.so/tern/print.html` (text extraction `/tmp/ternsdk/book.txt`, line 13675 for `search`) |
-| Tern binds no plain ⌥F: its keymap tables list only ⌥F5 and ⌥⌘F with F | same extraction, lines 47323 and 47713 |
+| Tern binds ⌥F (`canvas.fill_solid`) and ⌥⇧F (`canvas.fill_pattern`), and a plugin's default on a key Tern binds is left out | Spike in task 1.3: `op keys_all` read `alt+f → canvas.fill_solid`; a throwaway command with `keys = { "alt+f" }` logged `plugin bind left out: the preset binds these keys keys="alt+f"`, and `ctl key Alt+f` didn't run it. The SDK's keymap tables, searched for "alt+f", had missed this |
+| ⌃⌥F is free in Tern's keymap | Same spike: `op keys` read nothing on `ctrl+alt+f` |
 | A plugin key runs in every pane, with either Option key | custom-order-and-direct-controls D5 (⌥N); rename-key-shift-option-r (⌥⇧R) |
 
 ## Goals / Non-Goals
@@ -89,7 +90,7 @@ After the scope segment, and before the tag chips, since it filters as they do:
 Both verbs go through `M.action`, so like any click they end a question, a move, a hold and the Undo notice. `search=` opens the field and draws later (`later = true`). `unsearch=` clears `search` and draws.
 
 ### D5. The key
-- **`lib/keys.luau`:** `Keys.COMMANDS` gains `{ id = "search", label = "Search", default = "alt+f" }` after "new", so the settings page lists Search after New objective.
+- **`lib/keys.luau`:** `Keys.COMMANDS` gains `{ id = "search", label = "Search", default = "ctrl+alt+f" }` after "new", so the settings page lists Search after New objective. The user chose ⌃⌥F once the spike showed ⌥F can't be a plugin default (source record).
 - **`window.luau`:** registers "Objectives: Search…" with `icon = "search"`, `keys = Keys.default_keys("search")` and `run = App.search_key`.
 - **`App.search_key`:** follows `M.new_key`, without ending review mode, since the search applies there:
   - with no graph shown over the current tab, `M.open(cx)` opens it fresh, which also ends an old search;
@@ -115,7 +116,7 @@ Both verbs go through `M.action`, so like any click they end a question, a move,
 ### D8. README and screenshot
 - **README:**
   - a "Search" row in the commands table;
-  - ⌥F in the keys note, with the character Option+F types on the US layout, checked as ⌥⇧R's "‰" was;
+  - ⌃⌥F in the keys note, as for ⌥⇧R and ⌥N;
   - a paragraph on searching, after the paragraph on selecting;
   - "See what needs you" names tab nodes.
 - **`docs/graph.png`:** taken again, as highlight-origin-tab-links task 3.1 took it: the same window size (`ctl resize 1045 928`) and crop (914 × 808), opened from Guides with the Done group open.
@@ -125,13 +126,13 @@ Both verbs go through `M.action`, so like any click they end a question, a move,
 
 ## Risks / Trade-offs
 
-- **[⌥F in every pane]** Option+F no longer reaches any pane in Tern, so it no longer types its character there (which one on the US layout is checked in task 1.3). → It was the user's choice; the README says so, and Configure can move or remove the key.
-- **[Another plugin's ⌥F]** A plugin could claim ⌥F too. Read on 2026-11-11: the user's other plugins (external-editor, omp-narration, open-below, reply-selection, tabnav) register no default keys, and the user's `settings.json` holds no `alt+f` entry. → The live check (task 4.3) still presses ⌥F in a shell.
-- **[Case folding]** Luau's `string.lower` is expected to fold only ASCII letters, so "É" wouldn't find "é". Untested. → Task 1.2 searches for an accented title in both cases, and records what it does. The proposal leaves non-ASCII folding out of scope.
+- **[⌃⌥F in every pane]** ⌃⌥F no longer reaches any pane in Tern. → It was the user's choice; the README says so, and Configure can move or remove the key.
+- **[Another plugin's ⌃⌥F]** A plugin could claim ⌃⌥F too. Read on 2026-11-11: the user's other plugins (external-editor, omp-narration, open-below, reply-selection, tabnav) register no default keys, and the user's `settings.json` holds no `ctrl+alt+f` entry. → The live check (task 4.3) still presses ⌃⌥F in a shell.
+- **[Case folding]** Luau's `string.lower` folds only the letters A to Z, so "é" doesn't find "É". Checked in task 1.2: "Écrire la doc" was found by "Écrire" and "ÉCRIRE", not by "écrire". → The README says the search ignores the case of A to Z only; the proposal leaves other letters out of scope.
 - **[Search hides the Done group's matches]** With the group folded, matches there show only in its count. → As under the tag filter; the proposal keeps the fold the user's.
 - **[A search ending review mode]** A search with no due match empties review mode's list, and "Leaving review mode" ends review mode then. → This is the tag filter's behaviour today; ending the search shows the normal list.
 - **[Rebuilt screenshot data]** The demo's chats are generated anew, so their titles and replies read differently. → As in highlight-origin-tab-links 3.1; the user approves the draft.
 
 ## Migration Plan
 
-Nothing is stored, so there is nothing to migrate. Keybinds that a user wrote for other commands are untouched. A user keybind already on `alt+f` claims the chord, so Search gets no key there (`Keys.in_effect`), and the settings row shows "none" with Reset.
+Nothing is stored, so there is nothing to migrate. Keybinds that a user wrote for other commands are untouched. A user keybind already on `ctrl+alt+f` claims the chord, so Search gets no key there (`Keys.in_effect`), and the settings row shows "none" with Reset.

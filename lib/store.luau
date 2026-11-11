@@ -266,6 +266,31 @@ function M.open_in_order(s: State, held: { [string]: number }?): { Objective }
 	return list
 end
 
+-- A search's words, lowercased (search-and-tab-marks, design D2); nil when the text holds none.
+function M.search_words(text: string): { string }?
+	local words: { string } = {}
+	for word in string.gmatch(string.lower(text), "%S+") do
+		table.insert(words, word)
+	end
+	return if #words > 0 then words else nil
+end
+
+-- Whether every word occurs in the objective's title, side note or "#tag"s, ignoring case (D2).
+-- A plain find, so ".", "%" and "(" are just characters.
+function M.matches(o: Objective, words: { string }): boolean
+	local parts = { o.title, o.note or "" }
+	for _, tag in o.tags do
+		table.insert(parts, "#" .. tag)
+	end
+	local text = string.lower(table.concat(parts, "\n"))
+	for _, word in words do
+		if string.find(text, word, 1, true) == nil then
+			return false
+		end
+	end
+	return true
+end
+
 -- ---- input rules ----
 
 -- A trimmed one-line title of at most 120 characters, or nil when blank.

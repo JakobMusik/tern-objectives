@@ -25,13 +25,22 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
 
 ## 1. Search
 
-- [ ] 1.1 Build the harness again under `/tmp/tobj` (add-objectives-plugin D14):
+- [x] 1.1 Build the harness again under `/tmp/tobj` (add-objectives-plugin D14):
   - the fixtures copy of the repo's package files;
   - `bin/serve`, `bin/ctl`, `bin/sync` and `bin/pump`;
   - the helper plugin `tobjh` and `bin/op`, with the ops the checks above use: `kv`, `keys_all`, `agents` and `run`.
 
   Verify that `ctl plugins fixtures` loads `objectives` and `tobjh` with no plugin errors in the serve log, `ctl state` answers, and `op keys_all` lists `ctrl+cmd+o → plugin.objectives.open`.
-- [ ] 1.2 The search (design D1–D4):
+
+  Result (harness, 2026-11-11):
+  - **Scripts:** `bin/env.sh`, `serve`, `ctl`, `sync`, `op`, `kv` and `pump`, and the helper's `plugin.toml` and `window.luau`, were restored from their last versions in this session's history. The helper's two throwaway ops that required copies of `lib/` under `./rev` were left out.
+  - **Fixture root:** with `STENCIL_FIXTURE_ROOT=/tmp/tobj`, as the restored `env.sh` had it, Tern 0.9.16 loaded no plugin: `ctl plugins fixtures` answered ok, and `plugins expect objectives` timed out. With `/tmp/tobj/crates/app`, the root D14 names, both plugins loaded.
+  - **Checks:** `ctl state` answered. `op keys_all` listed `ctrl+cmd+o → plugin.objectives.open`. The log's only warning was the helper's own `esc_probe` on Escape.
+  - **Layout:**
+    - session "web" (1): App build (tab 3, pane 2) and Docs (tab 5, pane 4);
+    - session "api" (6): Server (tab 8, shells 7 and 9), Benchmarks (tab 12, pane 11) and Split (tab 14, panes 13 and 15).
+  - **Slip:** before the harness was up, `tern serve --help` was run in the work shell to read its options. It took no `--help` and served for about a minute, with no harness variables, until `tern ctl --control /tmp/tern.sock quit` stopped it. No file under `~/Library/Application Support/Tern` changed in that time (`find -newermt`).
+- [x] 1.2 The search (design D1–D4):
   - `Store.search_words` and `Store.matches`;
   - the check in `visible`, and `ui_state.search`;
   - the header's Search button and chip, with their CSS;
@@ -48,18 +57,72 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
   - a shot of the header with the chip, and one with a 60-character search, its chip cut with "…";
   - the README paragraph, read back;
   - render times in the serve log stay within the 20 ms target, with no objectives warnings or errors.
-- [ ] 1.3 The key (design D5):
+
+  Result (harness, 2026-11-11). Store: open "Fix login bug" (P0, #api, linked to Server), "Write slides" (P2, side note "for the Monday demo", linked to Docs) and "Login page copy" (P3, #web); done "Set up CI" and "Restyle the docs site", both due today. The graph was shown over Benchmarks. Text went into the field with `ctl type`, then Enter.
+  - **"Search":**
+    - "A word of the title": "login" listed "Fix login bug" and "Login page copy". The header showed the chip "login", tooltip "Search: “login” · click to change", with no `.ob-searchbtn`. The tab nodes were the same five, in the same order.
+    - "Every word must match": "login API" listed "Fix login bug" alone.
+    - "Side note": "monday" listed "Write slides" alone.
+    - "Done objectives": "docs" showed "▸Done (1)"; opened, it listed "Restyle the docs site" alone.
+    - "Nothing matches": "zebra" left only "No objectives match this filter.", with the chip "zebra" and no Done group.
+    - "Lines of hidden objectives": in crop `sr_lines_search_crop.png`, no line reached Docs, while `sr_lines_none_crop.png`, without the search, shows Write slides' blue line ending at its header.
+    - "Changing the search": a click on the chip opened the field holding "login". "slides" then listed "Write slides" alone, with the chip "slides".
+    - "Ending with ×" and "Empty text": both listed all three again, with the Search button back and no chip.
+    - "Field dismissed": Escape left the same two objectives and the chip "login".
+  - **"Search and other filters":**
+    - "With the tag filter": with "#web" on, "login" listed "Login page copy" alone.
+    - "Selection cleared": with "Write slides" selected, "login" left nothing selected and no `.ob-acts`.
+    - "Created during a search": "＋ New objective" and "Write notes" listed "Fix login bug", "Write notes" (selected, at the top of P3) and "Login page copy". After a click on the gap, the other two were listed alone.
+    - "In review mode": "Review (2)" listed both done objectives. "docs" left "Restyle the docs site" alone, with "Review (1)" active.
+    - "Ended by a fresh open": after ⌃⌘O twice (`plugins run plugin.objectives.open`), every objective was listed, with the Search button and no chip.
+    - "Kept after a field": with "login" on and "Fix login bug" selected, Note opened the field. The graph was then closed while the field was open, as a click into the field closes it live. "check the logs" and Enter showed the graph again with the chip "login", the same two objectives, "Fix login bug" selected, and its note stored.
+  - **"Selection on a fresh open":**
+    - "Filters kept, search ended": "#api" and "login" on, then a fresh open: the "#api" chip active, "Fix login bug" listed, and the Search button.
+    - "Closed and opened again": nothing selected and no `.ob-acts`.
+    - "Review mode kept": "Review (2)" still active, listing both.
+    - "Kept after a picker" is "Kept after a field" above, and "New objective by key" is unchanged code: `M.new_key` still selects what it creates.
+  - **objective-review "Review button":**
+    - "Search narrows the count": "docs" outside review mode showed "Review (1)", which listed "Restyle the docs site" alone.
+    - "One due": with one review due tomorrow, "Review (1)".
+    - "Nothing due": with both due tomorrow, no Review button.
+  - **Plain text:** "1.2 (beta" found "Ship v1.2 (beta)". "1x2" and "50%" found nothing and raised no error.
+  - **Case folding** (design risk):
+    - "Écrire la doc" was found by "Écrire", "ÉCRIRE" and "la DOC", but not by "écrire" or "ecrire". Only A to Z fold: "É" and "é" stay apart.
+    - The README says "ignoring the case of the letters A to Z".
+    - `ctl type` sends `\u` escapes as typed text, so accented text went in as raw UTF-8.
+  - **Shots:** `sr_chip_crop.png` shows the chip after the scope segment, accent-filled, with the magnifier, "login" and ×. `sr_longchip_crop.png` shows a 61-character search cut at 220 px with "…".
+  - **README:** the paragraph after the one on selecting, read back.
+  - **Log:** 71 renders since the serve started, the longest 7.3 ms, and no objectives warnings or errors.
+- [x] 1.3 The key (design D5):
   - the `search` entry in `Keys.COMMANDS`;
   - the "Objectives: Search…" command in `window.luau`;
   - `App.search_key`;
-  - README: the commands table's Search row with ⌥F, and the keys note. Before writing which character Option+F types, check it on the US layout with a throwaway Swift script calling `UCKeyTranslate` on `com.apple.keylayout.US`, as rename-key-shift-option-r did for "‰", then delete the script.
+  - README: the commands table's Search row with ⌃⌥F, and ⌃⌥F in the keys note.
 
   Verify:
-  - `op keys_all` lists `alt+f → plugin.objectives.search`, and the serve log has no `bind left out`;
-  - objectives-graph "Search key": every scenario, pressing keys with `ctl key Alt+f`. "Letters still reach the panes" uses `ctl type fF` in the Benchmarks shell;
+  - `op keys_all` lists `ctrl+alt+f → plugin.objectives.search`, and the serve log has no `bind left out` for it;
+  - objectives-graph "Search key": every scenario, pressing keys with `ctl key Ctrl+Alt+f`. "Letters still reach the panes" uses `ctl type fF` in the Benchmarks shell;
   - plugin-package "Palette commands": its three scenarios, from the palette's rows in `ctl state`;
   - plugin-settings "Shortcut rows": "Defaults", "Search key changed" and "Rename moved to ⌥⇧R before this version", with `ctl tree` for the rows and `op` for the keybinds. After a Reset on Search, the keybinds equal the starting map;
-  - plugin-package "README": `grep` finds the Search row with ⌥F, the keys note and the search paragraph.
+  - plugin-package "README": `grep` finds the Search row with ⌃⌥F, the keys note and the search paragraph.
+
+  Result (harness, 2026-11-11):
+  - **Spike first:** `op keys_all` read `alt+f → canvas.fill_solid`, and `alt+shift+f → canvas.fill_pattern`. A throwaway helper command with `keys = { "alt+f" }` logged `plugin bind left out: the preset binds these keys keys="alt+f"`, and `ctl key Alt+f` didn't run it. The artifacts were updated, and the user picked ⌃⌥F (`ctrl+alt+f`, free in the keymap).
+  - **Keymap:** `ctrl+alt+f → plugin.objectives.search`, with no `bind left out` for it.
+  - **"Search key":**
+    - "From a shell": with no graph shown and the Benchmarks shell focused, ⌃⌥F showed the graph over Benchmarks with the field open. "login" listed the two matches with the chip "login", and the shell's text was the same before and after.
+    - "In the graph": with "login" on, ⌃⌥F opened the field holding "login".
+    - "From the settings page": ⌃⌥F and "login" showed the columns with the two matches.
+    - "Letters still reach the panes": `ctl type fF` in the Benchmarks shell left "fF" at its prompt, with no field and no graph.
+  - **"Palette commands"**, read with `ctl palette objectives` and `ctl tree '#pal [role=option]'`:
+    - "Commands listed": with "Fix login bug" selected, the seven commands: Open graph ⌃⌘O, Rename selected objective ⌥⇧R, New objective ⌥N, Search… ⌃⌥F, Link this tab…, New objective for this tab… and Configure.
+    - "Rename hidden without the graph" and "Rename hidden without a selection": the other six.
+  - **"Shortcut rows":**
+    - "Defaults": Open graph ⌃⌘O, Rename selected objective ⌥⇧R, New objective ⌥N, Search ⌃⌥F, the other three "none", and no Reset.
+    - "Search key changed": Change opened the field holding `ctrl+alt+f`. `ctrl+alt+s` made the row "⌃⌥S" with Reset. The keybinds then held `ctrl+alt+s → plugin.objectives.search` and an empty `ctrl+alt+f`. In the Benchmarks shell, ⌃⌥S showed the graph with the field, and ⌃⌥F did nothing.
+    - Reset brought back "⌃⌥F" without Reset, and the keybinds were `{}` again, as at the start.
+    - "Rename moved to ⌥⇧R before this version": with `alt+shift+r` and an empty `alt+r` written through `op`, the row read "⌥⇧R" with no Reset. With "Fix login bug" selected, ⌥⇧R opened the field holding its title. The keybinds were then set back to `{}`.
+  - **README:** the commands table's row "Objectives: Search… | ⌃⌥F", and the keys note naming ⌃⌥F.
 
 ## 2. Marks on tab nodes
 
@@ -101,7 +164,7 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
   Verify `tern plugin list` shows `objectives 0.25.0 … ready`, with the other plugins untouched.
 - [ ] 4.3 **(live)** With the user:
   - the header's Search button filters the objectives by title, note and tags, the chip's × ends the search, and reopening the graph ends it too;
-  - ⌥F in a shell opens the graph with the search field;
+  - ⌃⌥F in a shell opens the graph with the search field;
   - a tab whose omp chat asks a question shows an amber ring and "needs you", and a chat that replied while you were elsewhere marks its tab "replied" until you click into its pane.
 
   Record the result here.

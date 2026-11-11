@@ -40,6 +40,7 @@ It needs nothing on `PATH` but `git`, which `tern plugin install` already uses. 
 | Objectives: Open graph | ⌃⌘O | Show or hide the graph. |
 | Objectives: Rename selected objective | ⌥⇧R | Rename the objective selected in the graph. Clicking a title in the graph renames it too. |
 | Objectives: New objective | ⌥N | Create an objective in the graph, opening the graph first if it isn't shown. Same as **＋ New objective**. |
+| Objectives: Search… | ⌃⌥F | Search the objectives, opening the graph first if it isn't shown. Same as the graph's **Search** button. |
 | Objectives: Link this tab… | | Link the current tab to an objective, or unlink it. |
 | Objectives: New objective for this tab… | | Create an objective already linked to the current tab. |
 | Objectives: Configure | | Open the graph's settings: shortcuts, and how new objectives start. The ⚙ button in the graph's header does the same. |
@@ -50,7 +51,9 @@ Open objectives are listed by priority, P0 first, and in the order you give them
 
 Click an objective to select it: its lines stand out, every tab offers **＋ Link** or **× Unlink**, and a row of buttons appears under it. Click its title to rename it. Each time you open the graph, nothing is selected. While nothing is selected, the lines of the tab you opened the graph from stand out instead, and the objectives they lead to are tinted.
 
-⌥⇧R and ⌥N work in every pane, with either Option key, so Option+Shift+R no longer types "‰" and Option+N no longer starts "˜" anywhere in Tern. Change or remove them in Configure.
+To find objectives, click **Search** (the magnifier in the header) or press ⌃⌥F, and type a few words: the graph then lists only the objectives, open and done, whose title, side note or tags hold every one of them, ignoring the case of the letters A to Z; `#web` finds the tag. A chip in the header shows the search: click it to change the search, or its **×** to end it. The scope and tag filters still apply, the tabs stay listed, and **Review (n)** counts only what matches. Starting a search clears the selection, and an objective you create or select while searching stays listed while it is selected. Each time you open the graph, there is no search.
+
+⌥⇧R, ⌥N and ⌃⌥F work in every pane, with either Option key, so Option+Shift+R no longer types "‰", Option+N no longer starts "˜", and Control+Option+F no longer reaches the pane, anywhere in Tern. Change or remove them in Configure.
 
 ### Configure
 

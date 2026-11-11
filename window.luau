@@ -63,6 +63,18 @@ local function register_commands()
 		run = App.new_key,
 	})
 
+	-- ⌃⌥F (search-and-tab-marks, design D5): the search field over the graph, which opens first when
+	-- it isn't shown here. ⌥F, the user's first choice, is Tern's own (canvas.fill_solid), and Tern
+	-- leaves out a plugin's default on a key it binds.
+	tern.command({
+		id = "search",
+		title = "Objectives: Search…",
+		icon = "search",
+		group = "Objectives",
+		keys = Keys.default_keys("search"),
+		run = App.search_key,
+	})
+
 	tern.command({
 		id = "link_tab",
 		title = "Objectives: Link this tab…",

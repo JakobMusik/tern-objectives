@@ -10,7 +10,7 @@ The user asked for two features on 2026-11-11:
 The user chose how both work on 2026-11-11:
 - searching filters the graph;
 - a search lasts until the graph is opened again;
-- the search command gets ⌥F by default;
+- the search command gets ⌃⌥F by default. The user first chose ⌥F, but Tern binds ⌥F itself (`canvas.fill_solid`) and leaves out a plugin's default on a key it binds (task 1.3's spike), so the user picked ⌃⌥F instead;
 - tab nodes get the same marks as objective nodes.
 
 ## What Changes
@@ -23,14 +23,14 @@ The user chose how both work on 2026-11-11:
    - While searching, the selected objective stays listed even when it doesn't match, so an objective created or renamed during the search doesn't vanish while selected.
    - The search ends on a fresh open of the graph (the user's choice). Showing the graph again after one of its fields or pickers keeps it.
    - The search is never stored, and each window has its own.
-5. **"Objectives: Search…", default key ⌥F** (the user's choice). It opens the same field. If the graph isn't shown over the current tab, the graph opens there first; if the settings page is shown, it switches back to the graph. Like ⌥N, it runs in every pane, so Option+F no longer reaches the panes anywhere in Tern. Configure lists it as a seventh shortcut row, where it can be changed or removed.
+5. **"Objectives: Search…", default key ⌃⌥F** (the user's choice). It opens the same field. If the graph isn't shown over the current tab, the graph opens there first; if the settings page is shown, it switches back to the graph. Like ⌥N, it runs in every pane, so ⌃⌥F no longer reaches the panes anywhere in Tern. Configure lists it as a seventh shortcut row, where it can be changed or removed.
 6. **Marks on tab nodes** (the user's choice: the same as objective nodes).
    - A live tab node shows the strongest call of the omp chats in its panes: an amber ring with "needs you", a green ring with "replied", or a "working" chip with no ring.
    - The chip comes first on the node's second line, before "<session> · tab <n>", and its tooltip names the panes.
    - Marks clear as on objective nodes. Closed and other-window tabs show none. On the origin tab, the origin ring and the mark show together.
    - Unlinked tabs are marked too, so a chat in a tab no objective links is seen.
 7. **README:**
-   - the commands table and the keys note gain ⌥F;
+   - the commands table and the keys note gain ⌃⌥F;
    - a paragraph on searching;
    - the "See what needs you" feature names tab nodes;
    - `docs/graph.png` is taken again. Its Server tab, whose omp chat waits for input, and its Release notes tab, with an unseen reply, now carry marks, and its header shows the Search button. Its alt text is updated to match.
@@ -56,16 +56,16 @@ None.
 - `objectives-graph`:
   - new requirement "Search": the button, the filter, the chip, ending a search;
   - new requirement "Search and other filters": the search applies with the scope and tag filters and in review mode, and how it treats the selection and fresh opens;
-  - new requirement "Search key": ⌥F;
+  - new requirement "Search key": ⌃⌥F;
   - new requirement "Tab attention marks": the marks on tab nodes;
   - "Selection on a fresh open": a fresh open also ends the search, while the scope and tag filters stay.
 - `objective-review`:
   - "Review button": the count takes the search into account, as it does the scope and tag filters.
 - `plugin-package`:
-  - "Palette commands": seven commands, "Objectives: Search…" with ⌥F;
-  - "README": the seven commands with ⌥F, how searching works, and a marked tab in the graph screenshot.
+  - "Palette commands": seven commands, "Objectives: Search…" with ⌃⌥F;
+  - "README": the seven commands with ⌃⌥F, how searching works, and a marked tab in the graph screenshot.
 - `plugin-settings`:
-  - "Shortcut rows": seven rows, Search with ⌥F by default.
+  - "Shortcut rows": seven rows, Search with ⌃⌥F by default.
 
 ## Impact
 

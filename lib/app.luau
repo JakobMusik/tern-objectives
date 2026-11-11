@@ -11,6 +11,7 @@ local Dates = require("./dates")
 local Details = require("./details")
 local Refresh = require("./refresh")
 local Keys = require("./keys")
+local Text = require("./text")
 
 local M = {}
 
@@ -29,6 +30,10 @@ end
 -- The selected objective's id. A fresh open clears it; the reopen after one of the graph's pickers
 -- keeps it (highlight-origin-tab-links, design D1).
 local selected: string? = nil
+
+-- The search's text (search-and-tab-marks, design D1), never stored: a fresh open ends it, like the
+-- selection, and the reopen after one of the graph's pickers or fields keeps it.
+local search: string? = nil
 
 -- The open objective lifted by its grip (custom-order-and-direct-controls, design D2); never stored.
 local moving: string? = nil
@@ -140,6 +145,7 @@ local function build(cx: WindowCx): View.Built
 		moving = moving,
 		confirm = confirm,
 		held = held,
+		search = search,
 	})
 	if built.due == 0 then
 		reviewing = false
@@ -184,6 +190,7 @@ function M.open(cx: WindowCx, keep_origin: boolean?)
 	if not keep_origin then
 		drop_undo()
 		selected = nil
+		search = nil
 		moving = nil
 		held = nil
 		confirm = nil
@@ -282,6 +289,38 @@ function M.new_key(cx: WindowCx)
 		M.render(cx)
 	end
 	new_objective(cx, nil, nil, "", true)
+end
+
+-- ---- the search (search-and-tab-marks, design D3–D5) ----
+
+-- The search field, holding the current search. Empty text ends the search; other text sets it and
+-- clears the selection, so only an objective selected during the search stays listed without
+-- matching. Dismissing it changes nothing.
+local function ask_search(cx: WindowCx)
+	cx:prompt({ value = search or "", placeholder = "Search titles, notes and tags", icon = "search", action = "search" }):next(function(text, _err, cx2)
+		if text ~= nil then
+			local q = Text.one_line(text)
+			if q == "" then
+				search = nil
+			else
+				search = q
+				selected = nil
+			end
+		end
+		finish(cx2, true)
+	end)
+end
+
+-- ⌃⌥F: the search field over the graph, as the header's Search button opens it; when the graph isn't
+-- shown over this tab, a fresh open comes first, and the settings page goes back to the graph.
+function M.search_key(cx: WindowCx)
+	if Surface.here(cx) == nil then
+		M.open(cx)
+	elseif page ~= "graph" then
+		page = "graph"
+		M.render(cx)
+	end
+	ask_search(cx)
 end
 
 -- ---- Configure (custom-order-and-direct-controls, design D6–D8) ----
@@ -985,6 +1024,13 @@ function M.action(ev: Action, cx: WindowCx)
 	elseif act == "new" then
 		new_objective(cx, nil, nil, "", true)
 		later = true
+	elseif act == "search" then
+		-- The header's Search button and the search chip's text (D4); `finish` draws once it closes.
+		ask_search(cx)
+		later = true
+	elseif act == "unsearch" then
+		-- The search chip's ×.
+		search = nil
 	elseif act == "link" then
 		local tab = tonumber(value)
 		if selected == nil or tab == nil then

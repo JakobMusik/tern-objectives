@@ -12,6 +12,7 @@ local COMMANDS: { Command } = {
 	{ id = "open", label = "Open graph", default = "ctrl+cmd+o" },
 	{ id = "rename", label = "Rename selected objective", default = "alt+shift+r" },
 	{ id = "new", label = "New objective", default = "alt+n" },
+	{ id = "search", label = "Search", default = "ctrl+alt+f" },
 	{ id = "link_tab", label = "Link this tab", default = nil },
 	{ id = "new_for_tab", label = "New objective for this tab", default = nil },
 	{ id = "configure", label = "Configure", default = nil },

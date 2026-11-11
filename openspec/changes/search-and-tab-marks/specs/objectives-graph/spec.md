@@ -71,18 +71,18 @@ The search SHALL apply together with the scope and tag filters, and in review mo
 - **THEN** the graph is shown again with the chip reading "login", the same objectives listed, and "Fix login bug" selected
 
 ### Requirement: Search key
-"Objectives: Search…", default key ⌥F, SHALL open the search field as the Search button does. With the graph shown over the current tab, it SHALL act there, the settings page switching back to the graph. Anywhere else it SHALL first show the graph over the current tab. Like any plugin key, ⌥F SHALL run in every pane, whichever Option key is held.
+"Objectives: Search…", default key ⌃⌥F, SHALL open the search field as the Search button does. With the graph shown over the current tab, it SHALL act there, the settings page switching back to the graph. Anywhere else it SHALL first show the graph over the current tab. Like any plugin key, ⌃⌥F SHALL run in every pane, whichever Control and Option keys are held.
 
 #### Scenario: From a shell
-- **WHEN** no graph is shown, focus is in a shell, and the user presses ⌥F and enters "login"
+- **WHEN** no graph is shown, focus is in a shell, and the user presses ⌃⌥F and enters "login"
 - **THEN** the graph is shown over the current tab, listing the objectives that match "login" with the chip reading "login", and the shell's prompt is unchanged
 
 #### Scenario: In the graph
-- **WHEN** the graph is shown with a search for "login", and the user presses ⌥F
+- **WHEN** the graph is shown with a search for "login", and the user presses ⌃⌥F
 - **THEN** the field opens holding "login"
 
 #### Scenario: From the settings page
-- **WHEN** the settings page is shown, and the user presses ⌥F and enters "login"
+- **WHEN** the settings page is shown, and the user presses ⌃⌥F and enters "login"
 - **THEN** the graph's columns are shown, listing the objectives that match "login"
 
 #### Scenario: Letters still reach the panes

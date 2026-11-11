@@ -44,6 +44,9 @@ export type Ui = {
 	-- While badge clicks hold the order (sort-by-priority, design D3): the priority each open objective
 	-- had at the first of them, which the sorted order keeps using until the hold ends.
 	held: { [string]: number }?,
+	-- The search's text while one is on (search-and-tab-marks, design D1): objectives that don't match
+	-- it are hidden, the selected one excepted (D3).
+	search: string?,
 }
 
 -- An objective's attention mark: the strongest call over its live tabs, and those tabs' labels.
@@ -534,8 +537,15 @@ function M.build(state: Store.State, win: Model.Window, ui_state: Ui): Built
 		end
 	end
 
+	-- The search's words (search-and-tab-marks, design D2), nil without a search.
+	local words = if ui_state.search ~= nil then Store.search_words(ui_state.search) else nil
+
 	local function visible(o: Store.Objective): boolean
 		if view_state.tag ~= nil and table.find(o.tags, view_state.tag) == nil then
+			return false
+		end
+		-- The selected objective stays, so one created or renamed during a search stays in view (D3).
+		if words ~= nil and o.id ~= selected and not Store.matches(o, words) then
 			return false
 		end
 		if view_state.scope == "session" and o.id ~= selected then
@@ -983,6 +993,23 @@ function M.build(state: Store.State, win: Model.Window, ui_state: Ui): Built
 			}),
 		}),
 	}
+	-- The search (search-and-tab-marks, design D4): its button, or the chip showing it, whose text
+	-- opens the field again and whose × ends it.
+	if ui_state.search ~= nil then
+		table.insert(head, el("div", { class = "ob-searchchip", key = "search" }, {
+			el("span", { class = "ob-sq", key = "q", title = "Search: “" .. ui_state.search .. "” · click to change", actions = { click = "search=" } }, {
+				{ k = "icon", p = { name = "search" } } :: any,
+				span("ob-sqt", ui_state.search, { key = "t" }),
+			}),
+			el("span", { class = "ob-sx", key = "x", title = "End the search", actions = { click = "unsearch=" } }, {
+				{ k = "icon", p = { name = "x" } } :: any,
+			}),
+		}))
+	else
+		table.insert(head, el("span", { class = "ob-btn ob-btn-quiet ob-searchbtn", key = "search", title = "Search titles, notes and tags", actions = { click = "search=" } }, {
+			{ k = "icon", p = { name = "search" } } :: any,
+		}))
+	end
 	local tags: { Node } = {}
 	for _, tag in Store.all_tags(state) do
 		table.insert(tags, span("ob-chip ob-ftag" .. (if view_state.tag == tag then " ob-on" else ""), "#" .. tag, {

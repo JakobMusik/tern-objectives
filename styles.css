@@ -98,6 +98,50 @@
 	color: var(--t2);
 	box-shadow: inset 0 0 0 1px var(--l2);
 }
+/* The header's Search button (search-and-tab-marks, design D4): an icon in the quiet button's chrome,
+   like the gear. While a search is on, a chip in the active tag chip's colours takes its place: its
+   text, cut with "…", opens the field again, and its × ends the search. */
+[data-surface='plugin.tern.canvas'] .ob-root .ob-searchbtn {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 3px 7px;
+}
+[data-surface='plugin.tern.canvas'] .ob-root .ob-searchchip {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	min-width: 0;
+	border-radius: 7px;
+	overflow: hidden;
+	white-space: nowrap;
+	color: white;
+	background: var(--accent-fill);
+	user-select: none;
+}
+[data-surface='plugin.tern.canvas'] .ob-root .ob-sq {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	gap: 5px;
+	min-width: 0;
+	padding: 3px 4px 3px 8px;
+}
+[data-surface='plugin.tern.canvas'] .ob-root .ob-sqt {
+	max-width: 220px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+[data-surface='plugin.tern.canvas'] .ob-root .ob-sx {
+	display: flex;
+	align-items: center;
+	align-self: stretch;
+	padding: 0 7px 0 4px;
+}
+[data-surface='plugin.tern.canvas'] .ob-root .ob-sq:hover,
+[data-surface='plugin.tern.canvas'] .ob-root .ob-sx:hover {
+	background: rgb(255 255 255 / 16%);
+}
 
 /* ---- chips ---- */
 [data-surface='plugin.tern.canvas'] .ob-root .ob-chip {
