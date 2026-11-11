@@ -207,7 +207,9 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
 
 ## 4. Release 0.25.0
 
-- [ ] 4.1 Version `0.25.0` in `plugin.toml`. Verify that an isolated `tern plugin install` of the repo folder prints `installed objectives 0.25.0`. Tick this box, then commit, push `main` and tag `v0.25.0` (annotated, message "objectives 0.25.0").
+- [x] 4.1 Version `0.25.0` in `plugin.toml`. Verify that an isolated `tern plugin install` of the repo folder prints `installed objectives 0.25.0`. Tick this box, then commit, push `main` and tag `v0.25.0` (annotated, message "objectives 0.25.0").
+
+  Result: the install into `/tmp/tobj-inst250/config` printed `installed objectives 0.25.0 → /tmp/tobj-inst250/config/plugins/objectives`.
 - [ ] 4.2 **(live)** After the push has finished, run `tern plugin install github.com/JakobMusik/tern-objectives --force` from a shell with no harness variables.
 
   Verify `tern plugin list` shows `objectives 0.25.0 … ready`, with the other plugins untouched.
