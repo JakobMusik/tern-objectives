@@ -22,10 +22,11 @@ Tern's install-time checks SHALL accept the package.
 - **THEN** it reports `installed objectives` with the manifest's version, and `tern plugin list` shows the plugin ready with 0 blocks and no problems
 
 ### Requirement: Palette commands
-The plugin SHALL register six palette commands under the group "Objectives":
-- "Objectives: Open graph", default key ⌃⌘O;
-- "Objectives: Rename selected objective", default key ⌥⇧R;
-- "Objectives: New objective", default key ⌥N;
+The plugin SHALL register seven palette commands in the group "Objectives", four with default keys:
+- "Objectives: Open graph", ⌃⌘O;
+- "Objectives: Rename selected objective", ⌥⇧R;
+- "Objectives: New objective", ⌥N;
+- "Objectives: Search…", ⌃⌥F;
 - "Objectives: Link this tab…";
 - "Objectives: New objective for this tab…";
 - "Objectives: Configure".
@@ -34,15 +35,15 @@ The palette SHALL list the rename command only while an objective is selected in
 
 #### Scenario: Commands listed
 - **WHEN** an objective is selected in the graph shown over the current tab, and the palette is opened with the query "objectives"
-- **THEN** the six commands appear, "Open graph" with ⌃⌘O, "Rename selected objective" with ⌥⇧R and "New objective" with ⌥N
+- **THEN** the seven commands appear, "Open graph" with ⌃⌘O, "Rename selected objective" with ⌥⇧R, "New objective" with ⌥N and "Search…" with ⌃⌥F
 
 #### Scenario: Rename hidden without the graph
 - **WHEN** no graph is shown over the current tab, and the palette is opened with the query "objectives"
-- **THEN** "Open graph", "New objective", "Link this tab…", "New objective for this tab…" and "Configure" appear, and "Rename selected objective" doesn't
+- **THEN** "Open graph", "New objective", "Search…", "Link this tab…", "New objective for this tab…" and "Configure" appear, and "Rename selected objective" doesn't
 
 #### Scenario: Rename hidden without a selection
 - **WHEN** the graph is shown over the current tab with nothing selected, and the palette is opened with the query "objectives"
-- **THEN** "Rename selected objective" doesn't appear, and the other five commands do
+- **THEN** "Rename selected objective" doesn't appear, and the other six commands do
 
 ### Requirement: Install from GitHub
 The plugin SHALL install with `tern plugin install github.com/JakobMusik/tern-objectives` from the public repository's default branch, with no credentials and nothing extra needed on `PATH` besides git.
@@ -61,16 +62,16 @@ The repository SHALL be public under `JakobMusik`. It SHALL carry an MIT license
 ### Requirement: README
 The README SHALL give:
 - the exact install command;
-- that it needs nothing on `PATH` but `git`, and nothing on the machines sessions run on;
-- the six commands with the ⌃⌘O, ⌥⇧R and ⌥N keys;
-- how to close the graph: ⌃⌘O, a click outside, its ×, or Esc after a click on its title bar;
-- how reviewing done objectives works;
+- that it needs only `git` on `PATH`, and nothing on the machines sessions run on;
+- the seven commands with the ⌃⌘O, ⌥⇧R, ⌥N and ⌃⌥F keys;
+- how to close the graph: ⌃⌘O, a click outside, its ×, or Esc after clicking its title bar;
+- how searching and reviewing done objectives work;
 - where its data lives and how to remove it;
-- two screenshots: first the graph with the Done group open, then review mode with its rating buttons.
+- two screenshots: the graph with the Done group open and a marked tab, then review mode with its rating buttons.
 
 #### Scenario: README contents
 - **WHEN** a reader opens the README
-- **THEN** it contains the install command, the commands with ⌃⌘O, ⌥⇧R and ⌥N, the ways to close the graph, that nothing is installed on other machines, how to review done objectives, the data location under `plugin-data/objectives/`, a screenshot of the graph with the Done group open, and after it a screenshot of review mode with Hard, Good and Easy buttons
+- **THEN** it contains the install command, the commands with ⌃⌘O, ⌥⇧R, ⌥N and ⌃⌥F, the ways to close the graph, that nothing is installed on other machines, how to search, how to review done objectives, the data location under `plugin-data/objectives/`, a screenshot of the graph with the Done group open and a tab node marked "needs you", and after it a screenshot of review mode with Hard, Good and Easy buttons
 
 #### Scenario: Graph screenshot first
 - **WHEN** the README is read on GitHub
