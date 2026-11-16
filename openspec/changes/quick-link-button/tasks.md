@@ -156,12 +156,14 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
   Verify `tern plugin list` shows `objectives 0.26.0 … ready`, with the other plugins untouched.
 
   Result: `installed objectives 0.26.0 → ~/Library/Application Support/Tern/plugins/objectives`. `tern plugin list` shows `objectives 0.26.0 … window ready`, and the other plugins ready as before: `external-editor 0.1.0`, `omp-narration 0.1.0`, `open-below 0.2.0`, `reply-selection 0.1.0` and `tabnav 0.1.0`. The tag `v0.26.0` (`73b6997`) is signed and on GitHub.
-- [ ] 3.3 **(live)** With the user:
+- [x] 3.3 **(live)** With the user:
   - pointing at an objective in a graph opened from a tab shows a link icon at the right of its first line. A click links that tab: the node turns tinted with a thick line to the tab, and the icon stays, highlighted;
   - a click on the highlighted icon unlinks the tab;
   - in the open Done group, the icon links a done objective the same way.
 
   Record the result here.
+
+  Result (user, 0.26.0): "checked, it's working", in reply to the three checks listed above. The user reported nothing more specific, so no single check is recorded on its own.
 
 ## Workflow follow-up
 
