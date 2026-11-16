@@ -22,7 +22,7 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
 
 ## 1. The link button
 
-- [ ] 1.1 The button (design D1–D4):
+- [x] 1.1 The button (design D1–D4):
   - in `lib/view.luau`, `quick_tab` in `View.build`, and the `qlink` argument of `objective_node`, passed by `add_node`;
   - its CSS in `styles.css`: the box, the hover reveal, the pointer look and the highlighted look;
   - README: one sentence in "Link tabs to objectives".
@@ -49,6 +49,54 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
   - "Link lines" "Alignment at two widths": every line end within 2 px of its node and tab header centres at 1400 and 460 px wide, read from the layout JSON;
   - the README sentence, read back;
   - render times in the serve log stay within the 20 ms target, with no objectives warnings or errors.
+
+  Result (harness, 2026-11-16, Tern 0.9.21):
+  - **Harness:** a `/tmp` cleanup had emptied `/tmp/tobj/bin`, the helper's folder and the demo store. The scripts and the helper's `plugin.toml` and `window.luau` were written again from their last versions in this session's history, with `STENCIL_FIXTURE_ROOT=/tmp/tobj/crates/app`. Both plugins loaded with no errors; the log's only warning was the helper's own `esc_probe` on Escape.
+  - **Layout and store:** the demo was rebuilt in a fresh serve in `/tmp/tobj/w/demo/guides`, with the same ids as before:
+    - docs: Guides 3 (pane 2) and Release notes 5 (omp, pane 4);
+    - web: App build 8 (panes 7 and 9) and Components 12 (pane 11 and `todo.md` in pane 20);
+    - api: Server 15 (pane 14 and omp in pane 16) and Benchmarks 19 (pane 18).
+
+    The store was written from search-and-tab-marks 3.1's data, with due dates from today, and saved as `/tmp/tobj/kv.demo-0250.json`.
+  - **"Link button on objective nodes":**
+    - **Shown while pointing:** with the pointer on "Speed up search", its `.ob-l1` read grip, box, badge, name, `ob-qlink`, with the tooltip `Link to “Guides”`. In shot `ql_hover`, its button had 204 ink pixels. Every other unlinked node's button had 0, and the two linked ones 186 and 155.
+    - **Linked nodes keep it:** with the pointer on the header's empty space, `ob-qlink-on` was on "Read about rate limiting" and "Restyle the docs site" only, both titled `Unlink from “Guides”`. In shot `ql_rest`, only those two buttons had ink.
+    - **Review node:** with "Set up CI" due today and review mode on, the pointer on its node gave name, `ob-qlink`, `ob-trash` at the end of its `.ob-l1`. The crop shows the link icon just left of the trash icon.
+    - **Origin pane closes:** run on a two-pane tab "Scratch" added to web, rather than App build's tests pane, so the demo layout stayed whole. Opened from Scratch's second pane, the buttons read `Link to “Scratch”`. 0.08 s after the helper's `close`, `ctl tree` held no `.ob-qlink` and no `.ob-origin`, and the graph was still shown.
+    - **While moving:** with "Speed up search" lifted and the pointer on "Read about rate limiting", `ctl tree` held 0 `.ob-qlink` and 4 `.ob-drop`. A click on empty space ended the move, and the 10 buttons came back.
+  - **"Link button clicks":**
+    - **Link from the node:** "Speed up search" went from `[19]` to `[19, 3]`. Afterwards nothing was selected, with no action bar or link bar. The node had `ob-lit` and the button `ob-qlink-on`, titled `Unlink from “Guides”`. The edge layers read `ob-e-all ob-e-dim` and `ob-e-sel`, the graph was still shown, and focus stayed on the graph's pane (48). Shot `ql_linked` shows a thick blue line from it to Guides.
+    - **Unlink from the node:** a second click gave `[19]`, no `ob-lit`, and `Link to “Guides”`. The crop of shot `ql_unlinked` shows no line from it to Guides.
+    - **Selection kept:** with "Fix login bug" selected, a click on the button of "Speed up search" gave `[19, 3]`. "Fix login bug" was still selected with its action bar, and the tabs still had their 6 link bars.
+    - **Done objective:** "Set up CI" went from `[8]` to `[8, 3]` and stayed done. With the pointer away, its `ob-qlink-on` button showed (180 ink pixels).
+    - **Origin pane moved:** opened from pane 9 in App build, the tooltip read `Link to “App build”`. After `move_to_tab` 9 → Server:
+      - **First try, without activity:** after 1.2 s the graph had not redrawn, since the headless serve runs plugin timers only while the window is busy. The tooltip still named App build, and the click linked App build, the tab the button was drawn for (design D3). That link was removed by hand.
+      - **Second try, with `pump 2` (1.5 s):** the origin ring was on Server, and the tooltip read `Link to “Server”`. The click gave `[19, 15]`, with no link to App build.
+    - **Ends the Undo notice:** after marking "Update dependencies" done, the notice read `Marked done “Update dependencies” ·`. A click on the link button of "Speed up search" 0.3 s later left no `.ob-undo` and gave `[19, 3]`, and "Update dependencies" stayed done.
+  - **"Selection":**
+    - **Link button doesn't select:** after the click, nothing was selected, with no action bar or link bar.
+    - **Select and clear:** opened from Scratch, which no objective links. A click on the second line of "Speed up search" selected it, with its action bar, 7 link bars and the layers `ob-e-all ob-e-dim` and `ob-e-sel`. A click on empty space left none of them, only `ob-e-all`.
+  - **"Larger hit areas":**
+    - **Measured hit areas:** shot `ql_hit`, with "Speed up search" selected:
+      - 7 grips, 10 done boxes, 9 trash icons (tab nodes' included) and 10 link buttons, all 22 × 18;
+      - 4 action bar buttons, all 22 tall;
+      - 9 jump buttons, 28 × 22;
+      - pane rows 22 tall;
+      - the 7 unselected nodes with one-line titles, all 48 tall.
+    - **Review nodes:** in review mode, 6 rating buttons, all 22 tall. Both listed nodes were 78 tall, and both link buttons 22 × 18.
+  - **"Long note":** "Update dependencies" with a 200-character note stayed 48 px tall. The crop shows the note cut with "…" before the "due today" chip, and the node's tooltip holds the whole note.
+  - **Narrower line** (design risk), "Draft the onboarding email sequences" (36 characters, one line):
+    - **460 px window** (graph 379.5 px, node 116.8 px): beside the hidden button, the title showed nothing after the P1 badge. With the button gone (an objective lifted), it showed "Draf", clipped with no "…". Either way the title can't be read at this width.
+    - **600 px window:** "Draft… 10" with the button, "Draft… 10-29 1" without.
+    - **800 px window:** "Draft the … 10-29 14:05" with the button, "Draft the onbo… 10-29 14:05" without.
+  - **Look** (design risk), crops in light and dark:
+    - a plain button under the pointer is the accent on a light accent tint;
+    - the highlighted button on the tinted "Read about rate limiting" is the accent on a stronger tint, and turns red under the pointer.
+
+    In light mode the highlighted button is low contrast on the tint, but it can still be told apart; in dark mode it is clearly visible. D4 stands.
+  - **"Alignment at two widths":** at 1400 (graph 1200 px) and 460 (graph 379.5 px), all 7 left and 6 right line ends sat within 0.55 px of their centres.
+  - **README:** "Link tabs to objectives" now reads "Quicker still, point at an objective and click its link icon to link the tab you opened the graph from; the icon stays highlighted while they are linked, and clicking it again unlinks them."
+  - **Log:** 75 renders, the longest 10.5 ms, none over 20 ms, and no objectives warnings or errors.
 
 ## 2. The README screenshots
 

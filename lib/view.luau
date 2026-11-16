@@ -228,11 +228,16 @@ end
 -- the only one whose nodes take its drop.
 type Sorting = { lifted: number? }
 
+-- The node's link button (quick-link-button, design D2): the origin's tab it toggles, that tab's
+-- label for its tooltip, and whether the objective links it.
+type QLink = { tab: number, label: string, on: boolean }
+
 -- `title`: the title's lines (Text.wrap). `mark`: its attention mark, if any (D3). `review`: review
 -- mode's node, with Hard, Good and Easy under it (review-done-objectives, design D4). `acts`: the
 -- selected node's action bar (custom-order-and-direct-controls, design D3). `lit`: it links the
 -- focus tab (highlight-origin-tab-links, design D4). `sorting`: set while sorting by priority.
-local function objective_node(o: Store.Objective, ui_state: Ui, first: string, title: { string }, mark: Mark?, review: boolean?, acts: Acts?, lit: boolean?, sorting: Sorting?): Node
+-- `qlink`: its link button, while the right column shows the origin's tab.
+local function objective_node(o: Store.Objective, ui_state: Ui, first: string, title: { string }, mark: Mark?, review: boolean?, acts: Acts?, lit: boolean?, sorting: Sorting?, qlink: QLink?): Node
 	local selected = ui_state.selected == o.id
 	local cls = "ob-obj ob-o-" .. o.id .. first
 	if #title > 1 then
@@ -321,6 +326,16 @@ local function objective_node(o: Store.Objective, ui_state: Ui, first: string, t
 		table.insert(rows, el("div", { class = "ob-tline", key = "t" .. i }, row))
 	end
 	table.insert(l1, el("div", { class = "ob-name", key = "name" }, rows))
+	-- At the line's right end, before a done node's trash icon. Its own click toggles the one link,
+	-- as a "Link to" menu row does, so it doesn't select (quick-link-button, D2, D3).
+	if qlink ~= nil then
+		table.insert(l1, el("span", {
+			class = if qlink.on then "ob-qlink ob-qlink-on" else "ob-qlink",
+			key = "qlink",
+			title = (if qlink.on then "Unlink from “" else "Link to “") .. qlink.label .. "”",
+			actions = { click = "lnk=" .. o.id .. ":" .. qlink.tab },
+		}, { { k = "icon", p = { name = "link" } } :: any }))
+	end
 	if o.done then
 		table.insert(l1, el("span", { class = "ob-trash", key = "trash", title = "Remove", actions = { click = "rm=" .. o.id } }, {
 			{ k = "icon", p = { name = "trash" } } :: any,
@@ -632,6 +647,13 @@ function M.build(state: Store.State, win: Model.Window, ui_state: Ui): Built
 	if selected == nil and not reviewing and origin_tab ~= nil and (view_state.scope == "all" or origin_tab.session == win.current) then
 		focus_tab = origin_tab.id
 	end
+	-- The tab the nodes' link buttons toggle (quick-link-button, design D1): the origin's tab while the
+	-- right column shows it, whatever is selected. None while an objective is lifted, since the drop
+	-- zones cover the nodes (D2).
+	local quick_tab: Model.Tab? = nil
+	if origin_tab ~= nil and ui_state.moving == nil and (view_state.scope == "all" or origin_tab.session == win.current) then
+		quick_tab = origin_tab
+	end
 
 	-- Left column.
 	local left = Layout.stack()
@@ -713,7 +735,11 @@ function M.build(state: Store.State, win: Model.Window, ui_state: Ui): Built
 		end
 		obj_cy[o.id] = Layout.add_obj(left, review, #title, acts ~= nil, acts ~= nil and acts.ask ~= nil)
 		local lit = focus_tab ~= nil and not o.done and table.find(o.tabs, focus_tab) ~= nil
-		table.insert(left_kids, objective_node(o, ui_state, first, title, mark_of(o), review, acts, lit, sorting))
+		local qlink: QLink? = nil
+		if quick_tab ~= nil then
+			qlink = { tab = quick_tab.id, label = quick_tab.label, on = table.find(o.tabs, quick_tab.id) ~= nil }
+		end
+		table.insert(left_kids, objective_node(o, ui_state, first, title, mark_of(o), review, acts, lit, sorting, qlink))
 		if o.id == selected then
 			sel_obj = o
 		end

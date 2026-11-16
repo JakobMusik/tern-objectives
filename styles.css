@@ -547,6 +547,38 @@
 	color: var(--bad);
 	background: rgb(from var(--bad) r g b / 12%);
 }
+/* An objective node's link button (quick-link-button, design D4): the trash icon's 22 x 18 px box,
+   shown only while the pointer is on the node, unless the objective links the origin's tab. It
+   keeps its place while hidden, so the title doesn't move. Its click unlinks once linked, so it
+   turns red under the pointer then, as the trash icon does. */
+[data-surface='plugin.tern.canvas'] .ob-root .ob-qlink {
+	flex: none;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 22px;
+	height: 18px;
+	border-radius: 4px;
+	color: var(--t3);
+	user-select: none;
+	opacity: 0;
+}
+[data-surface='plugin.tern.canvas'] .ob-root .ob-obj:hover .ob-qlink,
+[data-surface='plugin.tern.canvas'] .ob-root .ob-qlink.ob-qlink-on {
+	opacity: 1;
+}
+[data-surface='plugin.tern.canvas'] .ob-root .ob-qlink:hover {
+	color: var(--accent);
+	background: rgb(from var(--accent) r g b / 12%);
+}
+[data-surface='plugin.tern.canvas'] .ob-root .ob-qlink.ob-qlink-on {
+	color: var(--accent);
+	background: rgb(from var(--accent) r g b / 16%);
+}
+[data-surface='plugin.tern.canvas'] .ob-root .ob-qlink.ob-qlink-on:hover {
+	color: var(--bad);
+	background: rgb(from var(--bad) r g b / 12%);
+}
 [data-surface='plugin.tern.canvas'] .ob-root .ob-note {
 	flex: 0 1 auto;
 	min-width: 0;
