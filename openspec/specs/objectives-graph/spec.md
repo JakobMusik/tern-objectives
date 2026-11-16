@@ -51,10 +51,10 @@ With no objectives, the left column SHALL show a hint pointing at "＋ New objec
 
 ### Requirement: Objective node content
 Each objective node SHALL show:
-- a grip (open objectives, outside review mode), a done box, a priority badge and the title, plus a trash icon on done objectives;
+- a grip (open objectives, outside review mode), a done box, a priority badge, the title, the link button, and a trash icon on done objectives;
 - below them, the side note (dimmed), a due chip on open objectives or a review chip on done ones, and tag chips.
 
-Text other than the title that doesn't fit SHALL end in "…". Hovering the node SHALL show the full title, the full note and the created and done times, and for a done objective its review count and next review date.
+Text other than the title that doesn't fit SHALL end in "…". The node's tooltip SHALL show the full title, the full note, the created and done times, and a done objective's review count and next review date.
 
 #### Scenario: Long note
 - **WHEN** an objective with a one-line title has a 200-character side note
@@ -163,7 +163,7 @@ For each link between a shown open objective and a tab shown in the right column
 - **THEN** no line ends at that tab's header
 
 ### Requirement: Selection
-Clicking an objective node anywhere but its title, grip, done box, badge, trash icon or action bar SHALL select it:
+Clicking an objective node anywhere but its title, grip, done box, badge, trash icon, link button or action bar SHALL select it:
 - its action bar shows under it;
 - its lines are drawn thicker;
 - all other lines fade to about a quarter of their strength;
@@ -178,6 +178,10 @@ Clicking the selected objective there again, or empty graph space, SHALL clear t
 #### Scenario: Selecting a done objective
 - **WHEN** the user opens the Done group and clicks a done objective's node on its second line
 - **THEN** it is drawn selected, its lines show, and every tab node has a link bar
+
+#### Scenario: Link button doesn't select
+- **WHEN** nothing is selected and the user clicks an objective node's link button
+- **THEN** nothing is selected afterwards, and no action bar or link bar shows
 
 ### Requirement: Scope filter
 The header SHALL offer [All | This session].
@@ -246,11 +250,11 @@ The pane that has focus when the graph opens SHALL be the graph's origin. While 
 - **THEN** only the new pane's tab node and row are marked
 
 ### Requirement: Larger hit areas
-The grip, the done box and the trash icon SHALL each take clicks over at least 22 px of width and the full 18 px height of their line in objective nodes. Action bar buttons SHALL be at least 22 px tall. A pane row's jump button SHALL take clicks over at least 28 px of width and the row's full 22 px height. The Hard, Good and Easy buttons SHALL each be at least 22 px tall. Unselected objective nodes with a one-line title SHALL stay 48 px tall outside review mode, and pane rows 22 px.
+The grip, done box, trash icon and link button SHALL each take clicks over at least 22 px of width and the full 18 px height of their line in objective nodes. Action bar buttons SHALL be at least 22 px tall. A pane row's jump button SHALL take clicks over at least 28 px of width and the row's full 22 px height. The Hard, Good and Easy buttons SHALL each be at least 22 px tall. Unselected objective nodes with a one-line title SHALL stay 48 px tall outside review mode, and pane rows 22 px.
 
 #### Scenario: Measured hit areas
 - **WHEN** a screenshot's layout data is read outside review mode with one objective selected
-- **THEN** every grip, done box and trash icon is at least 22 × 18 px, every action bar button at least 22 px tall, every jump button at least 28 × 22 px, unselected objective nodes with one-line titles are 48 px tall, and pane rows are 22 px tall
+- **THEN** every grip, done box, trash icon and link button is at least 22 × 18 px, every action bar button at least 22 px tall, every jump button at least 28 × 22 px, unselected objective nodes with one-line titles are 48 px tall, and pane rows are 22 px tall
 
 #### Scenario: Review nodes
 - **WHEN** a screenshot's layout data is read in review mode

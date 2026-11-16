@@ -2,10 +2,10 @@
 
 ### Requirement: Objective node content
 Each objective node SHALL show:
-- a grip (open objectives, outside review mode), a done box, a priority badge and the title, plus a trash icon on done objectives, and the link button that "Link button on objective nodes" describes;
+- a grip (open objectives, outside review mode), a done box, a priority badge, the title, the link button, and a trash icon on done objectives;
 - below them, the side note (dimmed), a due chip on open objectives or a review chip on done ones, and tag chips.
 
-Text other than the title that doesn't fit SHALL end in "…". Hovering the node SHALL show the full title, the full note and the created and done times, and for a done objective its review count and next review date.
+Text other than the title that doesn't fit SHALL end in "…". The node's tooltip SHALL show the full title, the full note, the created and done times, and a done objective's review count and next review date.
 
 #### Scenario: Long note
 - **WHEN** an objective with a one-line title has a 200-character side note
@@ -37,7 +37,7 @@ Clicking the selected objective there again, or empty graph space, SHALL clear t
 - **THEN** nothing is selected afterwards, and no action bar or link bar shows
 
 ### Requirement: Larger hit areas
-The grip, the done box, the trash icon and the link button SHALL each take clicks over at least 22 px of width and the full 18 px height of their line in objective nodes. Action bar buttons SHALL be at least 22 px tall. A pane row's jump button SHALL take clicks over at least 28 px of width and the row's full 22 px height. The Hard, Good and Easy buttons SHALL each be at least 22 px tall. Unselected objective nodes with a one-line title SHALL stay 48 px tall outside review mode, and pane rows 22 px.
+The grip, done box, trash icon and link button SHALL each take clicks over at least 22 px of width and the full 18 px height of their line in objective nodes. Action bar buttons SHALL be at least 22 px tall. A pane row's jump button SHALL take clicks over at least 28 px of width and the row's full 22 px height. The Hard, Good and Easy buttons SHALL each be at least 22 px tall. Unselected objective nodes with a one-line title SHALL stay 48 px tall outside review mode, and pane rows 22 px.
 
 #### Scenario: Measured hit areas
 - **WHEN** a screenshot's layout data is read outside review mode with one objective selected
