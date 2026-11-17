@@ -441,18 +441,9 @@ local function tab_node(t: Model.Tab, status: string, first: string, linked_open
 		table.insert(line2, mark_chip(mark))
 	end
 	table.insert(line2, span("ob-line ob-dim", where, { key = "where" }))
-	-- A live tab's jump (select-tab-nodes, D6), at the line's right end, lined up with its rows' jump
-	-- buttons; the rest of the header selects the tab.
-	if live then
-		table.insert(line2, el("span", { class = "ob-jump ob-tjump", key = "jump", title = "Go to this tab", actions = { click = "tab=" .. t.id } }, {
-			{ k = "icon", p = { name = "arrow-right" } } :: any,
-		}))
-	end
 	local head_kids: { Node } = {
 		el("div", { class = if asking then "ob-th1 ob-th1-ask" else "ob-th1", key = "th1" }, th1),
-		-- A live tab's second line reaches into the header's right padding, so its arrow ends where its
-		-- rows' jump buttons do (select-tab-nodes, D7).
-		el("div", { class = if live then "ob-tl2 ob-tl2-jump" else "ob-tl2", key = "l2" }, line2),
+		el("div", { class = "ob-tl2", key = "l2" }, line2),
 	}
 	-- While it asks, a click on the header ends the question instead of selecting the tab (D3).
 	local kids: { Node } = {
@@ -507,13 +498,24 @@ local function tab_node(t: Model.Tab, status: string, first: string, linked_open
 	if holds_origin then
 		cls ..= " ob-origin"
 	end
-	-- Below the rows, away from the header, so a near miss doesn't select the tab.
-	if link ~= nil then
-		table.insert(kids, span("ob-linkbar" .. (if link.unlink then " ob-linkbar-on" else ""), if link.unlink then "× Unlink" else "＋ Link", {
-			key = "linkbar",
-			title = (if link.unlink then "Unlink from “" else "Link to “") .. link.title .. "”",
-			actions = { click = "link=" .. t.id },
-		}))
+	-- The foot row (select-tab-nodes, D6), below the rows, away from the header, so a near miss doesn't
+	-- select the tab: a live tab's "Go to tab" on the left, and while an objective is selected, the
+	-- link bar on the right. An empty cell holds a half that has nothing, so each keeps its side.
+	if live or link ~= nil then
+		local go: Node = if live
+			then el("span", { class = "ob-tgo", key = "go", title = "Go to this tab", actions = { click = "tab=" .. t.id } }, {
+				{ k = "icon", p = { name = "arrow-right" } } :: any,
+				span("ob-tgo-l", "Go to tab", { key = "l" }),
+			})
+			else el("span", { class = "ob-tcell", key = "go" })
+		local bar: Node = if link ~= nil
+			then span("ob-linkbar" .. (if link.unlink then " ob-linkbar-on" else ""), if link.unlink then "× Unlink" else "＋ Link", {
+				key = "linkbar",
+				title = (if link.unlink then "Unlink from “" else "Link to “") .. link.title .. "”",
+				actions = { click = "link=" .. t.id },
+			})
+			else el("span", { class = "ob-tcell", key = "linkbar" })
+		table.insert(kids, el("div", { class = "ob-tfoot", key = "foot" }, { go, bar }))
 	end
 	return el("div", { class = cls, key = "t:" .. t.id, actions = { menu = menu } }, kids), detail_lines
 end
@@ -949,7 +951,8 @@ function M.build(state: Store.State, win: Model.Window, ui_state: Ui): Built
 		local linked = linked_open[t.id] == true or linked_done[t.id] == true
 		local mark = if status == "live" then tab_mark(t.id) else nil
 		local node, details = tab_node(t, status, first, linked_open[t.id] == true, link, menu_of(t.id), ui_state, view_state.expanded, resume, linked, asking, mark, t.id == sel_tab)
-		tab_cy[t.id] = Layout.add_tab(right, #t.rows, details, link ~= nil)
+		-- The foot row: "Go to tab" on every live tab, and the link bar while an objective is selected.
+		tab_cy[t.id] = Layout.add_tab(right, #t.rows, details, status == "live" or link ~= nil)
 		table.insert(right_kids, node)
 		if status == "live" and linked_done[t.id] and not linked_open[t.id] then
 			table.insert(done_tabs, t.id)

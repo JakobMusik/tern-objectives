@@ -5,7 +5,7 @@ Each live tab node SHALL end in a row under its pane rows whose left half is a "
 
 #### Scenario: At the foot, on the left
 - **WHEN** nothing is selected, a live tab with two panes is shown, and a screenshot's layout data is read
-- **THEN** the node ends, below both pane rows, in a "Go to tab" button at least 22 px tall, with the tooltip "Go to this tab", spanning the left half of the node's width within 4 px, and its header shows no arrow
+- **THEN** the node ends, below both pane rows, in a row whose left half, within 1 px, is a "Go to tab" button at least 22 px tall, with the tooltip "Go to this tab", and its header shows no arrow
 
 #### Scenario: No button on ghosts
 - **WHEN** a closed linked tab and another window's linked tab are shown

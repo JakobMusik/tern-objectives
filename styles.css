@@ -868,15 +868,60 @@
 	box-shadow: inset 0 0 0 1px var(--bad);
 	background: rgb(from var(--bad) r g b / 8%);
 }
-/* The link bar at a tab node's foot while an objective is selected (design P6). Its height comes
-   from the layout sheet (link_h), so the lines below it stay on their nodes. Its text can't be
-   selected: a press that drifts across "＋ Link" would select it instead of clicking (task 6.5). */
+/* The foot row of a tab node (select-tab-nodes, design D6, D7): a live tab's "Go to tab" on the
+   left half, and the link bar on the right half while an objective is selected (design P6); an
+   empty cell holds a half that has nothing. Its height comes from the layout sheet (link_h), so the
+   lines below it stay on their nodes. */
+[data-surface='plugin.tern.canvas'] .ob-root .ob-tfoot {
+	display: flex;
+	flex-direction: row;
+	gap: 6px;
+	margin: 0 6px;
+}
+[data-surface='plugin.tern.canvas'] .ob-root .ob-tfoot > * {
+	flex: 1 1 0;
+	min-width: 0;
+}
+/* "Go to tab": the tab's jump, in the quiet button's look, with the pane rows' jump hover. Its text
+   can't be selected, and it is cut with "…" before the icon goes on a narrow graph. No padding: the
+   renderer adds it to the flex basis, which would make this half wider than the bar's. */
+[data-surface='plugin.tern.canvas'] .ob-root .ob-tgo {
+	box-sizing: border-box;
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	justify-content: center;
+	gap: 5px;
+	overflow: hidden;
+	border-radius: 6px;
+	font-weight: 600;
+	white-space: nowrap;
+	color: var(--t2);
+	box-shadow: inset 0 0 0 1px var(--l2);
+	user-select: none;
+}
+[data-surface='plugin.tern.canvas'] .ob-root .ob-tgo svg {
+	flex: none;
+}
+[data-surface='plugin.tern.canvas'] .ob-root .ob-tgo-l {
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+[data-surface='plugin.tern.canvas'] .ob-root .ob-tgo:hover {
+	color: var(--accent);
+	background: rgb(from var(--accent) r g b / 12%);
+}
+/* The link bar, the foot row's right half while an objective is selected (design P6). Its text can't
+   be selected: a press that drifts across "＋ Link" would select it instead of clicking (task 6.5). */
 [data-surface='plugin.tern.canvas'] .ob-root .ob-linkbar {
 	display: block;
 	box-sizing: border-box;
-	margin: 0 6px;
+	overflow: hidden;
 	border-radius: 6px;
 	text-align: center;
+	white-space: nowrap;
+	text-overflow: ellipsis;
 	font-weight: 600;
 	color: var(--accent);
 	box-shadow: inset 0 0 0 1px var(--accent);
@@ -918,15 +963,6 @@
 [data-surface='plugin.tern.canvas'] .ob-root .ob-jump:hover {
 	color: var(--accent);
 	background: rgb(from var(--accent) r g b / 12%);
-}
-/* A live tab's jump (select-tab-nodes, design D7): last on the header's second line, which reaches
-   into the header's 8 px right padding, so the arrow ends where the rows' jump buttons do. The
-   line's 18 px height is its height. */
-[data-surface='plugin.tern.canvas'] .ob-root .ob-tl2-jump {
-	margin-right: -8px;
-}
-[data-surface='plugin.tern.canvas'] .ob-root .ob-tjump {
-	margin-left: auto;
 }
 /* A row's pane type, and an agent's state after its name (design R4). */
 [data-surface='plugin.tern.canvas'] .ob-root .ob-rtype {

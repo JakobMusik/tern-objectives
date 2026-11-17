@@ -279,7 +279,7 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
 
 ## 6. "Go to tab" at the node's foot
 
-- [ ] 6.1 The foot row (design D6, D7):
+- [x] 6.1 The foot row (design D6, D7):
   - in `tab_node`, the header loses its arrow, and the node ends in `div.ob-tfoot`;
   - on the left, a live tab's "Go to tab" button (`span.ob-tgo`, the `arrow-right` icon and "Go to tab", tooltip "Go to this tab", click `tab=<id>`);
   - on the right, the link bar while an objective is selected;
@@ -298,6 +298,32 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
   - the foot in light and dark (`ctl appearance`): a live tab with nothing selected, a linked and an unlinked tab with an objective selected, and a closed tab with its bar, from crops;
   - the README lines, read back;
   - render times in the serve log stay within the 20 ms target, with no objectives warnings or errors.
+
+  Result (harness, 2026-11-18). A fresh serve rebuilt the demo with the same ids as in 1.1, and the window was 1600 × 1400 unless a check says otherwise. The stores were group 1's.
+  - **Halves:** the first draw gave "Go to tab" 295 px and the empty right cell 279 px of the 580 px row. The renderer adds the Go button's 8 px side padding to its flex basis. With the padding dropped (the content is centred anyway), both halves are 287 px.
+  - **"Tab jump button":**
+    - **At the foot, on the left:** with nothing selected, App build (two panes, 114 px tall: border, 38 px header, two 22 px rows, the 26 px row and 4 px under it) ends in its foot row at y 525.7, under both pane rows. Its left cell is `.ob-tgo`, 287 × 26 px at the row's left edge, with the icon, "Go to tab" and the tooltip "Go to this tab". No header holds a jump button any more (`.ob-thead .ob-jump`: 0), and all 6 live tabs have a Go button.
+    - **No button on ghosts:** closed Old API and other-window Remote build have no `.ob-tgo`, and no foot row while nothing is selected.
+  - **"Jump to a tab":** from session misc, with Components' last focused pane 11:
+    - Components' label selected it, with misc still current, focus on the graph and the graph shown;
+    - its trash icon asked "Close tab?", with misc still current; Cancel followed;
+    - "Go to tab" showed web, with Components active and pane 11 focused, and closed the graph.
+
+    Session misc was closed afterwards.
+  - **"Linking from the graph":**
+    - **Add then remove a link:** "Write slides" selected. "＋ Link" on Benchmarks stored `[3, 19]`, and "× Unlink" stored `[3]`, with the objective still selected and the graph shown.
+    - **Press that drifts across the bar:** a press 30 px into Benchmarks' "＋ Link", moved 40 px along it and released there, stored `[3, 19]`. The crop `f_drift_c` shows no text highlighted.
+    - **Beside the Go button:** "Fix login bug" selected. Server's row holds `.ob-tgo` and `.ob-linkbar-on` ("× Unlink"), App build's `.ob-tgo` and `.ob-linkbar` ("＋ Link"), each 287 px, the bar from x 1014.6. Closed Old API and other-window Remote build hold an empty left cell and the bar on the same right half.
+  - **"Selecting a tab":** "Select and clear" selected Benchmarks with no link bar and focus unchanged, and empty space cleared it. "Kept with a selected objective": with "Fix login bug" selected, Server's label selected Server, and the objective kept its action bar, heading and all 6 link bars. Server's rect and the column's order were unchanged.
+  - **"Alignment at two widths":** at 1400 and 460 px wide, with nothing selected, with "Fix login bug" selected, and with Server selected too, every line end sat within 0.05 px (1400) and 0.45 px (460) of its centre. At 460 px a tab node is 142.7 px wide; its two foot cells are 61.4 px each, and "Go to tab" is cut to "Go t…" after its icon (crop `f_w460_server`).
+  - **"Measured hit areas":** pane rows 22 px tall, their jump buttons 28 × 22 px, and the Go buttons 26 px tall.
+  - **Look** (sheets `foot_sheet` and `foot_closed_sheet`), light and dark:
+    - Benchmarks at rest has "Go to tab" alone on the left half;
+    - Server, with "Fix login bug" selected, has "× Unlink" beside it in the grey ring;
+    - App build, unlinked, has "＋ Link" in accent on its grey fill;
+    - closed Old API's "＋ Link" keeps the right half and fades with the node.
+  - **README:** the intro line and the "Jump anywhere" bullet name "Go to tab", read back.
+  - **Render times:** 39 renders, the longest 12.4 ms, with no objectives warnings or errors.
 
 ## 7. The README screenshots again
 

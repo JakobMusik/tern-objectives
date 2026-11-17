@@ -25,7 +25,7 @@ M.px = {
 	row_h = 22, -- pane row
 	detail_h = 18, -- one line of pane details
 	tab_pad = 4, -- room under the last row
-	link_h = 26, -- link bar at a tab node's foot, only while an objective is selected (design P6)
+	link_h = 26, -- the foot row: "Go to tab" on live tabs, and the link bar while an objective is selected (design P6; select-tab-nodes D6)
 	first_m = 4, -- margin above the first item of a column
 	gap_w = 120, -- the edge column between the two node columns
 }
@@ -72,7 +72,7 @@ function M.css(): string
 		string.format("%s .ob-thead { height: %dpx; }", SCOPE, p.tab_head_h),
 		string.format("%s .ob-row { height: %dpx; line-height: %dpx; }", SCOPE, p.row_h, p.row_h),
 		string.format("%s .ob-detail { height: %dpx; line-height: %dpx; }", SCOPE, p.detail_h, p.detail_h),
-		string.format("%s .ob-linkbar { height: %dpx; line-height: %dpx; }", SCOPE, p.link_h, p.link_h),
+		string.format("%s .ob-tfoot { height: %dpx; } %s .ob-tfoot > * { height: %dpx; line-height: %dpx; }", SCOPE, p.link_h, SCOPE, p.link_h, p.link_h),
 		string.format("%s .ob-col > .ob-first { margin-top: %dpx; }", SCOPE, p.first_m),
 		string.format("%s .ob-gap { width: %dpx; }", SCOPE, p.gap_w),
 	}
@@ -140,12 +140,13 @@ function M.add_session(s: Stack)
 	add(s, M.px.session_m, M.px.session_h)
 end
 
--- Tab node with `rows` pane rows, `details` detail lines and, while an objective is selected, a link
--- bar; returns its header's vertical centre.
-function M.add_tab(s: Stack, rows: number, details: number, bar: boolean): number
+-- Tab node with `rows` pane rows, `details` detail lines and, when `foot`, the foot row: "Go to tab"
+-- on a live tab, the link bar while an objective is selected (select-tab-nodes, D6); returns its
+-- header's vertical centre.
+function M.add_tab(s: Stack, rows: number, details: number, foot: boolean): number
 	local p = M.px
 	local h = 2 * p.tab_border + p.tab_head_h + rows * p.row_h + details * p.detail_h + p.tab_pad
-	if bar then
+	if foot then
 		h += p.link_h
 	end
 	local top = add(s, p.tab_m, h)
