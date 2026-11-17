@@ -190,10 +190,49 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
   Verify `tern plugin list` shows `objectives 0.28.0 … ready`, with the other plugins untouched.
 
   Result: `installed objectives 0.28.0 → ~/Library/Application Support/Tern/plugins/objectives`. `tern plugin list` shows `objectives 0.28.0 … window ready`, and the other plugins ready as before: `external-editor 0.1.0`, `omp-narration 0.1.0`, `open-below 0.2.0`, `reply-selection 0.1.0` and `tabnav 0.1.0`. The tag `v0.28.0` (`c70ac4e`) is signed and on GitHub.
-- [ ] 3.3 **(live)** With the user:
+- [x] 3.3 **(live)** With the user:
   - clicking a tab's header keeps the graph open and selects the tab: thick lines to it, its objectives tinted, done ones too while the Done group is open;
   - the arrow at the right end of the header's second line goes to the tab;
   - while a tab is selected, an objective's link icon links or unlinks that tab.
+
+  Record the result here.
+
+  Result (user, 0.28.0): not as intended. The user wrote: "currently when i select an objective node with connected tab nodes, the tab nodes would also be selected while being put to the top, but then if i click on the these tab nodes, they get deselected, which is not ok. the intended behavior should be that when these nodes are selected 'again' after an objective node is selected, the node that get's click selected 'again' would not be deselected but instead show the other connection lines coming from other objective nodes that are connecting to it so that it's easy to know what other objective nodes are connected to the tab node".
+
+  0.28.0 cleared the selected objective when a tab was selected. The `Linked to` section went with it, and the tab moved back down the column, so it read as deselected. The user reported nothing about the arrow or the link buttons.
+
+  The user then chose, on 2026-11-18, a fix released as 0.28.1:
+  - **Selecting:** an objective and a tab can be selected together. Selecting one keeps the other, clicking either again clears only it, and a click on empty graph space clears both.
+  - **Lines:** with both selected, the objective's lines and every line into the tab are thick, and all other lines fade.
+
+  Groups 4 and 5 do this.
+
+## 4. An objective and a tab selected together
+
+- [ ] 4.1 Both selections at once (design D1, D3, D4):
+  - `tsel` keeps `selected`, and `sel`, `reopen` and creating an objective keep `selected_tab`, in `lib/app.luau`; `bg` still clears both;
+  - in `View.build`, the selected objective isn't tinted, and the selected tab's done lines skip the selected objective, whose lines `add_edges` already draws;
+  - README: the selection paragraph says an objective and a tab can be selected together.
+
+  Verify:
+  - objectives-graph "Selecting a tab", every scenario;
+  - objectives-graph "Selected tab's links": "With a selected objective", "Open objectives" and "Done objective in the open Done group";
+  - objectives-graph "Done objectives' closed tabs": "Kept while selected";
+  - objectives-graph "Linked tabs section": "Linked tabs on top", then a click on Benchmarks, which leaves the column as it was;
+  - tab-links "Link button clicks": "Selection kept" and "Link to the selected tab", and both with an objective and a tab selected;
+  - the README paragraph, read back;
+  - render times in the serve log stay within the 20 ms target, with no objectives warnings or errors.
+
+## 5. Release 0.28.1
+
+- [ ] 5.1 Version `0.28.1` in `plugin.toml`. Verify that an isolated `tern plugin install` of the repo folder prints `installed objectives 0.28.1`. Tick this box, then commit, push `main` and tag `v0.28.1` (annotated, message "objectives 0.28.1").
+- [ ] 5.2 **(live)** After the push has finished, run `tern plugin install github.com/JakobMusik/tern-objectives --force` from a shell with no harness variables.
+
+  Verify `tern plugin list` shows `objectives 0.28.1 … ready`, with the other plugins untouched.
+- [ ] 5.3 **(live)** With the user:
+  - select an objective, then click one of its tabs under `Linked to`: the objective stays selected, the tab stays where it is with the selection ring, and the lines from the other objectives linked to that tab turn thick, those objectives tinted;
+  - clicking that tab again clears only the tab; a click on empty space clears both;
+  - the arrow still goes to the tab, and the link icons still link the selected tab.
 
   Record the result here.
 

@@ -1,7 +1,7 @@
 ## ADDED Requirements
 
 ### Requirement: Selecting a tab
-Clicking a tab node's header, anywhere but its trash icon, Resume button and jump arrow, or a closed or other-window tab's pane row, SHALL select the tab, drawn with the accent border and ring of a selected objective. Selecting a tab SHALL clear a selected objective, and selecting an objective SHALL clear a selected tab. Clicking the selected tab's header again, or empty graph space, SHALL clear it. A tab the right column stops showing SHALL be deselected.
+Clicking a tab node's header, anywhere but its trash icon, Resume button and jump arrow, or a closed or other-window tab's pane row, SHALL select the tab, drawn with the accent border and ring of a selected objective. One objective and one tab SHALL be selectable together: selecting either SHALL keep the other. Clicking the selected tab's header again SHALL clear only the tab, and empty graph space SHALL clear both. A tab the right column stops showing SHALL be deselected.
 
 #### Scenario: Select and clear
 - **WHEN** nothing is selected, and the user clicks the label of tab "Benchmarks" and then clicks empty graph space
@@ -11,13 +11,25 @@ Clicking a tab node's header, anywhere but its trash icon, Resume button and jum
 - **WHEN** "Benchmarks" is selected and the user clicks its header's dimmed second line
 - **THEN** no tab node is drawn selected
 
-#### Scenario: Replaces a selected objective
-- **WHEN** "Fix login bug" is selected and the user clicks the label of tab "Server"
-- **THEN** "Server" is drawn selected, "Fix login bug" shows no ring and no action bar, no tab node shows a link bar, and the right column shows no `Linked to` heading
+#### Scenario: Kept with a selected objective
+- **WHEN** "Fix login bug", which links "Server" and "Benchmarks", is selected, and the user clicks the label of "Server"
+- **THEN** "Server" is drawn selected where it was, "Fix login bug" is still selected with its action bar, the right column still starts with `Linked to “Fix login bug”`, and every tab node still shows its link bar
 
-#### Scenario: Replaced by an objective
+#### Scenario: Clicking it again keeps the objective
+- **WHEN** "Fix login bug" and "Server" are selected, and the user clicks the label of "Server" again
+- **THEN** "Server" is not drawn selected, and "Fix login bug" is still selected with its action bar and the `Linked to` section
+
+#### Scenario: Objective selected with a tab
 - **WHEN** "Server" is selected and the user clicks "Write slides" beside its title
-- **THEN** "Write slides" is selected with its action bar, and "Server" is not drawn selected
+- **THEN** "Write slides" is selected with its action bar, and "Server" is still drawn selected
+
+#### Scenario: Another tab
+- **WHEN** "Server" is selected and the user clicks the label of "Benchmarks"
+- **THEN** only "Benchmarks" is drawn selected
+
+#### Scenario: Empty space clears both
+- **WHEN** "Fix login bug" and "Server" are selected, and the user clicks empty graph space
+- **THEN** neither is drawn selected, and no action bar or link bar shows
 
 #### Scenario: Live pane row doesn't select
 - **WHEN** nothing is selected and the user clicks the name of a pane row in "Server"
@@ -32,11 +44,15 @@ Clicking a tab node's header, anywhere but its trash icon, Resume button and jum
 - **THEN** after the first click no node for "App build" shows; after the second, "App build" is listed and not drawn selected
 
 ### Requirement: Selected tab's links
-While a tab is selected, the lines joining it to listed objectives SHALL be drawn as a selected objective's lines are, over the others, and every other line SHALL fade. This SHALL cover open objectives, done ones in the open Done group and those review mode lists, the done ones with a green line; their other links SHALL get no line. Those objectives SHALL show the accent border on the accent tint, with no ring and no action bar. No node SHALL move. With no such line, no line SHALL fade.
+While a tab is selected, its lines to listed objectives SHALL be drawn thick over the others, as a selected objective's are, and every other line SHALL fade but a selected objective's own. This SHALL cover open objectives, done ones in the open Done group and those review mode lists, done ones in green; their other links SHALL get no line. Those objectives, but a selected one, SHALL show the accent border on the accent tint. No node SHALL move. With no thick line, no line SHALL fade.
 
 #### Scenario: Open objectives
 - **WHEN** open objectives "Fix login bug" and "Speed up search" link tab "Server", "Fix login bug" also links "Benchmarks", "Write slides" links only "Guides", the graph was opened from "Guides", and the user selects "Server"
 - **THEN** a screenshot shows thick lines from "Fix login bug" and "Speed up search" to "Server", drawn over the faded lines they cross, every other line faded, those two nodes with an accent border on a tint and no action bar, "Write slides" not tinted, and every objective node where it was before the click
+
+#### Scenario: With a selected objective
+- **WHEN** open "Fix login bug" links "Server" and "Benchmarks", "Speed up search" links "Server", "Write slides" links only "Guides", "Fix login bug" is selected, and the user selects "Server"
+- **THEN** thick lines join "Fix login bug" to "Server" and "Benchmarks", and "Speed up search" to "Server"; the line from "Write slides" is faded; "Speed up search" is tinted; and "Fix login bug" keeps its ring and action bar, with no tint
 
 #### Scenario: Done objective in the open Done group
 - **WHEN** done objective "Set up CI" links "Server" and "Benchmarks", the Done group is open, and the user selects "Server"
@@ -76,8 +92,8 @@ A closed tab that only done objectives link SHALL NOT show in the right column, 
 - **THEN** it shows under "Closed tabs"
 
 #### Scenario: Kept while selected
-- **WHEN** X is selected, and the user clicks A's label and then clicks empty graph space
-- **THEN** after the first click A still shows under "Closed tabs", drawn selected, and X is not selected; after the second, the right column has no node for A
+- **WHEN** X is selected, and the user clicks A's label, then X beside its title, then empty graph space
+- **THEN** after the first click X and A are both selected; after the second, X is not selected and A still shows under "Closed tabs", drawn selected; after the third, the right column has no node for A
 
 ### Requirement: Selection on a fresh open
 Each fresh open of the graph SHALL start with no objective or tab selected, whatever was selected when it last closed, and with no search. Review mode, the scope and tag filters, the Done group's fold and open pane rows SHALL stay as they were. Showing the graph again after one of its pickers or fields SHALL keep the selection and the search, and ⌥N SHALL still select the objective it creates.

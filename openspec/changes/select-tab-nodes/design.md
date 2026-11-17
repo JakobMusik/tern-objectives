@@ -25,7 +25,7 @@ See proposal.md, "Why".
 ## Goals / Non-Goals
 
 **Goals:**
-- One selection at a time, an objective or a tab, so the graph never shows two highlights.
+- One selected objective and one selected tab at most, each set and cleared on its own, so a tab can be looked into without losing the objective it was reached from (0.28.1, after the user's check of 0.28.0).
 - A selected tab reuses the focus-tab path the origin's tab already takes, so tint, thick lines and fading look the same.
 - Jumping to a tab stays one click, on its own target.
 
@@ -37,12 +37,14 @@ See proposal.md, "Why".
 
 ### D1. The selected tab
 A new `selected_tab: number?` in `lib/app.luau`, never stored, beside `selected`.
-- **Verb:** a new `tsel=<tab>` sets it, or clears it when it is that tab already, and clears `selected`.
+- **Verb:** a new `tsel=<tab>` sets it, or clears it when it is that tab already. It leaves `selected` as it is.
+- **Selecting an objective keeps it:** `sel`, `reopen` and creating an objective set or clear `selected` only.
 - **Clearing it:**
-  - `sel`, `reopen` and creating an objective, which select an objective, clear it;
   - `bg` clears both selections, and its early return now also needs `selected_tab == nil`;
   - a fresh open clears it; the reopen after a picker or field keeps it, as it keeps `selected`;
   - the search keeps it: it hides objectives, not tabs.
+
+*Why both at once (0.28.1):* 0.28.0 kept one selection at a time, so `tsel` cleared `selected` and `sel` cleared `selected_tab`. The user checked it and found that clicking one of the selected objective's tabs dropped the objective. The `Linked to` section went with it, and the tab moved back down the column, so it read as deselected. The user wants that click to show which other objectives lead into the tab, with the objective still selected. Independent selections give exactly that, and need no new state.
 - **Handover:** `build` passes it to the view as `Ui.selected_tab`. On the graph page, it sets `selected_tab = built.selected_tab`, the selected tab if the right column showed it, else nil. A tab the column stops showing is deselected this way: hidden by the scope, closed with no link left, or gone.
 
 *Alternative:* one `selected` holding `"o:<id>"` or `"t:<id>"`. Rejected: every existing reader of `selected` (rename, link bars, the Linked section, `can_rename`) would need to parse it.
@@ -59,12 +61,12 @@ The column is still drawn after the left column, from the same lists.
 - With `sel_tab`: the focus tab is `sel_tab`, for every listed objective, open or done, in review mode too.
 - Without it: the origin rule as today, for open objectives only, outside review mode, with nothing selected.
 
-A node is `lit` when it links the focus tab and, for the origin rule, is open. As today, `lit` draws `.ob-lit`: the accent border on the accent tint, with no ring and no action bar.
+A node is `lit` when it links the focus tab and, for the origin rule, is open. As today, `lit` draws `.ob-lit`: the accent border on the accent tint, with no ring and no action bar. The selected objective is never `lit`: it keeps its ring and action bar, untinted, while a tab is selected too.
 
 *Why the origin keeps open only:* the user chose what a selected tab shows. The origin highlight is what a fresh open shows, and the proposal keeps it out of scope.
 
 ### D4. Lines to the selected tab
-The open objectives' edges are added as today, `strong` when they end at the focus tab. With `sel_tab`, each listed done objective that links it gets one edge to it, `strong`. This covers the open Done group's nodes outside review mode, and the listed nodes in review mode. These edges are `done` (green), and dashed when the tab isn't live. Their other links get no edge. `Edges.build` draws the strong layer over the dimmed one, as today.
+The open objectives' edges are added as today, `strong` when they belong to the selected objective or end at the focus tab. With both an objective and a tab selected, both sets are strong and everything else dims. With `sel_tab`, each listed done objective that links it gets one edge to it, `strong`. This covers the open Done group's nodes outside review mode, and the listed nodes in review mode. These edges are `done` (green), and dashed when the tab isn't live. Their other links get no edge. A selected done objective is skipped there, since `add_edges` already draws all its lines. `Edges.build` draws the strong layer over the dimmed one, as today.
 
 ### D5. The link buttons
 `quick_tab` is `sel_tab` when there is one and nothing is lifted, else the origin rule as today. For a closed or other-window tab, its label comes from its snapshot through `ghost`, as its node's does. The verb stays `lnk=<objective>:<tab>`, which `Store.toggle_link` takes for any tab. A ghost passes no facts, so its snapshot stays as it is.
