@@ -209,7 +209,7 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
 
 ## 4. An objective and a tab selected together
 
-- [ ] 4.1 Both selections at once (design D1, D3, D4):
+- [x] 4.1 Both selections at once (design D1, D3, D4):
   - `tsel` keeps `selected`, and `sel`, `reopen` and creating an objective keep `selected_tab`, in `lib/app.luau`; `bg` still clears both;
   - in `View.build`, the selected objective isn't tinted, and the selected tab's done lines skip the selected objective, whose lines `add_edges` already draws;
   - README: the selection paragraph says an objective and a tab can be selected together.
@@ -222,6 +222,35 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
   - tab-links "Link button clicks": "Selection kept" and "Link to the selected tab", and both with an objective and a tab selected;
   - the README paragraph, read back;
   - render times in the serve log stay within the 20 ms target, with no objectives warnings or errors.
+
+  Result (harness, 2026-11-18). A fresh serve rebuilt the demo with the same ids as in 1.1. No chat was waiting this time, so no node carried an attention ring. The stores were the ones group 1 used.
+  - **"Selecting a tab":**
+    - **Select and clear:** a click on Benchmarks' label selected it, with the graph shown, focus unchanged and no link bar. A click on empty space cleared it.
+    - **Clicking it again:** a click on its dimmed second line cleared it.
+    - **Kept with a selected objective:** with "Fix login bug" selected, a click on Server's label selected Server. "Fix login bug" kept `ob-sel` and its action bar, and the column still started with `Linked to “Fix login bug”`, with all 6 tab nodes' link bars. Server's rect and the whole column's order were the same before and after the click.
+    - **Clicking it again keeps the objective:** a second click on Server's label cleared only Server, leaving "Fix login bug" selected with its action bar and heading.
+    - **Objective selected with a tab:** Server selected, then a click beside "Write slides"'s title. "Write slides" was selected with its action bar, and Server stayed selected.
+    - **Another tab:** Server selected, then Benchmarks' label: only Benchmarks was selected.
+    - **Empty space clears both:** with "Fix login bug" and Server selected, a click on empty space left nothing selected, no action bar and no link bar.
+    - **Live pane row doesn't select:** Server's "server" row opened its details, with nothing selected.
+    - **Trash icon doesn't select:** the trash icon asked "Close tab?", with nothing selected.
+    - **Hidden by the scope:** opened from Benchmarks, App build selected. "This session" hid it, and "All" listed it again, not selected.
+  - **"Selected tab's links":**
+    - **With a selected objective:** "Fix login bug" selected, then Server (shot `b_both`, crop `b_both_graph`).
+      - Thick: "Fix login bug" (red, to Server and Benchmarks), "Speed up search" (blue) and done "Set up CI" (green, to Server only).
+      - Faded: "Write slides" and "Read about rate limiting".
+      - Tinted: "Speed up search" and "Set up CI". "Fix login bug" kept `ob-sel ob-acts-on` with no `ob-lit`.
+    - **Open objectives:** Server alone selected. "Fix login bug", "Speed up search" and "Set up CI" have 6 px ends and are lit, with no action bar. Server is the one thick right end.
+    - **Done objective in the open Done group:** "Set up CI"'s green end is within 0.05 px, and Benchmarks' end is red, from "Fix login bug" alone.
+  - **"Done objectives' closed tabs" "Kept while selected":** "Tidy the backlog" selected, then Old notes' label: both selected, under `Linked to`. A click beside "Tidy the backlog"'s title cleared it, and Old notes stayed under "Closed tabs", selected. A click on empty space removed Old notes from the column.
+  - **"Linked tabs section":** X selected, opened from Server. The column read `Linked to “X”`, api: Benchmarks, web: Components, "Closed tabs": Old API, the divider, then api: Server, docs: Guides and Release notes, web: App build. A click on Benchmarks' label selected it and left that column exactly as it was, with X still selected.
+  - **tab-links "Link button clicks":**
+    - **Selection kept:** "Fix login bug" stayed selected with its action bar, and "Speed up search" held `[19, 3]`.
+    - **Link to the selected tab:** Server selected; "Speed up search" held `[19, 15]`, Server stayed selected, and "Speed up search" was lit with a 6 px end.
+    - **Both selected:** with "Fix login bug" and Server selected, "Speed up search"'s button read `Link to “Server”`. A click stored `[19, 15]`, and both selections stayed. "Speed up search" and "Set up CI" were lit, but not "Fix login bug".
+  - **README:** the selection paragraph now says an objective and a tab can be selected together, and how each clears, read back.
+  - **Render times:** 52 renders, the longest 10.4 ms, with no objectives warnings or errors.
+  - **Cleanup:** the serve was stopped. Its two omp panes had made empty chat folders, `--private-tmp-tobj-w-demo-notes--` and `--private-tmp-tobj-w-demo-serverchat--`, which were removed.
 
 ## 5. Release 0.28.1
 

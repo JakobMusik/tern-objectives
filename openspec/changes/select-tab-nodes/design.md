@@ -43,9 +43,9 @@ A new `selected_tab: number?` in `lib/app.luau`, never stored, beside `selected`
   - `bg` clears both selections, and its early return now also needs `selected_tab == nil`;
   - a fresh open clears it; the reopen after a picker or field keeps it, as it keeps `selected`;
   - the search keeps it: it hides objectives, not tabs.
+- **Handover:** `build` passes it to the view as `Ui.selected_tab`. On the graph page, it sets `selected_tab = built.selected_tab`, the selected tab if the right column showed it, else nil. A tab the column stops showing is deselected this way: hidden by the scope, closed with no link left, or gone.
 
 *Why both at once (0.28.1):* 0.28.0 kept one selection at a time, so `tsel` cleared `selected` and `sel` cleared `selected_tab`. The user checked it and found that clicking one of the selected objective's tabs dropped the objective. The `Linked to` section went with it, and the tab moved back down the column, so it read as deselected. The user wants that click to show which other objectives lead into the tab, with the objective still selected. Independent selections give exactly that, and need no new state.
-- **Handover:** `build` passes it to the view as `Ui.selected_tab`. On the graph page, it sets `selected_tab = built.selected_tab`, the selected tab if the right column showed it, else nil. A tab the column stops showing is deselected this way: hidden by the scope, closed with no link left, or gone.
 
 *Alternative:* one `selected` holding `"o:<id>"` or `"t:<id>"`. Rejected: every existing reader of `selected` (rename, link bars, the Linked section, `can_rename`) would need to parse it.
 

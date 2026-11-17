@@ -31,9 +31,10 @@ end
 -- keeps it (highlight-origin-tab-links, design D1).
 local selected: string? = nil
 
--- The selected tab's id (select-tab-nodes, design D1), never stored, like `selected`: one of the two
--- at most. A fresh open clears it, the reopen after a picker or field keeps it, and `build` drops it
--- once the right column no longer shows the tab.
+-- The selected tab's id (select-tab-nodes, design D1), never stored, like `selected`, and set or
+-- cleared on its own: an objective and a tab can be selected together. A fresh open clears it, the
+-- reopen after a picker or field keeps it, and `build` drops it once the right column no longer
+-- shows the tab.
 local selected_tab: number? = nil
 
 -- The search's text (search-and-tab-marks, design D1), never stored: a fresh open ends it, like the
@@ -278,7 +279,6 @@ local function new_objective(cx: WindowCx, tab: number?, facts: Model.Tab?, wind
 			cx2:toast("error", "An objective needs a title")
 		elseif tab == nil then
 			selected = id
-			selected_tab = nil
 		else
 			cx2:toast("success", "Objective created for this tab")
 		end
@@ -891,15 +891,13 @@ function M.action(ev: Action, cx: WindowCx)
 	-- Set by verbs whose own flow draws the graph later, or closes it.
 	local later = false
 	if act == "sel" then
-		-- One selection at a time (select-tab-nodes, D1): an objective's ends a tab's.
 		selected = if selected == value then nil else value
-		selected_tab = nil
 	elseif act == "tsel" then
-		-- A tab's header, or a closed or other-window tab's row (select-tab-nodes, D1, D6).
+		-- A tab's header, or a closed or other-window tab's row (select-tab-nodes, D1, D6). It keeps the
+		-- selected objective, so one of its tabs can show the other objectives leading into it.
 		local tab = tonumber(value)
 		if tab ~= nil then
 			selected_tab = if selected_tab == tab then nil else tab
-			selected = nil
 		end
 	elseif act == "bg" then
 		if selected == nil and selected_tab == nil and not had_undo and not was_moving and asked == nil and not was_held then
@@ -995,7 +993,6 @@ function M.action(ev: Action, cx: WindowCx)
 	elseif act == "reopen" then
 		-- A done objective's box (reopen-done-objectives, D1): selected, so its bar asks.
 		selected = value
-		selected_tab = nil
 		confirm = { kind = "reopen", id = value, where = "bar" }
 	elseif act == "rkeep" or act == "rreset" then
 		-- The bar's answers reopen it, last in the list and still selected (D2); no Undo.

@@ -15,7 +15,7 @@ local M = {}
 
 export type Ui = {
 	selected: string?,
-	-- The selected tab (select-tab-nodes, design D1); at most one of the two is set.
+	-- The selected tab (select-tab-nodes, design D1); it can be set along with `selected`.
 	selected_tab: number?,
 	-- The pane the graph was opened from (design P5).
 	origin: number?,
@@ -847,7 +847,8 @@ function M.build(state: Store.State, win: Model.Window, ui_state: Ui): Built
 			acts = { close = #tabs, kept = kept, ask = ask }
 		end
 		obj_cy[o.id] = Layout.add_obj(left, review, #title, acts ~= nil, acts ~= nil and acts.ask ~= nil)
-		local lit = focus_tab ~= nil and (focus_done or not o.done) and table.find(o.tabs, focus_tab) ~= nil
+		-- The selected objective keeps its ring, untinted, while a tab is selected too (D3).
+		local lit = focus_tab ~= nil and o.id ~= selected and (focus_done or not o.done) and table.find(o.tabs, focus_tab) ~= nil
 		local qlink: QLink? = nil
 		if quick_tab ~= nil then
 			qlink = { tab = quick_tab.id, label = quick_tab.label, on = table.find(o.tabs, quick_tab.id) ~= nil }
@@ -1089,7 +1090,8 @@ function M.build(state: Store.State, win: Model.Window, ui_state: Ui): Built
 		local to = tab_cy[sel_tab]
 		for _, o in (if reviewing then due_list else done_list) :: { Store.Objective } do
 			local from = obj_cy[o.id]
-			if from ~= nil and to ~= nil and table.find(o.tabs, sel_tab) ~= nil then
+			-- A selected done objective's lines all come from add_edges above (D4).
+			if from ~= nil and to ~= nil and o.id ~= selected and table.find(o.tabs, sel_tab) ~= nil then
 				table.insert(edges, {
 					from = from,
 					to = to,
