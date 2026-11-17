@@ -137,7 +137,7 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
 
 ## 2. The README screenshots
 
-- [ ] 2.1 Take `docs/graph.png` and `docs/review.png` again, as sort-button took them, since every live tab header now shows its arrow:
+- [x] 2.1 Take `docs/graph.png` and `docs/review.png` again, as sort-button took them, since every live tab header now shows its arrow:
   - **`graph.png`:**
     - Release notes' omp chat replies while Guides has focus, and Server's waits for input;
     - the same window size (`ctl resize 1045 928`) and crop (914 × 808);
@@ -154,6 +154,31 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
   - every live tab header in both shots ends in its arrow, and no closed tab's does;
   - every line end in both shots sits within 2 px of its node and tab header centres, read from the layout JSON;
   - the user approved both drafts.
+
+  Result (harness, 2026-11-18, the same serve as group 1):
+  - **Layout and store:**
+    - session misc was closed first, so the column held docs, web and api as before;
+    - the demo store was written again with dates counted from today, `sort` "priority", the Done group open and Release notes' row open; its ids matched the rebuilt layout's;
+    - Server's omp chat had waited for input since 1.2, asking "Restart the server before deploying?";
+    - with Guides focused, Release notes' chat answered "In two short sentences, say what release notes for a web app should cover." in 3.2 s (`idle` with its alert).
+  - **`graph.png`** (1828 × 1616):
+    - `ctl resize 1045 928`, opened from pane 2 in Guides, the pointer at (3, 3), once `ctl state` listed no banners;
+    - the glimpse was at 65.34, 76.95, 914.31 × 808.08, as before, and was cropped there;
+    - "Fix login bug" and Server are marked "needs you", "Write release notes" and Release notes "replied". "Read about rate limiting" is the one node tinted, nothing is selected, the Done group is open, and its row shows "you:" and "omp:";
+    - all 7 open nodes have grips, and no node has ⋯. All 6 live tab headers end in their arrows, in line with their rows' arrows;
+    - all 7 left and 6 right line ends sit within 0.3 px of their centres.
+  - **`review.png`** (1828 × 857):
+    - review mode, opened from Guides, listing "Profile slow search queries" (Hard · 1d, Good · 3d, Easy · 4d) and "Restyle the docs site" (Hard · 2d, Good · 10d, Easy · 14d);
+    - the first is selected, with Note and Tags, and Benchmarks under `Linked to` with "× Unlink";
+    - cropped from the glimpse's top to 8 px below the Guides node; Benchmarks and Guides show their arrows;
+    - the green line's ends sit within 0.3 px. The gap column's other marks were at y 872 and 905, in the footer below the crop.
+  - **Alt texts:** both now say that each tab's header ends in an arrow that goes to it.
+  - **README checks:** the README has two images, `docs/graph.png` first (line 5), then `docs/review.png` (line 26). "README contents" still holds: the graph shot has the Done group open and Server marked "needs you", and the review shot has Hard, Good and Easy.
+  - **Approval:** the user approved both drafts before they were committed.
+  - **Cleanup:**
+    - the serve was stopped with `ctl quit`;
+    - the chat folders this run created were removed: `--private-tmp-tobj-w-demo-notes--`, `--private-tmp-tobj-w-demo-serverchat--` and `--private-tmp-tobj-w-demo-resumechat--` (task 1.1's scratch chat);
+    - `--private-tmp-tobj-w-docs--` and `--private-tmp-tobj-w-server--`, from earlier runs, were left as they were.
 
 ## 3. Release 0.28.0
 
