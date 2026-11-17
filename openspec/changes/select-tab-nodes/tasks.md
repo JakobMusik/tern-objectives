@@ -361,9 +361,11 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
 - [x] 8.1 Version `0.28.2` in `plugin.toml`. Verify that an isolated `tern plugin install` of the repo folder prints `installed objectives 0.28.2`. Tick this box, then commit, push `main` and tag `v0.28.2` (annotated, message "objectives 0.28.2").
 
   Result: the install into `/tmp/tobj-inst282/config` printed `installed objectives 0.28.2 → /tmp/tobj-inst282/config/plugins/objectives`.
-- [ ] 8.2 **(live)** After the push has finished, run `tern plugin install github.com/JakobMusik/tern-objectives --force` from a shell with no harness variables.
+- [x] 8.2 **(live)** After the push has finished, run `tern plugin install github.com/JakobMusik/tern-objectives --force` from a shell with no harness variables.
 
   Verify `tern plugin list` shows `objectives 0.28.2 … ready`, with the other plugins untouched.
+
+  Result: `installed objectives 0.28.2 → ~/Library/Application Support/Tern/plugins/objectives`. `tern plugin list` shows `objectives 0.28.2 … window ready`, and the other plugins ready as before: `external-editor 0.1.0`, `omp-narration 0.1.0`, `open-below 0.2.0`, `reply-selection 0.1.0` and `tabnav 0.1.0`. The tag `v0.28.2` (`ebaa362`) is signed and on GitHub.
 - [ ] 8.3 **(live)** With the user:
   - select an objective, then click one of its tabs under `Linked to`: the objective stays selected, the tab stays where it is with the selection ring, and the lines from the other objectives linked to that tab turn thick, those objectives tinted;
   - clicking that tab again clears only the tab; a click on empty space clears both;
