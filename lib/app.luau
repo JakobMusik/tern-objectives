@@ -38,8 +38,9 @@ local search: string? = nil
 -- The open objective lifted by its grip (custom-order-and-direct-controls, design D2); never stored.
 local moving: string? = nil
 
--- While badge clicks hold the order (sort-by-priority, design D3): the priority each open objective
--- had at the first of them. Never stored; every other click and a fresh open end it.
+-- While badge clicks hold the order (sort-by-priority, design D3): the priority each objective, open
+-- or done (sort-button, design D5), had at the first of them. Never stored; every other click and a
+-- fresh open end it.
 local held: { [string]: number }? = nil
 
 -- The question an action is asking in place (custom-order-and-direct-controls, design D4), never
@@ -994,16 +995,14 @@ function M.action(ev: Action, cx: WindowCx)
 			end
 		end
 	elseif act == "prio" then
-		-- With sorting on, the first badge click records every open objective's priority, which the
-		-- order keeps until another click (sort-by-priority, design D3).
+		-- Sorted by priority, the first badge click records every objective's priority, open and done,
+		-- which the order keeps until another click (sort-by-priority D3; sort-button D5).
 		if held == nil then
 			local state = Store.read()
-			if state.settings.sort_priority then
+			if state.settings.sort == "priority" then
 				local record: { [string]: number } = {}
 				for _, o in state.objectives do
-					if not o.done then
-						record[o.id] = o.priority
-					end
+					record[o.id] = o.priority
 				end
 				held = record
 			end
@@ -1118,15 +1117,17 @@ function M.action(ev: Action, cx: WindowCx)
 			return true
 		end)
 	elseif act == "setsort" then
-		-- Configure: whether open objectives are listed by priority (sort-by-priority, design D1).
-		local on = value ~= "off"
-		Store.set_settings(function(s)
-			if s.sort_priority == on then
-				return false
-			end
-			s.sort_priority = on
-			return true
-		end)
+		-- The header's sort button and Configure's "Sort by" (sort-button, design D4): the method to
+		-- sort by; anything else changes nothing.
+		if value == "own" or value == "priority" or value == "created" then
+			Store.set_settings(function(s)
+				if s.sort == value then
+					return false
+				end
+				s.sort = value
+				return true
+			end)
+		end
 	elseif act == "kchg" then
 		change_keys(cx, value)
 		later = true

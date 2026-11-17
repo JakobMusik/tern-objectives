@@ -68,7 +68,7 @@ The click names the next method rather than "next", so it reuses the settings pa
 
 It shows in review mode too, so the header doesn't shift on entering review. There a click changes only the label, and the order the graph shows once review mode ends.
 
-**Icon:** Tern's set has no sort arrows (Source record). The button uses `swap`. If the harness shot shows it reads poorly as sorting, `list` takes its place, and the task's Result records which.
+**Icon:** Tern's set has no sort arrows (Source record). The button uses `swap`, turned upright by D8's rule. The harness found that `swap` draws two horizontal arrows, ⇄, which read as "switch" rather than "sort" (task 1.2). Turned 90°, they read as ⇅, the usual sort sign. `list` was the fallback, unused.
 
 *Alternatives:*
 - A picker or segments: the user chose a cycling button.
@@ -96,13 +96,13 @@ The grip's tooltip keeps "Move within P<n>: …" for `"priority"`.
 The "Order" section's row becomes "Sort by", with `segments` Your order, Priority and Newest first on `setsort`. Its note reads: "Priority keeps your order within each priority. The Done group follows this choice, and the sort button in the graph's header changes it too." The classes are the page's existing ones.
 
 ### D8. Style
-`.ob-sortbtn` is a flex row, `align-items: center`, `gap: 5px`, `padding: 3px 9px 3px 7px`, in the quiet button's chrome (`ob-btn ob-btn-quiet`, which already sets `user-select: none`). The label doesn't wrap.
+`.ob-sortbtn` is a flex row, `align-items: center`, `gap: 5px`, `padding: 3px 9px 3px 7px`, in the quiet button's chrome (`ob-btn ob-btn-quiet`, which already sets `user-select: none`). The label doesn't wrap. `.ob-sortbtn svg` is turned with `transform: rotate(90deg)`. The shot's layout JSON reads that transform on the icon's `svg.ico`, so Tern's renderer applies plugin CSS transforms.
 
 ## Risks / Trade-offs
 
 - **The Done group's default order changes.** With the default Priority, 0.26.0 users see their Done group re-sorted by priority. → The user asked for the Done group to follow. Your order shows it as before.
 - **Header width.** The button adds about 100 px ("Your order" is the longest label). On a narrow graph the header wraps sooner. → The columns sit below the header, and the edges are drawn inside `.ob-graph`, so the lines don't depend on the header's height. The harness checks the line ends at 460 px.
-- **Icon (untested):** `swap` may draw horizontal arrows. → D3's fallback; the harness shot decides.
+- **Icon:** `swap` draws horizontal arrows (task 1.2). → Turned upright by CSS (D3, D8).
 - **Ties within a second:** two objectives created in the same second keep the user's order. → Rare, and deterministic.
 - **Downgrade.** 0.26.0 reads the missing `sort_priority` as On and shows Priority, whatever the method was. Its next write drops `sort`, so an upgrade back reads Priority too. → Acceptable for a preference.
 - **Cost:** one sort of the open and one of the done objectives per render, as today. → Tens of objectives. The harness checks renders stay within the 20 ms target.

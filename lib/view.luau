@@ -85,15 +85,13 @@ local function mark_chip(mark: Mark): Node
 	})
 end
 
-local function sort_done(list: { Store.Objective })
-	table.sort(list, function(a, b)
-		local ta, tb = a.done_at or 0, b.done_at or 0
-		if ta ~= tb then
-			return ta > tb
-		end
-		return a.id < b.id
-	end)
-end
+-- The header's sort button for each method (sort-button, design D3): its name, its tooltip, and the
+-- method its click sorts by.
+local SORTS: { [string]: { label: string, tip: string, next: string } } = {
+	own = { label = "Your order", tip = "In your order · click to sort by priority", next = "priority" },
+	priority = { label = "Priority", tip = "Sorted by priority · click to sort newest first", next = "created" },
+	created = { label = "Newest", tip = "Sorted newest first · click for your order", next = "own" },
+}
 
 local function stamp(t: number?): string
 	return if t ~= nil then os.date("%Y-%m-%d %H:%M", t) :: string else ""
@@ -224,9 +222,9 @@ local function action_bar(o: Store.Objective, acts: Acts): { Node }
 	return { el("div", { class = "ob-acts", key = "acts" }, kids) }
 end
 
--- While sorting by priority (sort-by-priority, design D4): `lifted` is the lifted objective's priority,
--- the only one whose nodes take its drop.
-type Sorting = { lifted: number? }
+-- The sort method (sort-button, design D6): newest first, nodes have no grip; by priority, `lifted`,
+-- the lifted objective's priority, is the only one whose nodes take its drop (sort-by-priority, D4).
+type Sorting = { by: string, lifted: number? }
 
 -- The node's link button (quick-link-button, design D2): the origin's tab it toggles, that tab's
 -- label for its tooltip, and whether the objective links it.
@@ -235,9 +233,9 @@ type QLink = { tab: number, label: string, on: boolean }
 -- `title`: the title's lines (Text.wrap). `mark`: its attention mark, if any (D3). `review`: review
 -- mode's node, with Hard, Good and Easy under it (review-done-objectives, design D4). `acts`: the
 -- selected node's action bar (custom-order-and-direct-controls, design D3). `lit`: it links the
--- focus tab (highlight-origin-tab-links, design D4). `sorting`: set while sorting by priority.
--- `qlink`: its link button, while the right column shows the origin's tab.
-local function objective_node(o: Store.Objective, ui_state: Ui, first: string, title: { string }, mark: Mark?, review: boolean?, acts: Acts?, lit: boolean?, sorting: Sorting?, qlink: QLink?): Node
+-- focus tab (highlight-origin-tab-links, design D4). `sorting`: the sort method and the lifted
+-- objective's priority. `qlink`: its link button, while the right column shows the origin's tab.
+local function objective_node(o: Store.Objective, ui_state: Ui, first: string, title: { string }, mark: Mark?, review: boolean?, acts: Acts?, lit: boolean?, sorting: Sorting, qlink: QLink?): Node
 	local selected = ui_state.selected == o.id
 	local cls = "ob-obj ob-o-" .. o.id .. first
 	if #title > 1 then
@@ -265,9 +263,10 @@ local function objective_node(o: Store.Objective, ui_state: Ui, first: string, t
 	if mark ~= nil and mark.kind ~= "working" then
 		cls ..= " ob-att-" .. mark.kind
 	end
-	-- Moving (design D2): open nodes outside review mode have a grip; the lifted one is drawn lifted,
-	-- and every other one takes the drop on its upper or lower half.
-	local movable = not o.done and not review
+	-- Moving (design D2): open nodes outside review mode have a grip, except newest first, where a move
+	-- couldn't show (sort-button, D6); the lifted one is drawn lifted, and every other one takes the
+	-- drop on its upper or lower half.
+	local movable = not o.done and not review and sorting.by ~= "created"
 	if movable and ui_state.moving == o.id then
 		cls ..= " ob-lifted"
 	end
@@ -294,7 +293,7 @@ local function objective_node(o: Store.Objective, ui_state: Ui, first: string, t
 			key = "grip",
 			title = if ui_state.moving == o.id
 				then "Put it back"
-				elseif sorting ~= nil then "Move within P" .. o.priority .. ": click, then click where it goes"
+				elseif sorting.by == "priority" then "Move within P" .. o.priority .. ": click, then click where it goes"
 				else "Move: click, then click where it goes",
 			actions = { click = "lift=" .. o.id },
 		}, { { k = "icon", p = { name = "grip" } } :: any }))
@@ -363,8 +362,8 @@ local function objective_node(o: Store.Objective, ui_state: Ui, first: string, t
 			table.insert(lines, line)
 		end
 	end
-	-- While sorting, only the lifted objective's priority takes its drop (sort-by-priority, D4).
-	if movable and ui_state.moving ~= nil and ui_state.moving ~= o.id and (sorting == nil or sorting.lifted == o.priority) then
+	-- By priority, only the lifted objective's priority takes its drop (sort-by-priority, D4).
+	if movable and ui_state.moving ~= nil and ui_state.moving ~= o.id and (sorting.by ~= "priority" or sorting.lifted == o.priority) then
 		-- Over the node's content, so they take the click; their :hover draws the insertion line.
 		table.insert(lines, el("div", { class = "ob-drop ob-drop-top", key = "dropt", actions = { click = "drop=" .. o.id .. ":before" } }))
 		table.insert(lines, el("div", { class = "ob-drop ob-drop-bot", key = "dropb", actions = { click = "drop=" .. o.id .. ":after" } }))
@@ -592,9 +591,8 @@ function M.build(state: Store.State, win: Model.Window, ui_state: Ui): Built
 		return true
 	end
 
-	-- Open objectives in the graph's order: the user's, by priority first while sorting
-	-- (sort-by-priority, design D2); filters only leave some out. The Done group sorts by when each
-	-- was done.
+	-- Open objectives in the graph's order, and done ones in the Done group's, by the sort method
+	-- (sort-button, design D2); filters only leave some out.
 	local open_list, done_list = {}, {}
 	for _, o in Store.open_in_order(state, ui_state.held) do
 		if visible(o) then
@@ -606,7 +604,7 @@ function M.build(state: Store.State, win: Model.Window, ui_state: Ui): Built
 			table.insert(done_list, o)
 		end
 	end
-	sort_done(done_list)
+	Store.sort_done(state, done_list, ui_state.held)
 
 	-- Review mode's list (review-done-objectives, design D4): the done objectives the filters show whose
 	-- review is due, the longest due first, then the most recently done. An empty list is normal mode.
@@ -708,12 +706,9 @@ function M.build(state: Store.State, win: Model.Window, ui_state: Ui): Built
 		end
 		return if kind ~= "" then { kind = kind, names = names } else nil
 	end
-	-- While sorting by priority, the lifted objective's priority bounds its drop (sort-by-priority, D4).
-	local sorting: Sorting? = nil
-	if state.settings.sort_priority then
-		local lifted = if ui_state.moving ~= nil then Store.find(state, ui_state.moving) else nil
-		sorting = { lifted = if lifted ~= nil then lifted.priority else nil }
-	end
+	-- The sort method; by priority, the lifted objective's priority bounds its drop (sort-by-priority, D4).
+	local lifted = if ui_state.moving ~= nil then Store.find(state, ui_state.moving) else nil
+	local sorting: Sorting = { by = state.settings.sort, lifted = if lifted ~= nil then lifted.priority else nil }
 	-- One objective node; its title lines set its height (attention-marks-and-titles D1).
 	local function add_node(o: Store.Objective, review: boolean?)
 		local first = Layout.first(left)
@@ -1064,6 +1059,12 @@ function M.build(state: Store.State, win: Model.Window, ui_state: Ui): Built
 			{ k = "icon", p = { name = "search" } } :: any,
 		}))
 	end
+	-- The sort button (sort-button, design D3): the method's name; a click sorts by the next method.
+	local sort = SORTS[state.settings.sort] or SORTS.priority
+	table.insert(head, el("span", { class = "ob-btn ob-btn-quiet ob-sortbtn", key = "sort", title = sort.tip, actions = { click = "setsort=" .. sort.next } }, {
+		{ k = "icon", p = { name = "swap" } } :: any,
+		span("ob-sortt", sort.label, { key = "t" }),
+	}))
 	local tags: { Node } = {}
 	for _, tag in Store.all_tags(state) do
 		table.insert(tags, span("ob-chip ob-ftag" .. (if view_state.tag == tag then " ob-on" else ""), "#" .. tag, {
@@ -1074,7 +1075,6 @@ function M.build(state: Store.State, win: Model.Window, ui_state: Ui): Built
 	end
 	table.insert(head, el("div", { class = "ob-ftags", key = "tags" }, tags))
 	table.insert(head, el("div", { class = "ob-spacer", key = "sp" }))
-	local lifted = if ui_state.moving ~= nil then Store.find(state, ui_state.moving) else nil
 	if lifted ~= nil then
 		-- While a node is lifted (design D2); the lifting click already dropped any Undo notice.
 		local text = "Moving “" .. lifted.title .. "”"
@@ -1183,7 +1183,7 @@ end
 
 -- Configure's settings page, drawn in the graph's canvas in place of the columns (design D6): the
 -- plugin's shortcuts as Tern's keymap has them (`keys`, by command id; D7), the new-objective
--- defaults (D8) and the order (sort-by-priority, design D5). No edges.
+-- defaults (D8) and the sort method (sort-by-priority D5; sort-button D7). No edges.
 function M.build_settings(state: Store.State, keys: { [string]: { string } }): Built
 	local rows: { Node } = { el("div", { class = "ob-sh", key = "h", text = "Shortcuts" }) }
 	for _, c in Keys.COMMANDS do
@@ -1222,10 +1222,10 @@ function M.build_settings(state: Store.State, keys: { [string]: { string } }): B
 	}
 	local order: { Node } = {
 		el("div", { class = "ob-sh", key = "h", text = "Order" }),
-		setting_row("sort", "Sort by priority", {
-			segments("seg", if set.sort_priority then "on" else "off", { { "on", "On" }, { "off", "Off" } }, "setsort"),
+		setting_row("sort", "Sort by", {
+			segments("seg", set.sort, { { "own", "Your order" }, { "priority", "Priority" }, { "created", "Newest first" } }, "setsort"),
 		}),
-		span("ob-line ob-dim ob-snote", "Within one priority, objectives keep your order. Off shows your order as it is.", { key = "note" }),
+		span("ob-line ob-dim ob-snote", "Priority keeps your order within each priority. The Done group follows this choice, and the sort button in the graph's header changes it too.", { key = "note" }),
 	}
 	local head: { Node } = {
 		span("ob-stitle", "Settings", { key = "title" }),

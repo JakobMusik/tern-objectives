@@ -69,12 +69,13 @@ local function valid_session(a: any): boolean
 	return type(a) == "table" and a.agent == "omp" and M.is_chat_file(a.session) and type(a.cwd) == "string"
 end
 
--- Configure's defaults for new objectives (custom-order-and-direct-controls, design D8), and whether
--- open objectives are listed by priority (sort-by-priority, design D1).
+-- Configure's defaults for new objectives (custom-order-and-direct-controls, design D8), and how
+-- open and done objectives are sorted (sort-button, design D1): "own" (the user's order), "priority"
+-- or "created" (newest first).
 export type Settings = {
 	start_priority: number, -- 0..3
 	new_place: string, -- "top" or "bottom"
-	sort_priority: boolean,
+	sort: string,
 }
 
 export type State = {
@@ -98,7 +99,7 @@ local VERSION = 1
 local array = tern.json.array
 
 local function default_settings(): Settings
-	return { start_priority = 3, new_place = "top", sort_priority = true }
+	return { start_priority = 3, new_place = "top", sort = "priority" }
 end
 
 local function default(): State
@@ -209,8 +210,12 @@ local function normalize(raw: any): State
 	s.settings = {
 		start_priority = if type(start) == "number" and start >= 0 and start <= 3 and start % 1 == 0 then start else 3,
 		new_place = if set.new_place == "bottom" then "bottom" else "top",
-		-- Absent before 0.24.0, and On by default (sort-by-priority, design D1).
-		sort_priority = set.sort_priority ~= false,
+		-- Absent before 0.27.0 (sort-button, design D1): 0.24.0–0.26.0 stored `sort_priority`, Off
+		-- meaning the user's order; anything else reads as the default, by priority.
+		sort = if set.sort == "own" or set.sort == "priority" or set.sort == "created"
+			then set.sort
+			elseif set.sort_priority == false then "own"
+			else "priority",
 	}
 	if s.ordered ~= true then
 		migrate_order(s)
@@ -240,9 +245,10 @@ function M.find(s: State, id: string): Objective?
 	return nil
 end
 
--- The open objectives in the order the graph lists them (sort-by-priority, design D2): the list's
--- own order, the user's; with sorting on, by priority first. `held` gives the priority to sort by
--- while badge clicks hold the order (D3); an objective it lacks sorts by its own.
+-- The open objectives in the order the graph lists them (sort-button, design D2): the list's own
+-- order, the user's; by priority first, or by creation time, newest first, with the list's order
+-- breaking ties. `held` gives the priority to sort by while badge clicks hold the order
+-- (sort-by-priority, design D3); an objective it lacks sorts by its own.
 function M.open_in_order(s: State, held: { [string]: number }?): { Objective }
 	local list: { Objective } = {}
 	local index: { [string]: number } = {}
@@ -252,7 +258,8 @@ function M.open_in_order(s: State, held: { [string]: number }?): { Objective }
 			index[o.id] = #list
 		end
 	end
-	if s.settings.sort_priority then
+	local by = s.settings.sort
+	if by == "priority" then
 		local hold = held or {}
 		-- Ties go by list index, so the result doesn't rest on table.sort being stable.
 		table.sort(list, function(a, b)
@@ -262,8 +269,42 @@ function M.open_in_order(s: State, held: { [string]: number }?): { Objective }
 			end
 			return index[a.id] < index[b.id]
 		end)
+	elseif by == "created" then
+		table.sort(list, function(a, b)
+			local ca, cb = a.created or 0, b.created or 0
+			if ca ~= cb then
+				return ca > cb
+			end
+			return index[a.id] < index[b.id]
+		end)
 	end
 	return list
+end
+
+-- Sorts done objectives, in place, as the Done group lists them (sort-button, design D2): the most
+-- recently done first; by priority first, or by creation time, newest first, as the open ones are.
+-- `held` is open_in_order's.
+function M.sort_done(s: State, list: { Objective }, held: { [string]: number }?)
+	local by = s.settings.sort
+	local hold = held or {}
+	table.sort(list, function(a, b)
+		if by == "priority" then
+			local pa, pb = hold[a.id] or a.priority, hold[b.id] or b.priority
+			if pa ~= pb then
+				return pa < pb
+			end
+		elseif by == "created" then
+			local ca, cb = a.created or 0, b.created or 0
+			if ca ~= cb then
+				return ca > cb
+			end
+		end
+		local ta, tb = a.done_at or 0, b.done_at or 0
+		if ta ~= tb then
+			return ta > tb
+		end
+		return a.id < b.id
+	end)
 end
 
 -- A search's words, lowercased (search-and-tab-marks, design D2); nil when the text holds none.

@@ -20,7 +20,7 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
 
 ## 1. Sort methods and the sort button
 
-- [ ] 1.1 The stored method and the orders (design D1, D2, D4, D5, D7):
+- [x] 1.1 The stored method and the orders (design D1, D2, D4, D5, D7):
   - `Settings.sort` in `lib/store.luau`, read by `normalize` with the fallback on `sort_priority`;
   - `Store.open_in_order` by method, and `Store.sort_done`, which replaces the view's `sort_done`;
   - the `setsort` verb with the three methods, and the hold recording done objectives too, in `lib/app.luau`;
@@ -33,7 +33,24 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
   - objectives-graph "Done group order", every scenario, switching the method on the settings page;
   - objectives-graph "Sorting waits for another click", every scenario, "Done badges hold it too" among them. For "Refresh keeps the order", open a tab with the helper and wait 1.2 s for render lines in the log;
   - objectives-graph "Custom order", "Badge clicks don't move a node" and "New objective on top".
-- [ ] 1.2 The header button, grips and look (design D3, D6, D8):
+
+  Result (harness, 2026-11-18, Tern 0.9.21). A fresh serve in `/tmp/tobj/w/demo/guides` rebuilt the README demo with the same ids as before: docs (Guides 3, pane 2; Release notes 5, omp pane 4), web (App build 8, panes 7 and 9; Components 12, pane 11 and `todo.md` pane 20) and api (Server 15, pane 14 and omp pane 16; Benchmarks 19, pane 18). Both plugins loaded with no errors. Unless a check says otherwise, objectives were created on 2026-11-17 at the hours given.
+  - **"Sort method":**
+    - **Priority by default:** with the 0.23.0 store, the page showed "Shortcuts", "New objectives" and "Order", with P3, Top and Priority selected. The note reads "Priority keeps your order within each priority. The Done group follows this choice, and the sort button in the graph's header changes it too." The column read "Review pull requests" (P1), "Fix login bug", "Write slides".
+    - **Turned off before this version:** with the 0.26.0 store holding `sort_priority: false`, the page had Your order selected, and the column was in the stored order.
+    - **Picked and saved:** after a click on Newest first, it was selected, and the kv dump's settings read `{"new_place": "top", "sort": "created", "start_priority": 3}`, with no `sort_priority`.
+    - **Survives a reload:** after Your order and `ctl plugins fixtures`, the page still had Your order selected, and the column showed the stored order.
+  - **"New objective defaults":**
+    - **Start at P1, at the bottom** (Your order): "Write slides" came last with a P1 badge; the kv dump held priority 1 for it and `start_priority` 1, `new_place` "bottom".
+    - **Bottom of its priority:** "Release", "Write slides", "Fix login bug".
+    - **First when sorted newest first:** "Write slides", "Release", "Fix login bug", with "Write slides" stored last. The first try gave "Release" the older time, against the scenario, so "Fix login bug" came second; it was run again with the scenario's data.
+    - **Defaults survive a reload:** P1 and Bottom picked, then `ctl plugins fixtures`: the page still had both selected.
+  - **"Sorted by priority":** "Sorted list" gave "Update dependencies", "Review pull requests", "Fix login bug", "Write slides", with the kv dump still o1–o4. "Link choices sorted too": stepping through the "Link this tab…" picker from App build read the same four in that order, and the right-click menu of App build's node (crop `sb_menu_prio_crop`) lists them under "Link to" in that order. "Your order chosen" gave "Fix login bug", "Review pull requests", "Write slides", "Update dependencies".
+  - **"Sorting newest first":** "Newest on top" gave "Review pull requests", "Write slides", "Fix login bug", the kv dump still o1–o3; the picker and the menu (crop `sb_menu_new_crop`) list them the same way. "Created in the same second" listed "Fix login bug" right before "Write slides", and stored the other way round, "Write slides" before "Fix login bug".
+  - **"Done group order":** with "Set up CI", "Read docs" and "Tidy the backlog" as in the scenario, the open Done group read "Read docs", "Tidy the backlog", "Set up CI" in Your order; "Set up CI", "Read docs", "Tidy the backlog" by priority; and "Tidy the backlog", "Set up CI", "Read docs" newest first.
+  - **"Sorting waits for another click":** "Badge clicks hold the order": "Write slides" stayed third, P2 then P1, and the kv dump held 1. "Another click sorts": "Fix login bug", "Write slides", "Review pull requests". "Other badges hold it too": no node moved and "Review pull requests" read P1; then "Fix login bug", "Review pull requests", "Write slides". "Done badges hold it too": "Read docs" stayed second at P2, P1, then P0; after a click on empty space the Done group read "Read docs", "Set up CI". "Refresh keeps the order": a new tab opened with the helper drew the graph twice in 1.2 s, and "Write slides" stayed third, also after that tab closed. "Fresh open sorts": two ⌃⌘O presses closed and reopened the graph, which listed "Fix login bug", "Write slides", "Review pull requests". A first attempt right after closing the helper's tab needed a third press, since the first left the graph open.
+  - **"Custom order":** "Badge clicks don't move a node" (Your order): "Write slides" stayed third after each of three badge clicks and the click on empty space, read P0, and the kv dump held 0. "New objective on top" (by priority): "Write slides", "Fix login bug", "Review pull requests".
+- [x] 1.2 The header button, grips and look (design D3, D6, D8):
   - the button in `View.build`'s header, after the search control;
   - `Sorting` as `{ by, lifted }` in `objective_node`: no grip newest first;
   - `.ob-sortbtn` in `styles.css`;
@@ -52,6 +69,31 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
   - the header width (design risk): at 460 px wide, a shot of the wrapped header, and "Link lines" "Alignment at two widths": every line end within 2 px of its node and tab header centres at 1400 and 460 px wide, read from the layout JSON;
   - the README paragraphs, read back;
   - render times in the serve log stay within the 20 ms target, with no objectives warnings or errors.
+
+  Result (harness, 2026-11-18, the same serve as 1.1):
+  - **"Sort button":**
+    - **Shown with the current method:** with a 0.26.0 store holding `sort_priority: true`, the header's children read `ob-seg`, `ob-searchbtn`, `ob-sortbtn` "Priority", then the gear and "＋ New objective" (no tags in that store). The tooltip read "Sorted by priority · click to sort newest first".
+    - **Each click moves on:** "Newest" with "Write slides", "Review pull requests", "Fix login bug"; "Your order" with "Fix login bug", "Review pull requests", "Write slides"; "Priority" with "Review pull requests", "Fix login bug", "Write slides". The kv dump then held `sort` "priority".
+    - **Selection kept:** with "Write slides" selected, a click gave Newest: "Write slides" stayed selected, now first, with its action bar and the edge layers `ob-e-all ob-e-dim` and `ob-e-sel`.
+    - **Same method on the settings page:** after clicks up to "Newest", ⚙ showed Newest first selected, and the kv dump held `sort` "created".
+    - **Drag across the sort button:** `ctl down` in the header's empty space, `move` leftwards across the button, `up` below the header: crop `sb_drag_crop` shows no highlight, and nothing changed.
+  - **"Sort method", the button:** it read "Priority" with the 0.23.0 store, "Your order" with the 0.26.0 store whose sorting was off, and "Newest", tooltip "Sorted newest first · click for your order", after Newest first was picked on the page.
+  - **Review mode:** with three done objectives due, review mode listed "Read docs", "Set up CI", "Tidy the backlog". Three clicks on the button read Newest, Your order, Priority, and the list and "Review (3)" stayed the same each time.
+  - **"Moving objectives"** (Your order; "Fix login bug", "Review pull requests", "Write slides", plus done "Set up CI"):
+    - 3 grips, none on the done node, and the grip's tooltip "Move: click, then click where it goes";
+    - "Move to the top": "Write slides", "Fix login bug", "Review pull requests", nothing lifted, the same kv order;
+    - "Move below": "Fix login bug", "Review pull requests", "Write slides";
+    - "Insertion line": with the pointer on the lower half of "Fix login bug", crop `sb_insert_crop` shows "Write slides" lifted and an accent line along the bottom of "Fix login bug" only; the header read `Moving “Write slides” · Cancel`;
+    - "Cancelled move": nothing lifted, no notice, kv objectives unchanged;
+    - "Moving under a tag filter": with "#api" on, the column held "Fix login bug" and "Write slides"; after the move and clearing the filter, "Write slides", "Fix login bug", "Review pull requests";
+    - "No grip on done objectives": 0 grips in done nodes;
+    - "Switching the sort ends a move": with "Write slides" lifted, the first click read Priority with nothing lifted, no notice and the same kv order; the second read Newest.
+  - **"No grips":** newest first, `ctl tree` held 0 `.ob-grip`. Crop `sb_newest_crop` shows each open node starting with its box, as done nodes do.
+  - **"Moving while sorted":** tooltips "Move within P1: …" and "Move within P3: …". With "Write slides" lifted, the drop zones were 0 in "Release" and 2 in each other P3. "Move within a priority" gave "Release", "Write slides", "Fix login bug", "Review pull requests", stored that way. "Another priority takes no drop": with the pointer on the lower half of "Release", 0 drop zones there, and crop `sb_nodrop_crop` shows no line. The click ended the move and selected "Release", with the kv objectives unchanged.
+  - **Icon:** `swap` drew two horizontal arrows, ⇄, which read as "switch" (crop `sb_drag_crop`). A rule in `styles.css` turns the button's `svg` 90°. The layout JSON reads that matrix on `svg.ico`, and crop `sb_icon_light_crop` shows ⇅ before "Newest". In dark (crop `sb_icon_dark_crop`), the icon, label and border follow the quiet button's colours, like the search button beside it. The design's D3, D8 and risks now say so; `list` wasn't needed.
+  - **Header width and line ends:** with the demo store, at `ctl resize 1400 900` (graph 1200 px) the header stayed one row, 22.5 px tall. At `ctl resize 460 900` (graph 379.5 px), it wrapped into three rows, 83.5 px: scope, Search and the sort button; the tag chips, "Review (2)" and ⚙; then "＋ New objective" (crop `sb_narrow_head`). Pixels 3 px inside the gap column's edges placed all 7 left and 6 right line ends within 0.55 px of their objective node and tab header centres at both widths.
+  - **README:** read back. "Organize" names the sort button and its three methods. The order paragraph explains the button and its cycle, the Done group under each method, badge clicks, where new objectives go, and that newest first has no grips. The Configure "Order" bullet names "Sort by" with its three choices, and the Configure command row says it covers sorting. "Finish cleanly" reads "last of its priority, sorted by priority".
+  - **Log:** 141 renders since the serve started, the longest 11.9 ms, and no objectives warnings or errors.
 
 ## 2. The README screenshots
 

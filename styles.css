@@ -107,6 +107,18 @@
 	justify-content: center;
 	padding: 3px 7px;
 }
+/* The header's sort button (sort-button, design D3, D8): an icon and the sort method's name, in the
+   quiet button's chrome. Tern's set has no sort arrows, so its `swap` arrows are turned upright. */
+[data-surface='plugin.tern.canvas'] .ob-root .ob-sortbtn {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	gap: 5px;
+	padding: 3px 9px 3px 7px;
+}
+[data-surface='plugin.tern.canvas'] .ob-root .ob-sortbtn svg {
+	transform: rotate(90deg);
+}
 [data-surface='plugin.tern.canvas'] .ob-root .ob-searchchip {
 	display: flex;
 	flex-direction: row;
