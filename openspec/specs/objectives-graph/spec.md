@@ -349,7 +349,7 @@ When an objective is marked done in the graph and has tabs "Close n tabs" would 
 - **THEN** the header reads "Marked done “<title>” · Undo", with no close button
 
 ### Requirement: Done objectives' closed tabs
-A closed tab that only done objectives link SHALL NOT show in the right column, except while one of those objectives is selected or is listed in review mode.
+A closed tab that only done objectives link SHALL NOT show in the right column, except while one of those objectives is selected or is listed in review mode, or while the tab itself is selected.
 
 #### Scenario: Out of the way
 - **WHEN** done objective X's tab A is closed, no other objective links A, and nothing is selected
@@ -362,6 +362,10 @@ A closed tab that only done objectives link SHALL NOT show in the right column, 
 #### Scenario: Also linked to an open objective
 - **WHEN** a closed tab is linked to done objective X and to open objective Y, and nothing is selected
 - **THEN** it shows under "Closed tabs"
+
+#### Scenario: Kept while selected
+- **WHEN** X is selected, and the user clicks A's label, then X beside its title, then empty graph space
+- **THEN** after the first click X and A are both selected; after the second, X is not selected and A still shows under "Closed tabs", drawn selected; after the third, the right column has no node for A
 
 ### Requirement: Linked tabs section
 While an objective is selected, the right column SHALL start with a section headed `Linked to “<title>”`: the shown tabs linked to it. When other tabs are shown, the "Other tabs" divider and those tabs SHALL follow, each part ordered as "Tab column" says. Linking or unlinking a tab SHALL move it across the divider at once. Deselecting SHALL restore the normal order. With no linked tab shown, neither heading nor divider SHALL show.
@@ -747,7 +751,7 @@ Clicking a done objective's box, in the Done group or in review mode, SHALL sele
 - **THEN** the left column shows the open objectives, the reopened one last and selected, and the header shows no Review button
 
 ### Requirement: Selection on a fresh open
-Each fresh open of the graph SHALL start with no objective selected, whatever was selected when it last closed, and with no search. Review mode, the scope and tag filters, the Done group's fold and open pane rows SHALL stay as they were. Showing the graph again after one of its pickers or fields SHALL keep the selection and the search, and ⌥N SHALL still select the objective it creates.
+Each fresh open of the graph SHALL start with no objective or tab selected, whatever was selected when it last closed, and with no search. Review mode, the scope and tag filters, the Done group's fold and open pane rows SHALL stay as they were. Showing the graph again after one of its pickers or fields SHALL keep the selection and the search, and ⌥N SHALL still select the objective it creates.
 
 #### Scenario: Closed and opened again
 - **WHEN** the user selects "Fix login bug", closes the graph with ⌃⌘O and opens it again with ⌃⌘O
@@ -769,8 +773,16 @@ Each fresh open of the graph SHALL start with no objective selected, whatever wa
 - **WHEN** the "#api" filter and a search for "login" are on, and the user closes the graph with ⌃⌘O and opens it again
 - **THEN** the "#api" chip is drawn active, every objective tagged "api" is listed, and the header shows the Search button
 
+#### Scenario: Selected tab cleared
+- **WHEN** tab "Server" is selected, and the user closes the graph with ⌃⌘O and opens it again with ⌃⌘O
+- **THEN** no tab node is drawn selected
+
+#### Scenario: Selected tab kept after a field
+- **WHEN** tab "Server" is selected, and the user clicks Search, clicks into the field, types "login" and presses Enter
+- **THEN** the graph shown again lists the matching objectives, and "Server" is drawn selected
+
 ### Requirement: Origin tab's links
-While no objective is selected, outside review mode, the lines joining the origin pane's tab to shown open objectives SHALL be drawn as a selected objective's lines are, over the others, and every other line SHALL fade as for a selection. Those objectives SHALL show an accent border on an accent tint, with no selection ring and no action bar, and no tab node SHALL show a link bar. Selecting an objective SHALL replace this until the selection clears. With no such line, no line SHALL fade.
+While no objective is selected, outside review mode, the lines joining the origin pane's tab to shown open objectives SHALL be drawn as a selected objective's lines are, over the others, and every other line SHALL fade as for a selection. Those objectives SHALL show an accent border on an accent tint, with no selection ring and no action bar, and no tab node SHALL show a link bar. Selecting an objective or a tab SHALL replace this until it clears. With no such line, no line SHALL fade.
 
 #### Scenario: Opened from a linked tab
 - **WHEN** open objectives "Fix login bug" and "Speed up search" link tab "Server", "Fix login bug" also links "Benchmarks", "Write slides" links only "Guides", and the user opens the graph from a pane in "Server"
@@ -807,6 +819,10 @@ While no objective is selected, outside review mode, the lines joining the origi
 #### Scenario: Node size unchanged
 - **WHEN** the graph is opened from "Server" and a screenshot's layout data is read
 - **THEN** the tinted nodes with one-line titles are 48 px tall, as the others
+
+#### Scenario: Selecting a tab takes over
+- **WHEN** the graph was opened from "Server" and the user selects tab "Guides"
+- **THEN** only the line from "Write slides" to "Guides" is thick, "Write slides" is tinted, and neither "Fix login bug" nor "Speed up search" is tinted
 
 ### Requirement: Closing a tab from its node
 While the pointer is over a live tab node, it SHALL show a trash icon at the right end of its header's first line, taking clicks over at least 22 × 18 px. Closed and other-window tab nodes SHALL show none. Clicking it SHALL ask in place: that line turns into "Close tab?" with Cancel and, at the icon's place, Close. Close SHALL save the omp chats, then close every pane of the tab, as "Close n tabs" does, closing nothing if they can't be saved, and change no links.
@@ -1096,3 +1112,77 @@ Sorted by priority, open objectives SHALL be listed P0 first and P3 last, in the
 #### Scenario: Your order chosen
 - **WHEN** the objectives are as in "Sorted list", and the user picks Your order on the settings page and goes back to the graph
 - **THEN** the left column reads "Fix login bug", "Review pull requests", "Write slides", "Update dependencies"
+
+### Requirement: Selecting a tab
+Clicking a tab node's header, anywhere but its trash icon and Resume button, or a closed or other-window tab's pane row, SHALL select the tab, drawn with the accent border and ring of a selected objective. One objective and one tab SHALL be selectable together: selecting either SHALL keep the other. Clicking the selected tab's header again SHALL clear only the tab, and empty graph space SHALL clear both. A tab the right column stops showing SHALL be deselected.
+
+#### Scenario: Select and clear
+- **WHEN** nothing is selected, and the user clicks the label of tab "Benchmarks" and then clicks empty graph space
+- **THEN** after the first click the graph is still shown, focus is unchanged, a screenshot shows "Benchmarks" with the accent border and ring, and no tab node shows a link bar; after the second, "Benchmarks" is drawn as before
+
+#### Scenario: Clicking it again
+- **WHEN** "Benchmarks" is selected and the user clicks its header's dimmed second line
+- **THEN** no tab node is drawn selected
+
+#### Scenario: Kept with a selected objective
+- **WHEN** "Fix login bug", which links "Server" and "Benchmarks", is selected, and the user clicks the label of "Server"
+- **THEN** "Server" is drawn selected where it was, "Fix login bug" is still selected with its action bar, the right column still starts with `Linked to “Fix login bug”`, and every tab node still shows its link bar
+
+#### Scenario: Clicking it again keeps the objective
+- **WHEN** "Fix login bug" and "Server" are selected, and the user clicks the label of "Server" again
+- **THEN** "Server" is not drawn selected, and "Fix login bug" is still selected with its action bar and the `Linked to` section
+
+#### Scenario: Objective selected with a tab
+- **WHEN** "Server" is selected and the user clicks "Write slides" beside its title
+- **THEN** "Write slides" is selected with its action bar, and "Server" is still drawn selected
+
+#### Scenario: Another tab
+- **WHEN** "Server" is selected and the user clicks the label of "Benchmarks"
+- **THEN** only "Benchmarks" is drawn selected
+
+#### Scenario: Empty space clears both
+- **WHEN** "Fix login bug" and "Server" are selected, and the user clicks empty graph space
+- **THEN** neither is drawn selected, and no action bar or link bar shows
+
+#### Scenario: Live pane row doesn't select
+- **WHEN** nothing is selected and the user clicks the name of a pane row in "Server"
+- **THEN** the row's details open, and no tab node is drawn selected
+
+#### Scenario: Trash icon doesn't select
+- **WHEN** nothing is selected and the user clicks the trash icon on "Server"
+- **THEN** its header asks "Close tab?", and no tab node is drawn selected
+
+#### Scenario: Hidden by the scope
+- **WHEN** tab "App build" of session "web" is selected, the current session is "api", and the user clicks "This session" and then "All"
+- **THEN** after the first click no node for "App build" shows; after the second, "App build" is listed and not drawn selected
+
+### Requirement: Selected tab's links
+While a tab is selected, its lines to listed objectives SHALL be drawn thick over the others, as a selected objective's are, and every other line SHALL fade but a selected objective's own. This SHALL cover open objectives, done ones in the open Done group and those review mode lists, done ones in green; their other links SHALL get no line. Those objectives, but a selected one, SHALL show the accent border on the accent tint. No node SHALL move. With no thick line, no line SHALL fade.
+
+#### Scenario: Open objectives
+- **WHEN** open objectives "Fix login bug" and "Speed up search" link tab "Server", "Fix login bug" also links "Benchmarks", "Write slides" links only "Guides", the graph was opened from "Guides", and the user selects "Server"
+- **THEN** a screenshot shows thick lines from "Fix login bug" and "Speed up search" to "Server", drawn over the faded lines they cross, every other line faded, those two nodes with an accent border on a tint and no action bar, "Write slides" not tinted, and every objective node where it was before the click
+
+#### Scenario: With a selected objective
+- **WHEN** open "Fix login bug" links "Server" and "Benchmarks", "Speed up search" links "Server", "Write slides" links only "Guides", "Fix login bug" is selected, and the user selects "Server"
+- **THEN** thick lines join "Fix login bug" to "Server" and "Benchmarks", and "Speed up search" to "Server"; the line from "Write slides" is faded; "Speed up search" is tinted; and "Fix login bug" keeps its ring and action bar, with no tint
+
+#### Scenario: Done objective in the open Done group
+- **WHEN** done objective "Set up CI" links "Server" and "Benchmarks", the Done group is open, and the user selects "Server"
+- **THEN** a thick green line joins "Set up CI" to "Server", ending within 2 pixels of both vertical centres, "Set up CI" is tinted, and no line joins it to "Benchmarks"
+
+#### Scenario: Done group folded
+- **WHEN** the Done group is folded and the user selects "Server"
+- **THEN** no green line shows
+
+#### Scenario: Review mode
+- **WHEN** review mode lists done objectives "Set up CI" and "Restyle the docs site", only "Set up CI" links "Server", and the user selects "Server"
+- **THEN** a thick green line joins "Set up CI" to "Server", ending within 2 pixels of both vertical centres, "Set up CI" is tinted, and no line joins "Restyle the docs site"
+
+#### Scenario: Tab no objective links
+- **WHEN** the user selects a tab no listed objective links
+- **THEN** every line is drawn at full strength and normal width, and no node is tinted
+
+#### Scenario: Line ends at two widths
+- **WHEN** "Server" is selected and the graph is captured at 1400 and 460 pixels wide
+- **THEN** in both captures, each line's ends sit within 2 pixels of the vertical centres of its objective node and tab header

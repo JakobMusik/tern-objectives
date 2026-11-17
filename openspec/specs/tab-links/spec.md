@@ -13,7 +13,7 @@ An objective SHALL be linkable to any number of tabs, and a tab to any number of
 - **THEN** both objectives list that tab, and the graph draws two lines into its node
 
 ### Requirement: Linking from the graph
-While an objective is selected, open or done, every tab node SHALL show a full-width link bar at its foot: "＋ Link" when the tab is not linked to the selected objective, "× Unlink" when it is. Clicking the bar SHALL add or remove that one link, SHALL keep the selection, and SHALL NOT jump to the tab. The bar's text SHALL NOT be selectable, so a press that drifts a little before release still counts as a click.
+While an objective is selected, open or done, every tab node SHALL show a link bar on the right half of the row at its foot, beside a live tab's "Go to tab" button: "＋ Link" when the tab is not linked to the selected objective, "× Unlink" when it is. Clicking the bar SHALL add or remove that one link, SHALL keep the selection, and SHALL NOT jump to the tab. The bar's text SHALL NOT be selectable, so a press that drifts a little before release still counts as a click.
 
 #### Scenario: Add then remove a link
 - **WHEN** the user selects an objective, clicks "＋ Link" on a tab node, then clicks "× Unlink" on the same node
@@ -22,6 +22,10 @@ While an objective is selected, open or done, every tab node SHALL show a full-w
 #### Scenario: Press that drifts across the bar
 - **WHEN** the user presses on "＋ Link", moves the pointer 40 px along the bar and releases
 - **THEN** no text is selected and `kv.json` shows the link
+
+#### Scenario: Beside the Go button
+- **WHEN** an objective is selected and a screenshot's layout data is read
+- **THEN** each live tab node's foot row holds "Go to tab" on its left half and the link bar on its right half, and a closed tab node's link bar keeps the right half
 
 ### Requirement: Link this tab command
 "Objectives: Link this tab…" SHALL open a picker of open objectives in graph order, with a check on those already linked to the focused pane's tab. Choosing an objective SHALL toggle its link to that tab. With no open objectives it SHALL show an info toast and change nothing.
@@ -134,7 +138,7 @@ A done objective's links SHALL change the same way as an open objective's: throu
 - **THEN** the kv dump shows X open and linked to A and B, and B shows under "Closed tabs" with a dashed line to X
 
 ### Requirement: Link button on objective nodes
-While the right column shows the origin pane's tab, every objective node, open or done, in review mode too, SHALL show a link button at the right end of its first line, before a done node's trash icon. On a node not linked to that tab, the button SHALL show only while the pointer is over the node; on a linked one, it SHALL always show, highlighted. Its tooltip SHALL name the tab. Without that tab, or while an objective is lifted, no node SHALL show it.
+While a tab is selected, or else while the right column shows the origin pane's tab, every objective node, open or done, in review mode too, SHALL show a link button at the right end of its first line, before a done node's trash icon. On a node not linked to that tab, the button SHALL show only while the pointer is over the node; on a linked one, it SHALL always show, highlighted. Its tooltip SHALL name the tab. Without either tab, or while an objective is lifted, no node SHALL show it.
 
 #### Scenario: Shown while pointing
 - **WHEN** the graph is opened from a pane in tab "Guides" and the pointer rests on open objective "Speed up search", which doesn't link Guides
@@ -156,8 +160,12 @@ While the right column shows the origin pane's tab, every objective node, open o
 - **WHEN** "Speed up search" is lifted by its grip and the pointer rests on "Read about rate limiting"
 - **THEN** no node shows a link button, "Read about rate limiting" included
 
+#### Scenario: Selected tab's buttons
+- **WHEN** the graph is opened from Guides, the user selects tab "Server", which "Fix login bug" links, and the pointer rests on "Speed up search", which doesn't link Server
+- **THEN** a shot shows a highlighted link button on "Fix login bug" with the tooltip `Unlink from “Server”`, a link button on "Speed up search" with the tooltip `Link to “Server”`, and no highlighted button on "Read about rate limiting", which links only Guides
+
 ### Requirement: Link button clicks
-A click on an objective node's link button SHALL link that objective to the origin pane's tab, or unlink them when they are linked, as that tab's link bar would. It SHALL NOT select the node, change the selection or jump, and the graph SHALL stay shown. Like any other click in the graph, it SHALL end a question asked in place and the Undo notice.
+A click on an objective node's link button SHALL link that objective to the button's tab, the selected tab or else the origin pane's tab, or unlink them when they are linked, as that tab's link bar would. It SHALL NOT select the node, change the selection or jump, and the graph SHALL stay shown. Like any other click in the graph, it SHALL end a question asked in place and the Undo notice.
 
 #### Scenario: Link from the node
 - **WHEN** nothing is selected, the graph was opened from Guides, and the user clicks the link button on "Speed up search"
@@ -182,3 +190,11 @@ A click on an objective node's link button SHALL link that objective to the orig
 #### Scenario: Ends the Undo notice
 - **WHEN** the "Marked done" notice shows with its Undo, and the user clicks a link button
 - **THEN** the notice is gone, and the kv dump shows the link
+
+#### Scenario: Link to the selected tab
+- **WHEN** the graph was opened from Guides, tab "Server" is selected, and the user clicks the link button on "Speed up search"
+- **THEN** the kv dump shows "Speed up search" linked to Server and still not to Guides, "Server" is still selected, and "Speed up search" is tinted with a thick line to "Server"
+
+#### Scenario: Selected closed tab
+- **WHEN** closed linked tab A is selected and the user clicks the link button on "Write slides"
+- **THEN** the kv dump shows "Write slides" linked to A, and a thick dashed line joins them

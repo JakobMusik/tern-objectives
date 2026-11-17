@@ -5,21 +5,6 @@ Lets a closed tab's omp chats come back from the graph: the plugin saves each ch
 
 ## Requirements
 
-### Requirement: Resume button
-A closed tab node SHALL show a "Resume" button on its header when at least one of its pane rows has a saved omp chat whose file still exists, and none otherwise. Tabs held by another window SHALL NOT show it. Its hit area SHALL be at least 28 × 22 px, and dragging across it SHALL NOT select its text. Clicking the rest of the header SHALL still only say the tab is closed.
-
-#### Scenario: Button on a closed chat tab
-- **WHEN** a linked tab holding an omp chat with a saved chat file, and a linked tab holding only a shell, are both closed
-- **THEN** the first closed tab's header shows "Resume" and the second's doesn't
-
-#### Scenario: Header click still toasts
-- **WHEN** the user clicks the closed tab's label, beside its Resume button
-- **THEN** focus is unchanged and a toast says the tab is closed
-
-#### Scenario: Chat file gone
-- **WHEN** a closed tab's only saved omp chat file is moved away, and the graph draws again
-- **THEN** that tab's header shows no "Resume"
-
 ### Requirement: Resuming a closed tab
 Clicking "Resume" SHALL close the graph, open a new tab in the first saved chat's folder, in the session "Where a chat resumes" names, and run `omp --resume <file>` there. Each further saved chat of that tab SHALL run the same way in a split to the right, in row order. Every objective linking the closed tab SHALL then link the new tab instead, and the closed tab's snapshot SHALL be removed. Panes without a saved chat SHALL NOT be recreated.
 
@@ -97,3 +82,18 @@ A saved omp chat SHALL be removed once its pane is neither live in the window no
 #### Scenario: Unlinked with its tab
 - **WHEN** a tab holding an omp chat with a saved chat file, linked only to open objective Y, is closed, and the user selects Y and clicks "× Unlink" on the closed tab
 - **THEN** once the graph has redrawn, the kv dump holds neither the tab's snapshot nor the pane's saved chat
+
+### Requirement: Resume button on a closed tab
+A closed tab node SHALL show a "Resume" button on its header when at least one of its pane rows has a saved omp chat whose file still exists, and none otherwise. Tabs held by another window SHALL NOT show it. Its hit area SHALL be at least 28 × 22 px, and dragging across it SHALL NOT select its text. Clicking the rest of the header SHALL select the tab, with no toast.
+
+#### Scenario: Button on a closed chat tab
+- **WHEN** a linked tab holding an omp chat with a saved chat file, and a linked tab holding only a shell, are both closed
+- **THEN** the first closed tab's header shows "Resume" and the second's doesn't
+
+#### Scenario: Header click selects
+- **WHEN** the user clicks the closed tab's label, beside its Resume button
+- **THEN** focus is unchanged, no toast shows, no new tab opens, and the closed tab is drawn selected with its "Resume" still showing
+
+#### Scenario: Chat file gone
+- **WHEN** a closed tab's only saved omp chat file is moved away, and the graph draws again
+- **THEN** that tab's header shows no "Resume"
