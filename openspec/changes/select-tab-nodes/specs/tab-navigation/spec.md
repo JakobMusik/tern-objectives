@@ -1,20 +1,20 @@
 ## ADDED Requirements
 
-### Requirement: Tab jump arrow
-Each live tab node's header SHALL end its second line in a jump button: an arrow icon with the tooltip "Go to this tab", taking clicks over at least 28 × 18 px, its right edge within 1 px of the right edges of the tab's pane rows' jump buttons. Closed and other-window tab nodes SHALL show none. Clicking it SHALL NOT select the tab.
+### Requirement: Tab jump button
+Each live tab node SHALL end in a row under its pane rows whose left half is a "Go to tab" button: an arrow icon and the words "Go to tab", with the tooltip "Go to this tab", taking clicks over that whole half and at least 22 px of height. The row SHALL show at all times, whatever is selected. Closed and other-window tab nodes SHALL show no such button. Clicking it SHALL NOT select the tab.
 
-#### Scenario: Lined up with the rows
-- **WHEN** a live tab with two panes is shown and a screenshot's layout data is read
-- **THEN** its header's second line ends in an arrow at least 28 × 18 px, with the tooltip "Go to this tab", whose right edge is within 1 px of both pane rows' jump buttons' right edges
+#### Scenario: At the foot, on the left
+- **WHEN** nothing is selected, a live tab with two panes is shown, and a screenshot's layout data is read
+- **THEN** the node ends, below both pane rows, in a "Go to tab" button at least 22 px tall, with the tooltip "Go to this tab", spanning the left half of the node's width within 4 px, and its header shows no arrow
 
-#### Scenario: No arrow on ghosts
+#### Scenario: No button on ghosts
 - **WHEN** a closed linked tab and another window's linked tab are shown
-- **THEN** neither node's header shows an arrow
+- **THEN** neither node shows a "Go to tab" button
 
 ## MODIFIED Requirements
 
 ### Requirement: Jump to a tab
-Clicking a live tab node's jump arrow SHALL:
+Clicking a live tab node's "Go to tab" button SHALL:
 - switch to that tab's session if it isn't shown;
 - show the tab;
 - focus the pane that was last focused in it.
@@ -22,7 +22,7 @@ Clicking a live tab node's jump arrow SHALL:
 The rest of its header, its trash icon, and the header while it asks "Close tab?", SHALL NOT jump.
 
 #### Scenario: Tab in another session
-- **WHEN** session "misc" is shown and the user clicks the jump arrow on tab 2 of session "web"
+- **WHEN** session "misc" is shown and the user clicks "Go to tab" on tab 2 of session "web"
 - **THEN** session "web" is shown, tab 2 is the visible tab, and its last focused pane has focus
 
 #### Scenario: Trash icon doesn't jump

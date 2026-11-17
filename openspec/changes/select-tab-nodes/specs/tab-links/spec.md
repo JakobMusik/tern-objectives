@@ -1,5 +1,20 @@
 ## MODIFIED Requirements
 
+### Requirement: Linking from the graph
+While an objective is selected, open or done, every tab node SHALL show a link bar on the right half of the row at its foot, beside a live tab's "Go to tab" button: "＋ Link" when the tab is not linked to the selected objective, "× Unlink" when it is. Clicking the bar SHALL add or remove that one link, SHALL keep the selection, and SHALL NOT jump to the tab. The bar's text SHALL NOT be selectable, so a press that drifts a little before release still counts as a click.
+
+#### Scenario: Add then remove a link
+- **WHEN** the user selects an objective, clicks "＋ Link" on a tab node, then clicks "× Unlink" on the same node
+- **THEN** `kv.json` shows the link after the first click and not after the second, and the graph stays shown with the objective still selected
+
+#### Scenario: Press that drifts across the bar
+- **WHEN** the user presses on "＋ Link", moves the pointer 40 px along the bar and releases
+- **THEN** no text is selected and `kv.json` shows the link
+
+#### Scenario: Beside the Go button
+- **WHEN** an objective is selected and a screenshot's layout data is read
+- **THEN** each live tab node's foot row holds "Go to tab" on its left half and the link bar on its right half, and a closed tab node's link bar keeps the right half
+
 ### Requirement: Link button on objective nodes
 While a tab is selected, or else while the right column shows the origin pane's tab, every objective node, open or done, in review mode too, SHALL show a link button at the right end of its first line, before a done node's trash icon. On a node not linked to that tab, the button SHALL show only while the pointer is over the node; on a linked one, it SHALL always show, highlighted. Its tooltip SHALL name the tab. Without either tab, or while an objective is lifted, no node SHALL show it.
 

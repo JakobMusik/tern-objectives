@@ -74,11 +74,17 @@ The open objectives' edges are added as today, `strong` when they belong to the 
 ### D6. The tab node
 `tab_node` takes `chosen: boolean`:
 - **Selected class:** `ob-tsel` when chosen.
-- **Header click:** `tsel=<id>`, or `cfx=` while it asks, as today. The trash icon (`tclose`), Resume (`resume`) and the arrow keep their own clicks.
+- **Header click:** `tsel=<id>`, or `cfx=` while it asks, as today. The trash icon (`tclose`) and Resume (`resume`) keep their own clicks.
 - **Ghost rows:** a closed or other-window row's click becomes `tsel=<id>`. Live rows keep `exp=` and their jump buttons.
-- **Jump arrow:** on a live tab, the header's second line ends in `span.ob-jump.ob-tjump`, key `jump`, title "Go to this tab", click `tab=<id>`, holding the `arrow-right` icon. It comes after the mark chip and the "where" line.
+- **Foot row** (0.28.2): `div.ob-tfoot`, key `foot`, after the rows and their details, on every live tab, and on a ghost while it has a link bar. It holds two cells:
+  - left: on a live tab, `span.ob-tgo`, key `go`, title "Go to this tab", click `tab=<id>`, holding the `arrow-right` icon and `span.ob-tgo-l` "Go to tab"; on a ghost, an empty `span.ob-tcell`;
+  - right: the link bar while an objective is selected, else an empty `span.ob-tcell`.
 
-`jump_tab` stays as it is. Its toasts now come only from a stale click: a tab that closed between the draw and the click on its arrow.
+  Two cells every time keep the Go button on the left half and the bar on the right half, whichever of them shows. `Layout.add_tab`'s last argument becomes `foot`, true when the row shows, and adds `link_h`, as the bar did.
+
+*Why at the foot (0.28.2):* 0.28.0 and 0.28.1 ended the header's second line in a 28 × 18 px arrow. With 0.28.1 installed, the user found it too small and asked for it at the foot, left of the link bar, which had taken the full width. The user chose to show the row always: the Go button stays where the hand expects it, at the cost of 26 px per live tab.
+
+`jump_tab` stays as it is. Its toasts now come only from a stale click: a tab that closed between the draw and the click on its Go button.
 
 ### D7. Style
 - **`.ob-tab.ob-tsel`:** `border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent)`, the selected objective's ring.
@@ -87,14 +93,20 @@ The open objectives' edges are added as today, `strong` when they belong to the 
   - Origin and a mark together: `0 0 0 1px var(--accent), inset 0 0 0 1.5px var(--accent), inset 0 0 0 3px var(--warn)` (or `--ok`).
   - The rules come after the origin and attention rules, so they win.
 - **The unlinked tab's look stays:** an unlinked selected tab keeps its dashed border and grey fill under the ring.
-- **`.ob-tjump`:** `margin-left: auto`, so it sits at the line's right end. Its line, `.ob-tl2`, clips what overflows it, so the arrow can't reach into the header's padding by a margin of its own. Instead, a live tab's line carries `ob-tl2-jump`, with `margin-right: -8px`, and the arrow's right edge meets the node's inner edge, where the pane rows' jump buttons end. From `.ob-jump` it takes the 28 px width, the hover tint and `align-self: stretch`, which gives it the line's 18 px height. The header keeps its 38 px.
+- **The foot row:**
+  - `.ob-tfoot` is a flex row with `gap: 6px` and `margin: 0 6px`, the margin the full-width bar had; its cells are `flex: 1 1 0; min-width: 0`;
+  - the layout sheet sizes the row and its cells from `link_h`, in place of the bar's rule;
+  - `.ob-tgo` is a centred flex row, `gap: 5px`, with a 6 px radius, weight 600, `--t2` text in a 1 px `--l2` ring, and no text selection. On hover it takes the accent colour and tint, as the pane rows' jump buttons do;
+  - the link bar keeps its look, without its own margin;
+  - on a ghost, the row is a child of the node like the bar was, so it fades with it;
+  - `.ob-tl2-jump` and `.ob-tjump`, the 0.28.0 arrow's rules, go.
 
 *Alternative:* an inset ring like the origin's. Rejected: the origin's tab is often the one selected, and two inset accent rings read as one.
 
 ## Risks / Trade-offs
 
-- **Habit:** a click on a tab header no longer leaves the graph. → The user asked for it. The arrow sits on the header, and the pane rows keep their arrows. The README says so.
-- **Smaller jump target:** the header was about 38 px tall; the arrow is 28 × 18 px. → At least the grip's and link button's size. The harness measures it.
+- **Habit:** a click on a tab header no longer leaves the graph. → The user asked for it. "Go to tab" sits at the foot of every live tab, and the pane rows keep their arrows. The README says so.
+- **Taller tab nodes:** the foot row adds 26 px to every live tab, so the right column is longer and the graph scrolls sooner. → The user chose this. The lines are drawn from the same layout table, and the harness checks their ends at 1400 and 460 px.
 - **The ring at the lines' ends:** the outer 1 px ring covers the last pixel of a line's stub at the tab's left edge, as a selected objective's ring does at its right edge. → The line-end checks measure the centres, at 1400 and 460 px.
 - **Hidden objectives:** objectives the filters, the search or a folded Done group hide don't show as linked. → As the origin highlight does today. The tab's lines still show which shown objectives link it.
 - **Moving the right column's lists earlier** could change what `sel_obj` and `kept_closed` hold. → D2 computes them from the same lists `add_node` walks. The harness checks the `Linked to` section and the closed-tab rules again.

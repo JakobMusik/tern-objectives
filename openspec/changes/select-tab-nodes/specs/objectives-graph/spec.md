@@ -1,7 +1,7 @@
 ## ADDED Requirements
 
 ### Requirement: Selecting a tab
-Clicking a tab node's header, anywhere but its trash icon, Resume button and jump arrow, or a closed or other-window tab's pane row, SHALL select the tab, drawn with the accent border and ring of a selected objective. One objective and one tab SHALL be selectable together: selecting either SHALL keep the other. Clicking the selected tab's header again SHALL clear only the tab, and empty graph space SHALL clear both. A tab the right column stops showing SHALL be deselected.
+Clicking a tab node's header, anywhere but its trash icon and Resume button, or a closed or other-window tab's pane row, SHALL select the tab, drawn with the accent border and ring of a selected objective. One objective and one tab SHALL be selectable together: selecting either SHALL keep the other. Clicking the selected tab's header again SHALL clear only the tab, and empty graph space SHALL clear both. A tab the right column stops showing SHALL be deselected.
 
 #### Scenario: Select and clear
 - **WHEN** nothing is selected, and the user clicks the label of tab "Benchmarks" and then clicks empty graph space

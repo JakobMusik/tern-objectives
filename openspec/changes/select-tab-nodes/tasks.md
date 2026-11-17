@@ -262,14 +262,69 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
   Verify `tern plugin list` shows `objectives 0.28.1 … ready`, with the other plugins untouched.
 
   Result: `installed objectives 0.28.1 → ~/Library/Application Support/Tern/plugins/objectives`. `tern plugin list` shows `objectives 0.28.1 … window ready`, and the other plugins ready as before: `external-editor 0.1.0`, `omp-narration 0.1.0`, `open-below 0.2.0`, `reply-selection 0.1.0` and `tabnav 0.1.0`. The tag `v0.28.1` (`24d7a27`) is signed and on GitHub.
-- [ ] 5.3 **(live)** With the user:
+- [x] 5.3 **(live)** With the user:
   - select an objective, then click one of its tabs under `Linked to`: the objective stays selected, the tab stays where it is with the selection ring, and the lines from the other objectives linked to that tab turn thick, those objectives tinted;
   - clicking that tab again clears only the tab; a click on empty space clears both;
   - the arrow still goes to the tab, and the link icons still link the selected tab.
 
   Record the result here.
 
+  Result (user, 0.28.1): no report on these three checks. The user replied with a further request: "also, the buttons for entering the tab is too small, change it to the bottom of the node block where the 'unlink' button is, and make it on the left, and the 'unlink' on the right." The three checks carry over to 8.3, on 0.28.2.
+
+  The user then chose, on 2026-11-18:
+  - **Go button:** the bottom row with "Go to tab" shows on every live tab, always, so each node grows by the row's height.
+  - **Release:** 0.28.2, with both README screenshots taken again.
+
+  Groups 6 to 8 do this.
+
+## 6. "Go to tab" at the node's foot
+
+- [ ] 6.1 The foot row (design D6, D7):
+  - in `tab_node`, the header loses its arrow, and the node ends in `div.ob-tfoot`;
+  - on the left, a live tab's "Go to tab" button (`span.ob-tgo`, the `arrow-right` icon and "Go to tab", tooltip "Go to this tab", click `tab=<id>`);
+  - on the right, the link bar while an objective is selected;
+  - each half is a cell, empty when it has nothing;
+  - `Layout.add_tab` counts the row for every live tab, and for a ghost while it has a link bar, and the layout sheet sizes `.ob-tfoot` and its cells from `link_h`;
+  - `.ob-tfoot`, `.ob-tgo` and the link bar's new margins in `styles.css`; `.ob-tl2-jump` and `.ob-tjump` go;
+  - README: the intro line and the "Jump anywhere" bullet name "Go to tab".
+
+  Verify:
+  - tab-navigation "Tab jump button", both scenarios, from the shot's layout JSON;
+  - tab-navigation "Jump to a tab", every scenario, from session "misc";
+  - tab-links "Linking from the graph", both scenarios, and the bar on the right half of the foot;
+  - objectives-graph "Selecting a tab": "Select and clear" and "Kept with a selected objective";
+  - objectives-graph "Link lines" "Alignment at two widths": every line end within 2 px of its node and tab header centres at 1400 and 460 px wide, with and without an objective selected;
+  - objectives-graph "Larger hit areas" "Measured hit areas": pane rows still 22 px tall, and the Go button at least 22 px tall;
+  - the foot in light and dark (`ctl appearance`): a live tab with nothing selected, a linked and an unlinked tab with an objective selected, and a closed tab with its bar, from crops;
+  - the README lines, read back;
+  - render times in the serve log stay within the 20 ms target, with no objectives warnings or errors.
+
+## 7. The README screenshots again
+
+- [ ] 7.1 Take `docs/graph.png` and `docs/review.png` again, as 2.1 took them, since every live tab now ends in its "Go to tab" row. Update both alt texts to say so. Show both drafts to the user before committing them.
+
+  Verify:
+  - plugin-package "README": "README contents" and "Graph screenshot first";
+  - plugin-package "Screenshots match this version": open nodes show grips, and no node in either image shows ⋯;
+  - every live tab in both shots ends in "Go to tab", and in `review.png` each tab's link bar sits on its right;
+  - every line end in both shots sits within 2 px of its node and tab header centres, read from the layout JSON;
+  - the user approved both drafts.
+
+## 8. Release 0.28.2
+
+- [ ] 8.1 Version `0.28.2` in `plugin.toml`. Verify that an isolated `tern plugin install` of the repo folder prints `installed objectives 0.28.2`. Tick this box, then commit, push `main` and tag `v0.28.2` (annotated, message "objectives 0.28.2").
+- [ ] 8.2 **(live)** After the push has finished, run `tern plugin install github.com/JakobMusik/tern-objectives --force` from a shell with no harness variables.
+
+  Verify `tern plugin list` shows `objectives 0.28.2 … ready`, with the other plugins untouched.
+- [ ] 8.3 **(live)** With the user:
+  - select an objective, then click one of its tabs under `Linked to`: the objective stays selected, the tab stays where it is with the selection ring, and the lines from the other objectives linked to that tab turn thick, those objectives tinted;
+  - clicking that tab again clears only the tab; a click on empty space clears both;
+  - every open tab ends in "Go to tab" on the left, which goes to the tab, with "＋ Link" or "× Unlink" on the right while an objective is selected;
+  - the link icons still link the selected tab.
+
+  Record the result here.
+
 ## Workflow follow-up
 
 - Archive the change (`openspec archive select-tab-nodes --yes`), run `openspec validate --specs --strict`, commit and push.
-- In the same commit, update tab-navigation's Purpose, which still says a click on a tab's header takes the user there, to name the header's arrow.
+- In the same commit, update tab-navigation's Purpose, which still says a click on a tab's header takes the user there, to name the "Go to tab" button.
