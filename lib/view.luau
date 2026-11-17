@@ -15,6 +15,8 @@ local M = {}
 
 export type Ui = {
 	selected: string?,
+	-- The selected tab (select-tab-nodes, design D1); at most one of the two is set.
+	selected_tab: number?,
 	-- The pane the graph was opened from (design P5).
 	origin: number?,
 	today: Dates.Day,
@@ -378,8 +380,9 @@ type Link = { unlink: boolean, title: string }
 
 -- `resume`: a closed tab with a saved omp chat shows "Resume" (resume-omp-chats, design D4). `linked`:
 -- any objective links it. `asking`: its trash icon's question is open (close-tab-from-node, D3).
--- `mark`: a live tab's attention mark (search-and-tab-marks, D7).
-local function tab_node(t: Model.Tab, status: string, first: string, linked_open: boolean, link: Link?, menu: { any }, ui_state: Ui, expanded: { [string]: boolean }, resume: boolean, linked: boolean, asking: boolean, mark: Mark?): (Node, number)
+-- `mark`: a live tab's attention mark (search-and-tab-marks, D7). `chosen`: it is the selected tab
+-- (select-tab-nodes, D6).
+local function tab_node(t: Model.Tab, status: string, first: string, linked_open: boolean, link: Link?, menu: { any }, ui_state: Ui, expanded: { [string]: boolean }, resume: boolean, linked: boolean, asking: boolean, mark: Mark?, chosen: boolean): (Node, number)
 	local live = status == "live"
 	local cls = "ob-tab ob-t-" .. t.id .. first
 	if status ~= "live" then
@@ -390,6 +393,9 @@ local function tab_node(t: Model.Tab, status: string, first: string, linked_open
 	-- Only "needs you" and "replied" ring the node, as on objective nodes (D7).
 	if mark ~= nil and mark.kind ~= "working" then
 		cls ..= " ob-tatt-" .. mark.kind
+	end
+	if chosen then
+		cls ..= " ob-tsel"
 	end
 	-- position 0: a ghost with no saved snapshot, so there is no place to name.
 	local place = if t.position > 0 then t.session_name .. " · tab " .. t.position else nil
@@ -435,13 +441,22 @@ local function tab_node(t: Model.Tab, status: string, first: string, linked_open
 		table.insert(line2, mark_chip(mark))
 	end
 	table.insert(line2, span("ob-line ob-dim", where, { key = "where" }))
+	-- A live tab's jump (select-tab-nodes, D6), at the line's right end, lined up with its rows' jump
+	-- buttons; the rest of the header selects the tab.
+	if live then
+		table.insert(line2, el("span", { class = "ob-jump ob-tjump", key = "jump", title = "Go to this tab", actions = { click = "tab=" .. t.id } }, {
+			{ k = "icon", p = { name = "arrow-right" } } :: any,
+		}))
+	end
 	local head_kids: { Node } = {
 		el("div", { class = if asking then "ob-th1 ob-th1-ask" else "ob-th1", key = "th1" }, th1),
-		el("div", { class = "ob-tl2", key = "l2" }, line2),
+		-- A live tab's second line reaches into the header's right padding, so its arrow ends where its
+		-- rows' jump buttons do (select-tab-nodes, D7).
+		el("div", { class = if live then "ob-tl2 ob-tl2-jump" else "ob-tl2", key = "l2" }, line2),
 	}
-	-- While it asks, a click on the header ends the question instead of jumping (D3).
+	-- While it asks, a click on the header ends the question instead of selecting the tab (D3).
 	local kids: { Node } = {
-		el("div", { class = "ob-thead", key = "head", title = t.label, actions = { click = if asking then "cfx=" else "tab=" .. t.id } }, head_kids),
+		el("div", { class = "ob-thead", key = "head", title = t.label, actions = { click = if asking then "cfx=" else "tsel=" .. t.id } }, head_kids),
 	}
 	local detail_lines = 0
 	local holds_origin = false
@@ -463,8 +478,8 @@ local function tab_node(t: Model.Tab, status: string, first: string, linked_open
 			row_cls ..= " ob-row-origin"
 			holds_origin = true
 		end
-		-- A ghost row has no details; its click says why the tab can't be reached.
-		local row_click = if live then "exp=" .. r.pane else "tab=" .. t.id
+		-- A ghost row has no details; its click selects the tab, as its header's does (select-tab-nodes, D6).
+		local row_click = if live then "exp=" .. r.pane else "tsel=" .. t.id
 		table.insert(kids, el("div", { class = row_cls, key = "r:" .. r.pane, actions = { click = row_click } }, row_kids))
 		if open then
 			for i, d in ui_state.details(r) do
@@ -492,7 +507,7 @@ local function tab_node(t: Model.Tab, status: string, first: string, linked_open
 	if holds_origin then
 		cls ..= " ob-origin"
 	end
-	-- Below the rows, away from the header whose click jumps, so a near miss doesn't jump.
+	-- Below the rows, away from the header, so a near miss doesn't select the tab.
 	if link ~= nil then
 		table.insert(kids, span("ob-linkbar" .. (if link.unlink then " ob-linkbar-on" else ""), if link.unlink then "× Unlink" else "＋ Link", {
 			key = "linkbar",
@@ -533,6 +548,8 @@ export type Built = {
 	-- (custom-order-and-direct-controls, design D11).
 	done_tabs: { number },
 	due: number, -- done objectives due for review under the filters; 0 ends review mode
+	-- The selected tab when the right column shows it, else nil (select-tab-nodes, D1).
+	selected_tab: number?,
 }
 
 function M.build(state: Store.State, win: Model.Window, ui_state: Ui): Built
@@ -638,26 +655,127 @@ function M.build(state: Store.State, win: Model.Window, ui_state: Ui): Built
 			end
 		end
 	end
-	-- The focus tab (highlight-origin-tab-links, design D2): with nothing selected, outside review mode,
-	-- the origin's tab when the right column shows it. Its lines are drawn strong and the open
-	-- objectives linking it tinted.
+	-- The selected objective when the left column lists it, as review mode, the open list and the open
+	-- Done group list them. Like the right column's tabs below, it is worked out before the left
+	-- column, which needs to know whether the selected tab is shown (select-tab-nodes, D2).
+	local sel_obj: Store.Objective? = nil
+	if selected ~= nil then
+		local lists: { { Store.Objective } } = if reviewing
+			then { due_list }
+			elseif view_state.done_open then { open_list, done_list }
+			else { open_list }
+		for _, list in lists do
+			for _, o in list do
+				if o.id == selected then
+					sel_obj = o
+				end
+			end
+		end
+	end
+
+	-- The origin's session comes first, and its tab first inside it (design R1).
+	local placed: { { s: Model.Session, tabs: { Model.Tab } } } = {}
+	for _, s in win.sessions do
+		if view_state.scope == "all" or s.id == win.current then
+			local tabs: { Model.Tab } = {}
+			if origin_tab ~= nil and s.id == origin_tab.session then
+				table.insert(tabs, origin_tab)
+			end
+			for _, t in s.tabs do
+				if t ~= origin_tab then
+					table.insert(tabs, t)
+				end
+			end
+			local entry = { s = s, tabs = tabs }
+			if origin_tab ~= nil and s.id == origin_tab.session then
+				table.insert(placed, 1, entry)
+			else
+				table.insert(placed, entry)
+			end
+		end
+	end
+	-- A closed tab only done objectives link shows only for the selected objective, for those review
+	-- mode lists (close-linked-tabs D6), or while it is the selected tab (select-tab-nodes, D2).
+	local kept_closed: { [number]: boolean } = {}
+	if sel_obj ~= nil then
+		for _, tab in sel_obj.tabs do
+			kept_closed[tab] = true
+		end
+	end
+	if reviewing then
+		for _, o in due_list do
+			for _, tab in o.tabs do
+				kept_closed[tab] = true
+			end
+		end
+	end
+	if ui_state.selected_tab ~= nil then
+		kept_closed[ui_state.selected_tab] = true
+	end
+	local closed: { number } = {}
+	local elsewhere: { number } = {}
+	for tab, st in status_of do
+		if st == "closed" and (view_state.scope == "all" or in_session[tab]) and (linked_open[tab] or kept_closed[tab]) then
+			table.insert(closed, tab)
+		elseif st == "elsewhere" and view_state.scope == "all" then
+			table.insert(elsewhere, tab)
+		end
+	end
+	local function by_place(a: number, b: number): boolean
+		local sa, sb = state.tabs[tostring(a)], state.tabs[tostring(b)]
+		local ka = if sa ~= nil then sa.session_name .. string.format("%04d", sa.position) else ""
+		local kb = if sb ~= nil then sb.session_name .. string.format("%04d", sb.position) else ""
+		if ka ~= kb then
+			return ka < kb
+		end
+		return a < b
+	end
+	table.sort(closed, by_place)
+	table.sort(elsewhere, by_place)
+	-- The selected tab, when the right column shows it (select-tab-nodes, D1, D2).
+	local sel_tab: number? = nil
+	local want = ui_state.selected_tab
+	if want ~= nil then
+		if table.find(closed, want) ~= nil or table.find(elsewhere, want) ~= nil then
+			sel_tab = want
+		end
+		for _, p in placed do
+			for _, t in p.tabs do
+				if t.id == want then
+					sel_tab = want
+				end
+			end
+		end
+	end
+	-- The focus tab: its lines are drawn strong and the objectives linking it tinted. The selected tab,
+	-- for every listed objective (select-tab-nodes, D3); else, with nothing selected, outside review
+	-- mode, the origin's tab when the right column shows it, for open objectives only
+	-- (highlight-origin-tab-links, design D2).
 	local focus_tab: number? = nil
-	if selected == nil and not reviewing and origin_tab ~= nil and (view_state.scope == "all" or origin_tab.session == win.current) then
+	local focus_done = false
+	if sel_tab ~= nil then
+		focus_tab, focus_done = sel_tab, true
+	elseif selected == nil and not reviewing and origin_tab ~= nil and (view_state.scope == "all" or origin_tab.session == win.current) then
 		focus_tab = origin_tab.id
 	end
-	-- The tab the nodes' link buttons toggle (quick-link-button, design D1): the origin's tab while the
-	-- right column shows it, whatever is selected. None while an objective is lifted, since the drop
-	-- zones cover the nodes (D2).
-	local quick_tab: Model.Tab? = nil
-	if origin_tab ~= nil and ui_state.moving == nil and (view_state.scope == "all" or origin_tab.session == win.current) then
-		quick_tab = origin_tab
+	-- The tab the nodes' link buttons toggle: the selected tab (select-tab-nodes, D5), else the
+	-- origin's tab while the right column shows it, whatever is selected (quick-link-button, design
+	-- D1). None while an objective is lifted, since the drop zones cover the nodes (D2). A closed or
+	-- other-window tab's label comes from its snapshot, as its node's does.
+	local quick_tab: { id: number, label: string }? = nil
+	if ui_state.moving == nil then
+		if sel_tab ~= nil then
+			local t = win.tabs[sel_tab]
+			quick_tab = { id = sel_tab, label = if t ~= nil then t.label else ghost(sel_tab, state.tabs[tostring(sel_tab)], "closed").label }
+		elseif origin_tab ~= nil and (view_state.scope == "all" or origin_tab.session == win.current) then
+			quick_tab = { id = origin_tab.id, label = origin_tab.label }
+		end
 	end
 
 	-- Left column.
 	local left = Layout.stack()
 	local left_kids: { Node } = {}
 	local obj_cy: { [string]: number } = {}
-	local sel_obj: Store.Objective? = nil
 	-- Attention (attention-marks-and-titles D3; search-and-tab-marks D6): each live tab's mark, worked
 	-- out once: the strongest omp call over its rows, ranked by RANK (working-mark D2), and the titles
 	-- of the rows making it. Closed and elsewhere tabs have no live rows, so they never mark.
@@ -729,15 +847,12 @@ function M.build(state: Store.State, win: Model.Window, ui_state: Ui): Built
 			acts = { close = #tabs, kept = kept, ask = ask }
 		end
 		obj_cy[o.id] = Layout.add_obj(left, review, #title, acts ~= nil, acts ~= nil and acts.ask ~= nil)
-		local lit = focus_tab ~= nil and not o.done and table.find(o.tabs, focus_tab) ~= nil
+		local lit = focus_tab ~= nil and (focus_done or not o.done) and table.find(o.tabs, focus_tab) ~= nil
 		local qlink: QLink? = nil
 		if quick_tab ~= nil then
 			qlink = { tab = quick_tab.id, label = quick_tab.label, on = table.find(o.tabs, quick_tab.id) ~= nil }
 		end
 		table.insert(left_kids, objective_node(o, ui_state, first, title, mark_of(o), review, acts, lit, sorting, qlink))
-		if o.id == selected then
-			sel_obj = o
-		end
 	end
 	if reviewing then
 		for _, o in due_list do
@@ -832,69 +947,13 @@ function M.build(state: Store.State, win: Model.Window, ui_state: Ui): Built
 		local asking = status == "live" and c ~= nil and c.kind == "tab" and c.id == tostring(t.id)
 		local linked = linked_open[t.id] == true or linked_done[t.id] == true
 		local mark = if status == "live" then tab_mark(t.id) else nil
-		local node, details = tab_node(t, status, first, linked_open[t.id] == true, link, menu_of(t.id), ui_state, view_state.expanded, resume, linked, asking, mark)
+		local node, details = tab_node(t, status, first, linked_open[t.id] == true, link, menu_of(t.id), ui_state, view_state.expanded, resume, linked, asking, mark, t.id == sel_tab)
 		tab_cy[t.id] = Layout.add_tab(right, #t.rows, details, link ~= nil)
 		table.insert(right_kids, node)
 		if status == "live" and linked_done[t.id] and not linked_open[t.id] then
 			table.insert(done_tabs, t.id)
 		end
 	end
-	-- The origin's session comes first, and its tab first inside it (design R1).
-	local placed: { { s: Model.Session, tabs: { Model.Tab } } } = {}
-	for _, s in win.sessions do
-		if view_state.scope == "all" or s.id == win.current then
-			local tabs: { Model.Tab } = {}
-			if origin_tab ~= nil and s.id == origin_tab.session then
-				table.insert(tabs, origin_tab)
-			end
-			for _, t in s.tabs do
-				if t ~= origin_tab then
-					table.insert(tabs, t)
-				end
-			end
-			local entry = { s = s, tabs = tabs }
-			if origin_tab ~= nil and s.id == origin_tab.session then
-				table.insert(placed, 1, entry)
-			else
-				table.insert(placed, entry)
-			end
-		end
-	end
-	-- A closed tab only done objectives link shows only for the selected objective, or for those
-	-- review mode lists (close-linked-tabs D6).
-	local kept_closed: { [number]: boolean } = {}
-	if sel_obj ~= nil then
-		for _, tab in sel_obj.tabs do
-			kept_closed[tab] = true
-		end
-	end
-	if reviewing then
-		for _, o in due_list do
-			for _, tab in o.tabs do
-				kept_closed[tab] = true
-			end
-		end
-	end
-	local closed: { number } = {}
-	local elsewhere: { number } = {}
-	for tab, st in status_of do
-		if st == "closed" and (view_state.scope == "all" or in_session[tab]) and (linked_open[tab] or kept_closed[tab]) then
-			table.insert(closed, tab)
-		elseif st == "elsewhere" and view_state.scope == "all" then
-			table.insert(elsewhere, tab)
-		end
-	end
-	local function by_place(a: number, b: number): boolean
-		local sa, sb = state.tabs[tostring(a)], state.tabs[tostring(b)]
-		local ka = if sa ~= nil then sa.session_name .. string.format("%04d", sa.position) else ""
-		local kb = if sb ~= nil then sb.session_name .. string.format("%04d", sb.position) else ""
-		if ka ~= kb then
-			return ka < kb
-		end
-		return a < b
-	end
-	table.sort(closed, by_place)
-	table.sort(elsewhere, by_place)
 	local function ghost_group(title: string, key: string, list: { number }, status: string)
 		if #list == 0 then
 			return
@@ -999,7 +1058,8 @@ function M.build(state: Store.State, win: Model.Window, ui_state: Ui): Built
 
 	-- Edges: open objectives' lines outside review mode, and the selected objective's when it is done,
 	-- in review mode too (linked-section D4). Strong: the selected objective's, or those ending at the
-	-- focus tab (highlight-origin-tab-links, design D3).
+	-- focus tab (highlight-origin-tab-links, design D3). A selected tab also gets a line from each
+	-- listed done objective linking it, and only that one of its lines (select-tab-nodes, D4).
 	local edges: { Edges.Edge } = {}
 	local function add_edges(o: Store.Objective)
 		local from = obj_cy[o.id]
@@ -1024,6 +1084,22 @@ function M.build(state: Store.State, win: Model.Window, ui_state: Ui): Built
 	end
 	if sel_obj ~= nil and sel_obj.done then
 		add_edges(sel_obj)
+	end
+	if sel_tab ~= nil then
+		local to = tab_cy[sel_tab]
+		for _, o in (if reviewing then due_list else done_list) :: { Store.Objective } do
+			local from = obj_cy[o.id]
+			if from ~= nil and to ~= nil and table.find(o.tabs, sel_tab) ~= nil then
+				table.insert(edges, {
+					from = from,
+					to = to,
+					priority = o.priority,
+					done = true,
+					dashed = status_of[sel_tab] ~= "live",
+					strong = true,
+				})
+			end
+		end
 	end
 	local height = math.max(left.y, right.y)
 	local css, layers = Edges.build(edges, height)
@@ -1158,7 +1234,7 @@ function M.build(state: Store.State, win: Model.Window, ui_state: Ui): Built
 			el("div", { class = "ob-col ob-col-r", key = "r" }, right_kids),
 		}),
 	})
-	return { view = view, css = css, closed = closed, done_tabs = done_tabs, due = #due_list }
+	return { view = view, css = css, closed = closed, done_tabs = done_tabs, due = #due_list, selected_tab = sel_tab }
 end
 
 -- A segmented choice of the settings page: `options` are {value, label}; `act` takes the value.

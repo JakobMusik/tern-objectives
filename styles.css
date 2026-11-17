@@ -746,6 +746,30 @@
 	border-color: var(--accent);
 	box-shadow: inset 0 0 0 1.5px var(--accent), inset 0 0 0 3px var(--ok);
 }
+/* The selected tab (select-tab-nodes, design D7): a selected objective's accent border and outer
+   ring. Shadows only, so the node's height stays. With the origin's ring or an attention mark, those
+   stay inside, as on a selected objective. An unlinked tab keeps its dashed border and grey fill. */
+[data-surface='plugin.tern.canvas'] .ob-root .ob-tab.ob-tsel {
+	border-color: var(--accent);
+	box-shadow: 0 0 0 1px var(--accent);
+}
+[data-surface='plugin.tern.canvas'] .ob-root .ob-tab.ob-tsel.ob-origin {
+	box-shadow: 0 0 0 1px var(--accent), inset 0 0 0 1.5px var(--accent);
+}
+[data-surface='plugin.tern.canvas'] .ob-root .ob-tab.ob-tsel.ob-tatt-wait {
+	border-color: var(--accent);
+	box-shadow: 0 0 0 1px var(--accent), inset 0 0 0 2px var(--warn);
+}
+[data-surface='plugin.tern.canvas'] .ob-root .ob-tab.ob-tsel.ob-tatt-replied {
+	border-color: var(--accent);
+	box-shadow: 0 0 0 1px var(--accent), inset 0 0 0 2px var(--ok);
+}
+[data-surface='plugin.tern.canvas'] .ob-root .ob-tab.ob-tsel.ob-origin.ob-tatt-wait {
+	box-shadow: 0 0 0 1px var(--accent), inset 0 0 0 1.5px var(--accent), inset 0 0 0 3px var(--warn);
+}
+[data-surface='plugin.tern.canvas'] .ob-root .ob-tab.ob-tsel.ob-origin.ob-tatt-replied {
+	box-shadow: 0 0 0 1px var(--accent), inset 0 0 0 1.5px var(--accent), inset 0 0 0 3px var(--ok);
+}
 [data-surface='plugin.tern.canvas'] .ob-root .ob-row.ob-row-origin {
 	color: var(--t1);
 	box-shadow: inset 3px 0 0 var(--accent);
@@ -894,6 +918,15 @@
 [data-surface='plugin.tern.canvas'] .ob-root .ob-jump:hover {
 	color: var(--accent);
 	background: rgb(from var(--accent) r g b / 12%);
+}
+/* A live tab's jump (select-tab-nodes, design D7): last on the header's second line, which reaches
+   into the header's 8 px right padding, so the arrow ends where the rows' jump buttons do. The
+   line's 18 px height is its height. */
+[data-surface='plugin.tern.canvas'] .ob-root .ob-tl2-jump {
+	margin-right: -8px;
+}
+[data-surface='plugin.tern.canvas'] .ob-root .ob-tjump {
+	margin-left: auto;
 }
 /* A row's pane type, and an agent's state after its name (design R4). */
 [data-surface='plugin.tern.canvas'] .ob-root .ob-rtype {

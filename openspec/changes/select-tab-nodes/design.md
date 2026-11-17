@@ -85,7 +85,7 @@ The open objectives' edges are added as today, `strong` when they end at the foc
   - Origin and a mark together: `0 0 0 1px var(--accent), inset 0 0 0 1.5px var(--accent), inset 0 0 0 3px var(--warn)` (or `--ok`).
   - The rules come after the origin and attention rules, so they win.
 - **The unlinked tab's look stays:** an unlinked selected tab keeps its dashed border and grey fill under the ring.
-- **`.ob-tjump`:** `margin-left: auto; margin-right: -8px`. It sits at the line's right end, and its right edge meets the node's inner edge, where the pane rows' jump buttons end. From `.ob-jump` it takes the 28 px width, the hover tint and `align-self: stretch`, which gives it the line's 18 px height. The header keeps its 38 px.
+- **`.ob-tjump`:** `margin-left: auto`, so it sits at the line's right end. Its line, `.ob-tl2`, clips what overflows it, so the arrow can't reach into the header's padding by a margin of its own. Instead, a live tab's line carries `ob-tl2-jump`, with `margin-right: -8px`, and the arrow's right edge meets the node's inner edge, where the pane rows' jump buttons end. From `.ob-jump` it takes the 28 px width, the hover tint and `align-self: stretch`, which gives it the line's 18 px height. The header keeps its 38 px.
 
 *Alternative:* an inset ring like the origin's. Rejected: the origin's tab is often the one selected, and two inset accent rings read as one.
 

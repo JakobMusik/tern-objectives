@@ -31,6 +31,11 @@ end
 -- keeps it (highlight-origin-tab-links, design D1).
 local selected: string? = nil
 
+-- The selected tab's id (select-tab-nodes, design D1), never stored, like `selected`: one of the two
+-- at most. A fresh open clears it, the reopen after a picker or field keeps it, and `build` drops it
+-- once the right column no longer shows the tab.
+local selected_tab: number? = nil
+
 -- The search's text (search-and-tab-marks, design D1), never stored: a fresh open ends it, like the
 -- selection, and the reopen after one of the graph's pickers or fields keeps it.
 local search: string? = nil
@@ -133,6 +138,7 @@ local function build(cx: WindowCx): View.Built
 	Details.begin(cx, state.agents)
 	local built = View.build(state, win, {
 		selected = selected,
+		selected_tab = selected_tab,
 		origin = origin,
 		today = Dates.today(),
 		kind = Details.type,
@@ -151,6 +157,7 @@ local function build(cx: WindowCx): View.Built
 	if built.due == 0 then
 		reviewing = false
 	end
+	selected_tab = built.selected_tab
 	if built.css ~= edges_css then
 		tern.css("edges", built.css)
 		edges_css = built.css
@@ -185,12 +192,13 @@ function M.render(cx: WindowCx)
 end
 
 -- Shows the graph over the current tab (design G1). A fresh open takes the focused pane as the
--- origin and clears the selection; `keep_origin` (the reopen after one of the graph's pickers) keeps
--- both.
+-- origin and clears the selection, objective or tab; `keep_origin` (the reopen after one of the
+-- graph's pickers) keeps them.
 function M.open(cx: WindowCx, keep_origin: boolean?)
 	if not keep_origin then
 		drop_undo()
 		selected = nil
+		selected_tab = nil
 		search = nil
 		moving = nil
 		held = nil
@@ -270,6 +278,7 @@ local function new_objective(cx: WindowCx, tab: number?, facts: Model.Tab?, wind
 			cx2:toast("error", "An objective needs a title")
 		elseif tab == nil then
 			selected = id
+			selected_tab = nil
 		else
 			cx2:toast("success", "Objective created for this tab")
 		end
@@ -882,12 +891,22 @@ function M.action(ev: Action, cx: WindowCx)
 	-- Set by verbs whose own flow draws the graph later, or closes it.
 	local later = false
 	if act == "sel" then
+		-- One selection at a time (select-tab-nodes, D1): an objective's ends a tab's.
 		selected = if selected == value then nil else value
+		selected_tab = nil
+	elseif act == "tsel" then
+		-- A tab's header, or a closed or other-window tab's row (select-tab-nodes, D1, D6).
+		local tab = tonumber(value)
+		if tab ~= nil then
+			selected_tab = if selected_tab == tab then nil else tab
+			selected = nil
+		end
 	elseif act == "bg" then
-		if selected == nil and not had_undo and not was_moving and asked == nil and not was_held then
+		if selected == nil and selected_tab == nil and not had_undo and not was_moving and asked == nil and not was_held then
 			return
 		end
 		selected = nil
+		selected_tab = nil
 	elseif act == "lift" then
 		-- The grip lifts its node; the lifted node's grip puts it back.
 		moving = if moving == value then nil else value
@@ -976,6 +995,7 @@ function M.action(ev: Action, cx: WindowCx)
 	elseif act == "reopen" then
 		-- A done objective's box (reopen-done-objectives, D1): selected, so its bar asks.
 		selected = value
+		selected_tab = nil
 		confirm = { kind = "reopen", id = value, where = "bar" }
 	elseif act == "rkeep" or act == "rreset" then
 		-- The bar's answers reopen it, last in the list and still selected (D2); no Undo.
@@ -1051,6 +1071,7 @@ function M.action(ev: Action, cx: WindowCx)
 			toast_gone(cx)
 		end
 	elseif act == "tab" then
+		-- A live tab's jump arrow (select-tab-nodes, D6).
 		local tab = tonumber(value)
 		if tab ~= nil then
 			jump_tab(cx, tab)
