@@ -327,7 +327,7 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
 
 ## 7. The README screenshots again
 
-- [ ] 7.1 Take `docs/graph.png` and `docs/review.png` again, as 2.1 took them, since every live tab now ends in its "Go to tab" row. Update both alt texts to say so. Show both drafts to the user before committing them.
+- [x] 7.1 Take `docs/graph.png` and `docs/review.png` again, as 2.1 took them, since every live tab now ends in its "Go to tab" row. Update both alt texts to say so. Show both drafts to the user before committing them.
 
   Verify:
   - plugin-package "README": "README contents" and "Graph screenshot first";
@@ -335,6 +335,26 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
   - every live tab in both shots ends in "Go to tab", and in `review.png` each tab's link bar sits on its right;
   - every line end in both shots sits within 2 px of its node and tab header centres, read from the layout JSON;
   - the user approved both drafts.
+
+  Result (harness, 2026-11-18, the same serve as 6.1):
+  - **Store and chats:**
+    - the demo store was written again with today's dates;
+    - Server's omp chat was asked to ask "Restart the server before deploying?" and waited for input after 3 s;
+    - with Guides focused, Release notes' chat answered "In two short sentences, say what release notes for a web app should cover." in 3.3 s, `idle` with its alert.
+  - **`graph.png`** (1828 × 1856):
+    - **At the old size** (`ctl resize 1045 928`, 1828 × 1616), the right column ran past the glimpse: Benchmarks started at y 859 and ended at 951, while the glimpse ended at 885, so Server's foot was cut and Benchmarks didn't show (draft `graph_draft2`).
+    - **The shot taken:** at `ctl resize 1045 1060`, the glimpse was 914.31 × 928.2 at 65.34, 82.91. Benchmarks ends at 957.4, above the footer, and the glimpse was cropped there. The user was told of the new height and approved the draft.
+    - **Contents:** opened from Guides, with nothing selected, the pointer at (3, 3), no banners and the Done group open. Marks and tint are as in 2.1. All 7 open nodes have grips, no node has ⋯, and all 6 live tabs end in "Go to tab".
+    - **Line ends:** all 7 left and 6 right within 0.34 px.
+  - **`review.png`** (1828 × 857):
+    - review mode, opened from Guides, with "Profile slow search queries" selected;
+    - Benchmarks under `Linked to` ends in "Go to tab" and "× Unlink", and Guides in "Go to tab" and "＋ Link";
+    - cropped from the glimpse's top to 8 px below the Guides node;
+    - the green line's ends sit within 0.34 px. The gap's other marks were at y 1000 and below, in the footer under the crop.
+  - **Alt texts:** the graph's now says each tab ends in a "Go to tab" button under its pane rows. The review's says each tab ends in a row with "Go to tab" on the left and "× Unlink" or "＋ Link" on the right.
+  - **README checks:** two images, `docs/graph.png` first (line 5), then `docs/review.png` (line 26). "README contents" still holds.
+  - **Approval:** the user approved both drafts before they were committed.
+  - **Cleanup:** the serve was stopped, and the chat folders `--private-tmp-tobj-w-demo-notes--` and `--private-tmp-tobj-w-demo-serverchat--` were removed. The older `--private-tmp-tobj-w-docs--` and `--private-tmp-tobj-w-server--` were left.
 
 ## 8. Release 0.28.2
 
