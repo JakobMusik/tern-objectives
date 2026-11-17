@@ -366,13 +366,15 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
   Verify `tern plugin list` shows `objectives 0.28.2 … ready`, with the other plugins untouched.
 
   Result: `installed objectives 0.28.2 → ~/Library/Application Support/Tern/plugins/objectives`. `tern plugin list` shows `objectives 0.28.2 … window ready`, and the other plugins ready as before: `external-editor 0.1.0`, `omp-narration 0.1.0`, `open-below 0.2.0`, `reply-selection 0.1.0` and `tabnav 0.1.0`. The tag `v0.28.2` (`ebaa362`) is signed and on GitHub.
-- [ ] 8.3 **(live)** With the user:
+- [x] 8.3 **(live)** With the user:
   - select an objective, then click one of its tabs under `Linked to`: the objective stays selected, the tab stays where it is with the selection ring, and the lines from the other objectives linked to that tab turn thick, those objectives tinted;
   - clicking that tab again clears only the tab; a click on empty space clears both;
   - every open tab ends in "Go to tab" on the left, which goes to the tab, with "＋ Link" or "× Unlink" on the right while an objective is selected;
   - the link icons still link the selected tab.
 
   Record the result here.
+
+  Result (user, 0.28.2): "checked, it's working", in reply to the four checks listed above. The user reported nothing more specific, so no single check is recorded on its own.
 
 ## Workflow follow-up
 
