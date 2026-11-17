@@ -185,9 +185,11 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
 - [x] 3.1 Version `0.28.0` in `plugin.toml`. Verify that an isolated `tern plugin install` of the repo folder prints `installed objectives 0.28.0`. Tick this box, then commit, push `main` and tag `v0.28.0` (annotated, message "objectives 0.28.0").
 
   Result: the install into `/tmp/tobj-inst280/config` printed `installed objectives 0.28.0 → /tmp/tobj-inst280/config/plugins/objectives`.
-- [ ] 3.2 **(live)** After the push has finished, run `tern plugin install github.com/JakobMusik/tern-objectives --force` from a shell with no harness variables.
+- [x] 3.2 **(live)** After the push has finished, run `tern plugin install github.com/JakobMusik/tern-objectives --force` from a shell with no harness variables.
 
   Verify `tern plugin list` shows `objectives 0.28.0 … ready`, with the other plugins untouched.
+
+  Result: `installed objectives 0.28.0 → ~/Library/Application Support/Tern/plugins/objectives`. `tern plugin list` shows `objectives 0.28.0 … window ready`, and the other plugins ready as before: `external-editor 0.1.0`, `omp-narration 0.1.0`, `open-below 0.2.0`, `reply-selection 0.1.0` and `tabnav 0.1.0`. The tag `v0.28.0` (`c70ac4e`) is signed and on GitHub.
 - [ ] 3.3 **(live)** With the user:
   - clicking a tab's header keeps the graph open and selects the tab: thick lines to it, its objectives tinted, done ones too while the Done group is open;
   - the arrow at the right end of the header's second line goes to the tab;
