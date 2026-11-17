@@ -97,7 +97,7 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
 
 ## 2. The README screenshots
 
-- [ ] 2.1 Take `docs/graph.png` and `docs/review.png` again, from the store saved in `/tmp/tobj/kv.demo-0250.json`, sorted by priority, so the header shows the sort button reading "Priority":
+- [x] 2.1 Take `docs/graph.png` and `docs/review.png` again, from the store saved in `/tmp/tobj/kv.demo-0250.json`, sorted by priority, so the header shows the sort button reading "Priority":
   - **`graph.png`:**
     - Release notes' omp chat replies while Guides has focus, and Server's waits for input;
     - the same window size (`ctl resize 1045 928`) and crop (914 × 808);
@@ -114,6 +114,29 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
   - both headers show the sort button reading "Priority", right after the Search button;
   - every line end in both shots sits within 2 px of its node and tab header centres, read from the layout JSON;
   - the user approved both drafts.
+
+  Result (harness, 2026-11-18, the same serve as group 1):
+  - **Store:** the saved store's due and review dates were fixed on 2026-11-16, so two days later its chips read "overdue 4d" and "review in 2d". It was written again from the same records, with dates counted from today as before and `sort` "priority", and saved as `/tmp/tobj/kv.demo-0270.json`. The chips read as in 0.26.0's screenshots again.
+  - **Chats:** with Guides focused, Release notes' chat answered "In two short sentences, say what release notes for a web app should cover." (`idle` with its alert). Server's chat asked "Restart the server before deploying?" and waited (`waiting_input`). Both took 5 s.
+  - **`graph.png`** (1828 × 1616):
+    - `ctl resize 1045 928`, opened from pane 2 in Guides, the pointer at (3, 3). The glimpse was at 914.31 × 808.08, as before, and was cropped there;
+    - the first shot caught Tern's two chat banners over the top right corner. The shot was taken again once `ctl state` listed no banners;
+    - the header reads All, This session, Search, ⇅ Priority, the tag chips, "Review (2)", ⚙, "＋ New objective";
+    - the open objectives are P0 to P3 as before. The Done group, sorted by priority, reads "Profile slow search queries" (P1), "Set up CI", "Restyle the docs site" (P2, the later done first), the same order as 0.26.0's most recently done first;
+    - all 7 open nodes have grips, no node has ⋯, and the marks and highlighted link icons are as in 0.26.0;
+    - all 7 left and 6 right line ends sit within 0.3 px of their centres, measured 3 px inside the gap.
+  - **`review.png`** (1828 × 857):
+    - review mode, opened from Guides, with "Profile slow search queries" selected: its Note and Tags row, and Benchmarks under `Linked to` with "× Unlink". A first try at selecting it clicked its trash icon and removed it; the store was written again and the review shot taken from it;
+    - the header shows ⇅ Priority right after the Search button;
+    - cropped from the glimpse's top to 8 px below the Guides node;
+    - the one green line's ends sit within 0.4 px. The gap column's other marks were at y 873 and 905, in the footer below the crop.
+  - **Alt texts:** both name the sort button reading "Priority", and `graph.png`'s says the Done group is by priority too.
+  - **README checks:** the README has two images, `docs/graph.png` first (line 5), then `docs/review.png` (line 26). "README contents" still holds: the graph shot has the Done group open and Server marked "needs you", and the review shot has Hard, Good and Easy.
+  - **Approval:** the user approved both drafts before they were committed.
+  - **Cleanup:**
+    - the serve was stopped with `ctl quit`;
+    - the chat folders `--private-tmp-tobj-w-demo-notes--` and `--private-tmp-tobj-w-demo-serverchat--`, created today, were removed;
+    - `--private-tmp-tobj-w-docs--` and `--private-tmp-tobj-w-server--`, from earlier runs, were left as they were.
 
 ## 3. Release 0.27.0
 
