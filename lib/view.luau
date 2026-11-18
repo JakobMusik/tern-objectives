@@ -139,6 +139,31 @@ local function plural(n: number, word: string): string
 	return string.format("%d %s%s", n, word, if n == 1 then "" else "s")
 end
 
+-- Tab labels quoted as the attention chip's tooltip quotes them, as a list: “A”; “A” and “B”;
+-- “A”, “B” and “C” (mark-closing-tabs D5).
+local function quote_list(labels: { string }): string
+	local quoted: { string } = {}
+	for i, label in labels do
+		quoted[i] = "“" .. label .. "”"
+	end
+	if #quoted <= 1 then
+		return quoted[1] or ""
+	end
+	return table.concat(quoted, ", ", 1, #quoted - 1) .. " and " .. quoted[#quoted]
+end
+
+-- The labels of tabs this window holds, in the given order.
+local function tab_labels(win: Model.Window, tabs: { number }): { string }
+	local out: { string } = {}
+	for _, tab in tabs do
+		local t = win.tabs[tab]
+		if t ~= nil then
+			table.insert(out, t.label)
+		end
+	end
+	return out
+end
+
 -- The tabs of done objective `o` this window holds that no open objective links, which its "Close
 -- n tabs" closes, and how many of its open tabs an open objective keeps (close-linked-tabs D1). The
 -- app counts with it again when it closes them.
@@ -168,8 +193,9 @@ end
 -- What the selected node's action bar offers (design D3): `close` and `kept` count a done objective's
 -- tabs, and `ask` turns the bar into a question: "close" for "Close n tabs?" (D4), "reopen" for
 -- "Reopen “<title>”?" (reopen-done-objectives, D1). A question takes its own row over the answers
--- (reopen-done-objectives, D1a).
-type Acts = { close: number, kept: number, ask: string? }
+-- (reopen-done-objectives, D1a). `names`: while it asks to close, the tabs it closes, for its
+-- tooltip (mark-closing-tabs D5).
+type Acts = { close: number, kept: number, ask: string?, names: string? }
 
 local function act_button(key: string, icon: string, label: string, act: string, tip: string): Node
 	return el("span", { class = "ob-act ob-act-" .. key, key = key, title = tip, actions = { click = act } }, {
@@ -183,7 +209,7 @@ local function action_bar(o: Store.Objective, acts: Acts): { Node }
 	if acts.ask == "close" then
 		local q = "Close " .. plural(acts.close, "tab") .. "?"
 		local shown = q
-		local tip = q
+		local tip = if acts.names ~= nil then "Close " .. acts.names .. "?" else q
 		if acts.kept > 0 then
 			shown ..= " · " .. acts.kept .. (if acts.kept == 1 then " stays" else " stay") .. " open"
 			tip ..= " " .. plural(acts.kept, "tab") .. " linked to an open objective " .. (if acts.kept == 1 then "stays" else "stay") .. " open."
@@ -398,7 +424,8 @@ type Link = { unlink: boolean, title: string }
 -- any objective links it. `asking`: its trash icon's question is open (close-tab-from-node, D3).
 -- `mark`: a live tab's attention mark (search-and-tab-marks, D7). `chosen`: it is the selected tab
 -- (select-tab-nodes, D6).
-local function tab_node(t: Model.Tab, status: string, first: string, linked_open: boolean, link: Link?, menu: { any }, ui_state: Ui, expanded: { [string]: boolean }, resume: boolean, linked: boolean, asking: boolean, mark: Mark?, chosen: boolean): (Node, number)
+-- `closing`: Close in the question on show would close this tab (mark-closing-tabs D1, D3, D4).
+local function tab_node(t: Model.Tab, status: string, first: string, linked_open: boolean, link: Link?, menu: { any }, ui_state: Ui, expanded: { [string]: boolean }, resume: boolean, linked: boolean, asking: boolean, mark: Mark?, chosen: boolean, closing: boolean): (Node, number)
 	local live = status == "live"
 	local cls = "ob-tab ob-t-" .. t.id .. first
 	if status ~= "live" then
@@ -412,6 +439,9 @@ local function tab_node(t: Model.Tab, status: string, first: string, linked_open
 	end
 	if chosen then
 		cls ..= " ob-tsel"
+	end
+	if closing then
+		cls ..= " ob-tclosing"
 	end
 	-- position 0: a ghost with no saved snapshot, so there is no place to name.
 	local place = if t.position > 0 then t.session_name .. " · tab " .. t.position else nil
@@ -451,8 +481,12 @@ local function tab_node(t: Model.Tab, status: string, first: string, linked_open
 			}))
 		end
 	end
-	-- The second line: the mark's chip first, then where the tab is (D7).
+	-- The second line: the "Closes" chip while a question would close the tab, the mark's chip, then
+	-- where the tab is (D7; mark-closing-tabs D4).
 	local line2: { Node } = {}
+	if closing then
+		table.insert(line2, span("ob-chip ob-closechip", "Closes", { key = "closes", title = "This tab closes if you click Close" }))
+	end
 	if mark ~= nil then
 		table.insert(line2, mark_chip(mark))
 	end
@@ -846,6 +880,24 @@ function M.build(state: Store.State, win: Model.Window, ui_state: Ui): Built
 	-- The sort method; by priority, the lifted objective's priority bounds its drop (sort-by-priority, D4).
 	local lifted = if ui_state.moving ~= nil then Store.find(state, ui_state.moving) else nil
 	local sorting: Sorting = { by = state.settings.sort, lifted = if lifted ~= nil then lifted.priority else nil }
+	-- The tabs Close in the question on show would close, marked on their nodes (mark-closing-tabs D1):
+	-- the bar's are added in add_node and the header's in add_tab; the notice's here, before both
+	-- columns, and the notice reuses its list.
+	local closing: { [number]: boolean } = {}
+	local notice_tabs: { number }? = nil
+	do
+		local uc, c = ui_state.undo_close, ui_state.confirm
+		local o = if uc ~= nil and c ~= nil and c.kind == "close" and c.where == "notice" and c.id == uc.id then Store.find(state, uc.id) else nil
+		if o ~= nil then
+			local tabs = M.closable(state, win, o)
+			if #tabs > 0 then
+				notice_tabs = tabs
+				for _, tab in tabs do
+					closing[tab] = true
+				end
+			end
+		end
+	end
 	-- One objective node; its title lines set its height (attention-marks-and-titles D1).
 	local function add_node(o: Store.Objective, review: boolean?)
 		local first = Layout.first(left)
@@ -860,10 +912,13 @@ function M.build(state: Store.State, win: Model.Window, ui_state: Ui): Built
 			local ask: string? = nil
 			if c ~= nil and c.kind == "close" and c.where == "bar" and c.id == o.id and #tabs > 0 then
 				ask = "close"
+				for _, tab in tabs do
+					closing[tab] = true
+				end
 			elseif c ~= nil and c.kind == "reopen" and c.id == o.id and o.done then
 				ask = "reopen"
 			end
-			acts = { close = #tabs, kept = kept, ask = ask }
+			acts = { close = #tabs, kept = kept, ask = ask, names = if ask == "close" then quote_list(tab_labels(win, tabs)) else nil }
 		end
 		obj_cy[o.id] = Layout.add_obj(left, review, #title, acts ~= nil, acts ~= nil and acts.ask ~= nil)
 		-- The selected objective keeps its ring, untinted, while a tab is selected too (D3).
@@ -958,6 +1013,8 @@ function M.build(state: Store.State, win: Model.Window, ui_state: Ui): Built
 		return rows
 	end
 	local done_tabs: { number } = {}
+	local done_labels: { string } = {}
+	local asking_done = ui_state.confirm ~= nil and ui_state.confirm.kind == "done_tabs"
 	local function add_tab(t: Model.Tab, status: string)
 		local first = Layout.first(right)
 		local link = link_of(t.id)
@@ -977,12 +1034,16 @@ function M.build(state: Store.State, win: Model.Window, ui_state: Ui): Built
 		local asking = status == "live" and c ~= nil and c.kind == "tab" and c.id == tostring(t.id)
 		local linked = linked_open[t.id] == true or linked_done[t.id] == true
 		local mark = if status == "live" then tab_mark(t.id) else nil
-		local node, details = tab_node(t, status, first, linked_open[t.id] == true, link, menu_of(t.id), ui_state, view_state.expanded, resume, linked, asking, mark, t.id == sel_tab)
+		-- A live tab only done objectives link joins "Close n done tabs" (D11).
+		local done_only = status == "live" and linked_done[t.id] == true and not linked_open[t.id]
+		local closes = status == "live" and (closing[t.id] == true or (asking_done and done_only))
+		local node, details = tab_node(t, status, first, linked_open[t.id] == true, link, menu_of(t.id), ui_state, view_state.expanded, resume, linked, asking, mark, t.id == sel_tab, closes)
 		-- The foot row: "Go to tab" on every live tab, and the link bar while an objective is selected.
 		tab_cy[t.id] = Layout.add_tab(right, #t.rows, details, status == "live" or link ~= nil)
 		table.insert(right_kids, node)
-		if status == "live" and linked_done[t.id] and not linked_open[t.id] then
+		if done_only then
 			table.insert(done_tabs, t.id)
+			table.insert(done_labels, t.label)
 		end
 	end
 	local function ghost_group(title: string, key: string, list: { number }, status: string)
@@ -1198,15 +1259,15 @@ function M.build(state: Store.State, win: Model.Window, ui_state: Ui): Built
 			span("ob-undo-btn", "Undo", { key = "btn", actions = { click = "undo=" } }),
 		}
 		local close = ui_state.undo_close
-		local c = ui_state.confirm
 		local target = if close ~= nil then Store.find(state, close.id) else nil
-		local n = if target ~= nil then #(M.closable(state, win, target)) else 0
-		if close ~= nil and target ~= nil and n > 0 and c ~= nil and c.kind == "close" and c.where == "notice" and c.id == close.id then
-			-- The notice's "Close n tabs" asks in place (D4); Cancel brings the notice back as it was.
+		local n = if notice_tabs ~= nil then #notice_tabs elseif target ~= nil then #(M.closable(state, win, target)) else 0
+		if notice_tabs ~= nil and target ~= nil then
+			-- The notice's "Close n tabs" asks in place (D4); Cancel brings the notice back as it was. Its
+			-- tooltip names the tabs (mark-closing-tabs D5).
 			kids = {
 				span("ob-undo-text", "Close " .. plural(n, "tab") .. " of “" .. target.title .. "”? ·", {
 					key = "text",
-					title = "Closing ends their programs; omp chats come back with Resume.",
+					title = "Close " .. quote_list(tab_labels(win, notice_tabs)) .. "? Closing ends their programs; omp chats come back with Resume.",
 				}),
 				span("ob-undo-btn ob-undo-close", "Close", { key = "cfm", actions = { click = "cfm=" } }),
 				span("ob-undo-sep", "·", { key = "sep" }),
@@ -1231,7 +1292,7 @@ function M.build(state: Store.State, win: Model.Window, ui_state: Ui): Built
 			table.insert(head, el("div", { class = "ob-undo ob-ask-head", key = "closedone" }, {
 				span("ob-undo-text", "Close " .. what .. "? ·", {
 					key = "text",
-					title = "Closing ends their programs; omp chats come back with Resume. No link changes.",
+					title = "Close " .. quote_list(done_labels) .. "? Closing ends their programs; omp chats come back with Resume. No link changes.",
 				}),
 				span("ob-undo-btn ob-undo-close", "Close", { key = "cfm", actions = { click = "cfm=" } }),
 				span("ob-undo-sep", "·", { key = "sep" }),

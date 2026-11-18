@@ -59,12 +59,14 @@ Only live tab nodes are marked: `closable` and `done_tabs` hold only tabs that t
 They go with the question, through the same conditions. A click clears `confirm`. When the notice's timer drops the Undo, `undo_close` is nil on the next render, so the notice's tabs are no longer gathered. Nothing new is stored or timed.
 
 ### D3. The ring
-`.ob-tab.ob-tclosing { outline: 2px solid var(--bad); outline-offset: 1px; }`.
-- **Border colour and box-shadow,** as the attention rings use. Rejected: every combination with origin, attention and selected needs its own rule, as the 11 tab-ring rules already show.
-- It is drawn outside the border, so the origin ring, the attention ring and the selected ring still show inside it. The selected tab's 1 px ring sits in the 1 px gap.
+`.ob-tab.ob-tclosing { outline: 2px solid var(--bad); outline-offset: -2px; }`, over the border.
+- An outline takes no space, so node heights and the lines stay as they are.
+- It is drawn inside. Task 1.2 found an outline outside the border (offset 1 px) cut on the right at 760 and 460 px, where the graph fills the window and the canvas clips past the right column's edge. Inside, it covers the 1 px border, and the origin and attention rings, while the question shows. The selected tab's outer ring still shows; the origin tab keeps its row's accent bar, and an attention mark its chip.
 
 *Alternatives:*
-- **Border colour and box-shadow,** as the attention rings use. Rejected: every combination with origin, attention and selected needs its own rule, as the 12 tab-ring rules already show.
+- **Outside the border** (offset 1 px), which keeps every ring visible. Rejected after task 1.2's shots, as above.
+- **Padding on the right column,** so an outside ring fits. Rejected: it narrows every tab node for a mark that shows only while a question asks.
+- **Border colour and box-shadow,** as the attention rings use. Rejected: every combination with origin, attention and selected needs its own rule, as the 11 tab-ring rules already show.
 - **Fading the other tabs.** Rejected: it hides their own marks, and doesn't name the tabs the scope hides.
 
 ### D4. The chip
@@ -85,7 +87,7 @@ The user chose marking only while the question shows. Marking on hover would nee
 
 ## Risks / Trade-offs
 
-- **The outline could be clipped** at the canvas's right edge in a narrow window. → The harness shoots at 1400, 760 and 460 px. If it is cut, `outline-offset: -2px` draws it inside the border instead, over the origin ring.
+- **The outline is clipped** past the right column's edge when the graph fills the window (task 1.2). → D3 draws it inside the border.
 - **Marked tabs out of view.** The right column can be taller than the window. → The tooltip names every tab. With the bar's question, the selected objective's tabs come first under "Linked tabs".
 - **A long tooltip** when many tabs close. → Acceptable: it is shown only on hover, and the count stays in the visible text.
 - **Cost:** one extra `closable` call per render, and only while the notice asks. → The harness checks renders stay within the 20 ms target.

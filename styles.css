@@ -188,6 +188,13 @@
 	color: var(--accent);
 	background: rgb(from var(--accent) r g b / 12%);
 }
+/* A tab Close in the question on show would close (mark-closing-tabs, D4): the red of Close and
+   Delete, as a tint, bold like the attention chips. */
+[data-surface='plugin.tern.canvas'] .ob-root .ob-closechip {
+	font-weight: 600;
+	color: var(--bad);
+	background: rgb(from var(--bad) r g b / 12%);
+}
 /* Attention chips (attention-marks-and-titles D3): solid, so "needs you" can't pass for a due chip. */
 [data-surface='plugin.tern.canvas'] .ob-root .ob-attchip {
 	font-weight: 600;
@@ -797,6 +804,14 @@
 }
 [data-surface='plugin.tern.canvas'] .ob-root .ob-tab.ob-tsel.ob-origin.ob-tatt-replied {
 	box-shadow: 0 0 0 1px var(--accent), inset 0 0 0 1.5px var(--accent), inset 0 0 0 3px var(--ok);
+}
+/* A tab Close in the question on show would close (mark-closing-tabs, D3): a red outline over the
+   border. It takes no space, so heights and lines stay. It is drawn inside, since the canvas clips
+   anything past the right column's edge once the graph fills the window; a selected tab's outer
+   ring still shows, and the origin and attention rings sit under it for the question's length. */
+[data-surface='plugin.tern.canvas'] .ob-root .ob-tab.ob-tclosing {
+	outline: 2px solid var(--bad);
+	outline-offset: -2px;
 }
 [data-surface='plugin.tern.canvas'] .ob-root .ob-row.ob-row-origin {
 	color: var(--t1);
