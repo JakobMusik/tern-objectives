@@ -152,13 +152,15 @@ The live check that was task 2.3 is now task 4.3. As the user chose on 2026-11-1
   Verify `tern plugin list` shows `objectives 0.32.0 … ready`, with the other plugins untouched.
 
   Result: `installed objectives 0.32.0 → ~/Library/Application Support/Tern/plugins/objectives`. `tern plugin list` shows `objectives 0.32.0 … window ready`, and the other plugins ready as before: `external-editor 0.1.0`, `omp-narration 0.1.0`, `open-below 0.2.0`, `reply-selection 0.1.0` and `tabnav 0.1.0`. The tag `v0.32.0` (`97cb18b`) is signed and on GitHub.
-- [ ] 4.3 **(live)** With the user:
+- [x] 4.3 **(live)** With the user:
   - "Close n done tabs" in the header, then the question: the tabs it would close show a red ring and "Closes", and its tooltip names them;
   - a done objective's "Close n tabs", in its button row and in the "Marked done" notice: only the tabs that close are marked, and not the ones an open objective keeps open;
   - while each question shows, those tabs are listed first under a red "Closes" heading;
   - Cancel, or a click elsewhere, removes the marks and puts the tabs back.
 
   Record the result here.
+
+  Result (user, 0.32.0): "checked, it's working", in reply to the four checks listed above. The user reported nothing more specific, so no single check is recorded on its own.
 
 ## Workflow follow-up
 
