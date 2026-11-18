@@ -93,7 +93,7 @@ The live check that was task 2.3 is now task 4.3. As the user chose on 2026-11-1
 
 ## 3. Closing tabs listed first
 
-- [ ] 3.1 The "Closes" section (design D1, the header bullet, and D7):
+- [x] 3.1 The "Closes" section (design D1, the header bullet, and D7):
   - **`lib/view.luau`:**
     - before the tab column is placed, add the header question's tabs to `closing`;
     - count the shown closing tabs, then draw the "Closes" heading and `place(closing, "c")`;
@@ -108,6 +108,39 @@ The live check that was task 2.3 is now task 4.3. As the user chose on 2026-11-1
   - "Linked tabs section": "Linked tabs on top", "Linking moves a tab up", "Last link removed" and "This session" still pass. Use this layout's tabs in place of the scenarios' names;
   - shots at 1400 and 460 px with "Above the linked tabs" asking, showing the red "Closes" heading and the `Linked to` heading below it;
   - render times in the serve log stay within the 20 ms target.
+
+  Result (harness, 2026-11-18, Tern 0.9.27). The setup was a fresh serve with docs holding A (3), B (5) and C (7), and ops holding D (10), with the graph opened from A (pane 2 focused). B and C were made again after the bar's Close, as 14 and 17.
+
+  Each column below is read top to bottom: `<…>` is a heading, `[…]` a session heading, and `|divider|` the "Other tabs" divider.
+  - **Header question lists them first:** before, `[docs] A B C [ops] D`. While asking, `<Closes> [docs] C |divider| [docs] A B [ops] D`, and only C was marked.
+  - **Back in place:** after Cancel, `[docs] A B C [ops] D`, with no marks.
+  - **Above the linked tabs:**
+    - selected, `<Linked to “X”> [docs] A B C |divider| [ops] D`;
+    - while asking, `<Closes> [docs] B C <Linked to “X”> [docs] A |divider| [ops] D`, with the tooltip "Close “B” and “C”? 1 tab linked to an open objective stays open. …";
+    - after Cancel, the selected column again;
+    - after Close, docs held only A. The column read `<Linked to “X”> [docs] A <Closed tabs> B C |divider| [ops] D`.
+  - **Lines follow:** in the shot `mc3_bar_1400`, X's line ends at the gap's right edge were at y 242.8, 342.8 and 516.8. The `.ob-thead` centres from `ctl tree` for B, C and A were at 242.2, 342.2 and 516.2, within 0.6 px of each. The crop shows the lines leaving X for B and C at the top, and for A below `Linked to “X”`.
+  - **Notice question across sessions:** `<Closes> [docs] C [ops] D |divider| [docs] A B`, with the tooltip "Close “C” and “D”? …". After Cancel, `[docs] A B C [ops] D`.
+  - **Every shown tab closes:** the button read "Close 4 done tabs". While asking, `<Closes> [docs] A B C [ops] D`, with no divider. After a click on empty space, the usual order came back.
+  - **A tab's own question moves nothing:** C's header read "Close tab?", "Cancel", "Close". The column stayed `[docs] A B C [ops] D`, with no marks.
+  - **"Tabs marked while a close asks", again:** each scenario gave the same marks and tooltips as task 1.1, now with the closing tabs first:
+    - Header question: `<Closes> [docs] A |divider| [docs] B C [ops] D`;
+    - Bar question with a tab that stays: `<Closes> [docs] A B <Linked to “X”> [docs] C |divider| [ops] D`;
+    - Notice question: `<Closes> [docs] A B |divider| [docs] C [ops] D`;
+    - A tab the graph doesn't show: `<Closes> [docs] A |divider| [docs] B C`, with "Close “A” and “D”? …";
+    - Three or more names: `<Closes> [docs] A B C |divider| [ops] D`. X has no other tab shown, so there was no `Linked to` heading.
+
+    Another click put each order back. After the notice expired (11 s, then `pump 2`), the notice was gone and nothing was marked. The pump's scratch tab still showed in that read; `op sessions` showed it gone right after.
+  - **"Linked tabs section", unchanged:**
+    - "Linked tabs on top" (X links C and D): `<Linked to “X”> [docs] C [ops] D |divider| [docs] A B`.
+    - "Linking moves a tab up" (＋ Link on B): `<Linked to “X”> [docs] B C [ops] D |divider| [docs] A`, and the kv dump holds the link.
+    - "Last link removed" (× Unlink on C, X's only link): `[docs] A B C [ops] D`, every bar "＋ Link", and kv `tabs` [].
+    - "This session": `<Linked to “X”> [docs] C |divider| [docs] A B`.
+  - **Shots:**
+    - 1400 px: the red "Closes" heading above "DOCS ● current", and B with its ring and chip.
+    - 460 px: "Closes", docs, B and C, then `Linked to “X”`, docs and A. "Go to tab" was cut to "Go t…" as before, while the headings and chips were whole.
+  - **README:** the "Finish cleanly" item says the tabs move to the top of the tab column under **Closes**.
+  - **Render times:** 60 logged renders, the longest 3.6 ms. The only warning was the helper plugin's Esc probe, as before.
 
 ## 4. Release 0.32.0
 

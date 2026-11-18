@@ -662,6 +662,11 @@
 	overflow: hidden;
 	text-overflow: ellipsis;
 }
+/* The tabs a close question would close, first in the right column (mark-closing-tabs, D7): the red
+   of their ring and chip, as the linked section's heading takes the accent colour. */
+[data-surface='plugin.tern.canvas'] .ob-root .ob-closehead {
+	color: var(--bad);
+}
 [data-surface='plugin.tern.canvas'] .ob-root .ob-divider {
 	flex: none;
 	display: flex;

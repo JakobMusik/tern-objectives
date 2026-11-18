@@ -1014,7 +1014,6 @@ function M.build(state: Store.State, win: Model.Window, ui_state: Ui): Built
 	end
 	local done_tabs: { number } = {}
 	local done_labels: { string } = {}
-	local asking_done = ui_state.confirm ~= nil and ui_state.confirm.kind == "done_tabs"
 	local function add_tab(t: Model.Tab, status: string)
 		local first = Layout.first(right)
 		local link = link_of(t.id)
@@ -1036,7 +1035,7 @@ function M.build(state: Store.State, win: Model.Window, ui_state: Ui): Built
 		local mark = if status == "live" then tab_mark(t.id) else nil
 		-- A live tab only done objectives link joins "Close n done tabs" (D11).
 		local done_only = status == "live" and linked_done[t.id] == true and not linked_open[t.id]
-		local closes = status == "live" and (closing[t.id] == true or (asking_done and done_only))
+		local closes = status == "live" and closing[t.id] == true
 		local node, details = tab_node(t, status, first, linked_open[t.id] == true, link, menu_of(t.id), ui_state, view_state.expanded, resume, linked, asking, mark, t.id == sel_tab, closes)
 		-- The foot row: "Go to tab" on every live tab, and the link bar while an objective is selected.
 		tab_cy[t.id] = Layout.add_tab(right, #t.rows, details, status == "live" or link ~= nil)
@@ -1100,28 +1099,68 @@ function M.build(state: Store.State, win: Model.Window, ui_state: Ui): Built
 		ghost_group("Closed tabs", prefix .. "closedgrp", kept(closed), "closed")
 		ghost_group("Other windows", prefix .. "elsegrp", kept(elsewhere), "elsewhere")
 	end
-	-- While an objective is selected, the shown tabs it links now come first under a heading, and a
-	-- divider leads to the rest; a link change moves its tab on the next render (linked-section D1).
-	local n_top, n_rest = 0, 0
-	if sel_obj ~= nil then
-		local function count(tab: number)
-			if sel_tabs[tab] == true then
-				n_top += 1
-			else
-				n_rest += 1
-			end
-		end
+	-- While a close question shows, the shown tabs its Close would close come first under "Closes"
+	-- (mark-closing-tabs D7). The header's are gathered here, before any tab is drawn (D1).
+	if ui_state.confirm ~= nil and ui_state.confirm.kind == "done_tabs" then
 		for _, p in placed do
 			for _, t in p.tabs do
-				count(t.id)
+				if linked_done[t.id] and not linked_open[t.id] then
+					closing[t.id] = true
+				end
 			end
 		end
-		for _, tab in closed do
-			count(tab)
+	end
+	local function closes(tab: number): boolean
+		return closing[tab] == true
+	end
+	local n_close = 0
+	for _, p in placed do
+		for _, t in p.tabs do
+			if closes(t.id) then
+				n_close += 1
+			end
 		end
-		for _, tab in elsewhere do
-			count(tab)
+	end
+	if n_close > 0 then
+		local first = Layout.first(right)
+		Layout.add_group(right)
+		table.insert(right_kids, el("div", { class = "ob-group ob-closehead" .. first, key = "closehead", title = "These tabs close if you click Close" }, {
+			span("ob-gtext", "Closes", { key = "text" }),
+		}))
+		place(closes, "c")
+	end
+	-- While an objective is selected, the shown tabs it links now come first under a heading, and a
+	-- divider leads to the rest; a link change moves its tab on the next render (linked-section D1).
+	-- Closing tabs are in neither part (mark-closing-tabs D7).
+	local n_top, n_rest = 0, 0
+	local function count(tab: number)
+		if closes(tab) then
+			return
 		end
+		if sel_obj ~= nil and sel_tabs[tab] == true then
+			n_top += 1
+		else
+			n_rest += 1
+		end
+	end
+	for _, p in placed do
+		for _, t in p.tabs do
+			count(t.id)
+		end
+	end
+	for _, tab in closed do
+		count(tab)
+	end
+	for _, tab in elsewhere do
+		count(tab)
+	end
+	local function divider()
+		Layout.add_divider(right)
+		table.insert(right_kids, el("div", { class = "ob-divider", key = "divider" }, {
+			el("div", { class = "ob-drule", key = "a" }),
+			span("ob-dpill", "Other tabs", { key = "text" }),
+			el("div", { class = "ob-drule", key = "b" }),
+		}))
 	end
 	if sel_obj ~= nil and n_top > 0 then
 		local heading = "Linked to “" .. sel_obj.title .. "”"
@@ -1131,17 +1170,20 @@ function M.build(state: Store.State, win: Model.Window, ui_state: Ui): Built
 			span("ob-gtext", heading, { key = "text" }),
 		}))
 		place(function(tab)
-			return sel_tabs[tab] == true
+			return sel_tabs[tab] == true and not closes(tab)
 		end, "l")
 		if n_rest > 0 then
-			Layout.add_divider(right)
-			table.insert(right_kids, el("div", { class = "ob-divider", key = "divider" }, {
-				el("div", { class = "ob-drule", key = "a" }),
-				span("ob-dpill", "Other tabs", { key = "text" }),
-				el("div", { class = "ob-drule", key = "b" }),
-			}))
+			divider()
 			place(function(tab)
-				return sel_tabs[tab] ~= true
+				return sel_tabs[tab] ~= true and not closes(tab)
+			end, "")
+		end
+	elseif n_close > 0 then
+		-- Everything after "Closes", with no linked section left to head it.
+		if n_rest > 0 then
+			divider()
+			place(function(tab)
+				return not closes(tab)
 			end, "")
 		end
 	else
