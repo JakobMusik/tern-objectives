@@ -257,8 +257,9 @@ end
 -- The open objectives in the order the graph lists them (sort-button, design D2): the list's own
 -- order, the user's; by priority first, or by creation time, newest first, with the list's order
 -- breaking ties. `held` gives the priority to sort by while badge clicks hold the order
--- (sort-by-priority, design D3); an objective it lacks sorts by its own.
-function M.open_in_order(s: State, held: { [string]: number }?): { Objective }
+-- (sort-by-priority, design D3); an objective it lacks sorts by its own. `pinned`, the objective
+-- "＋ New objective" or ⌥N just created, comes first whatever the method (pin-new-objective, D3).
+function M.open_in_order(s: State, held: { [string]: number }?, pinned: string?): { Objective }
 	local list: { Objective } = {}
 	local index: { [string]: number } = {}
 	for _, o in s.objectives do
@@ -286,6 +287,15 @@ function M.open_in_order(s: State, held: { [string]: number }?): { Objective }
 			end
 			return index[a.id] < index[b.id]
 		end)
+	end
+	if pinned ~= nil then
+		for i, o in list do
+			if o.id == pinned then
+				table.remove(list, i)
+				table.insert(list, 1, o)
+				break
+			end
+		end
 	end
 	return list
 end

@@ -49,6 +49,11 @@ local moving: string? = nil
 -- fresh open end it.
 local held: { [string]: number }? = nil
 
+-- The objective "＋ New objective" or ⌥N just created, listed first while it stays the selected, open
+-- objective (pin-new-objective, design D1, D2). Never stored; `build`, a grip's lift and a fresh open
+-- end it.
+local pinned: string? = nil
+
 -- The question an action is asking in place (custom-order-and-direct-controls, design D4), never
 -- stored: "close" for an objective's tabs, from its bar or from the done notice, "done_tabs" for
 -- the header's "Close n done tabs" (D11), "reopen" for a done objective's box, asked in its bar
@@ -119,6 +124,14 @@ local function build(cx: WindowCx): View.Built
 	if selected ~= nil and Store.find(state, selected) == nil then
 		selected = nil
 	end
+	-- The pin lasts only while its objective is the selected, open one (pin-new-objective, D2): this
+	-- covers every click that changes the selection, Delete, marking done and other windows' changes.
+	if pinned ~= nil then
+		local p = Store.find(state, pinned)
+		if pinned ~= selected or p == nil or p.done then
+			pinned = nil
+		end
+	end
 	local lifted = if moving ~= nil then Store.find(state, moving) else nil
 	if lifted == nil or lifted.done then
 		moving = nil
@@ -153,6 +166,7 @@ local function build(cx: WindowCx): View.Built
 		moving = moving,
 		confirm = confirm,
 		held = held,
+		pinned = pinned,
 		search = search,
 	})
 	if built.due == 0 then
@@ -203,6 +217,7 @@ function M.open(cx: WindowCx, keep_origin: boolean?)
 		search = nil
 		moving = nil
 		held = nil
+		pinned = nil
 		confirm = nil
 		page = "graph"
 		local focused = cx.session:focused()
@@ -279,6 +294,7 @@ local function new_objective(cx: WindowCx, tab: number?, facts: Model.Tab?, wind
 			cx2:toast("error", "An objective needs a title")
 		elseif tab == nil then
 			selected = id
+			pinned = id
 		else
 			cx2:toast("success", "Objective created for this tab")
 		end
@@ -455,7 +471,7 @@ function M.link_tab(cx: WindowCx)
 		no_tab(cx)
 		return
 	end
-	local open = Store.open_in_order(Store.read(), held)
+	local open = Store.open_in_order(Store.read(), held, pinned)
 	if #open == 0 then
 		cx:toast("info", "No objectives yet", "Create one with Objectives: New objective for this tab…")
 		return
@@ -906,8 +922,10 @@ function M.action(ev: Action, cx: WindowCx)
 		selected = nil
 		selected_tab = nil
 	elseif act == "lift" then
-		-- The grip lifts its node; the lifted node's grip puts it back.
+		-- The grip lifts its node; the lifted node's grip puts it back. A move works on the stored
+		-- order, so any lift ends the pin (pin-new-objective, D2).
 		moving = if moving == value then nil else value
+		pinned = nil
 	elseif act == "unlift" then
 		-- The Moving notice's Cancel: the move already ended above.
 	elseif act == "drop" then
@@ -1039,6 +1057,8 @@ function M.action(ev: Action, cx: WindowCx)
 			later = true
 		end
 	elseif act == "new" then
+		-- Review mode ends first, as for ⌥N, since it hides open objectives (pin-new-objective, D6).
+		reviewing = false
 		new_objective(cx, nil, nil, "", true)
 		later = true
 	elseif act == "search" then

@@ -183,6 +183,11 @@
 	color: var(--accent);
 	background: rgb(from var(--accent) r g b / 12%);
 }
+/* The new objective listed first (pin-new-objective, D5): the accent tint of "review due". */
+[data-surface='plugin.tern.canvas'] .ob-root .ob-newchip {
+	color: var(--accent);
+	background: rgb(from var(--accent) r g b / 12%);
+}
 /* Attention chips (attention-marks-and-titles D3): solid, so "needs you" can't pass for a due chip. */
 [data-surface='plugin.tern.canvas'] .ob-root .ob-attchip {
 	font-weight: 600;

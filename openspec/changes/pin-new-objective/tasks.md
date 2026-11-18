@@ -18,7 +18,7 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
 
 ## 1. The new objective listed first
 
-- [ ] 1.1 The pin, its order and its end (design D1–D4):
+- [x] 1.1 The pin, its order and its end (design D1–D4):
   - `pinned` in `lib/app.luau`, set in `new_objective` with `selected` when no tab was given, cleared in `build` unless it equals `selected` and names an open objective, by `lift` and by a fresh `M.open`; passed to `View.build` and, in `M.link_tab`, to `Store.open_in_order`;
   - `Store.open_in_order(s, held?, pinned?)` in `lib/store.luau`, moving the pinned objective first;
   - `Ui.pinned` in `lib/view.luau`, passed to `Store.open_in_order` for the left column and the tab menu, and let through the tag filter in `visible`.
@@ -27,7 +27,26 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
   - objectives-graph "New objective listed first", every scenario except the "New" chip, which task 1.2 checks. For "Link choices list it first", read the tab menu after `ctl click` with the right button on Guides' header, then run "Objectives: Link this tab…" from `ctl palette objectives` and read the picker. For "Fresh open ends it", press ⌃⌘O twice with `ctl key`;
   - plugin-settings "New objective defaults", "Start at P1, at the bottom", "Bottom of its priority" and "First when sorted newest first";
   - objectives-graph "Custom order", "New objective on top"; "Sorted by priority", "Sorted list"; "Sorting waits for another click", "Badge clicks hold the order" and "Another click sorts", unchanged.
-- [ ] 1.2 The "New" chip, the button in review mode and the README (design D5, D6):
+
+  Result (harness, 2026-11-18, Tern 0.9.27). A fresh serve with one session, docs, holding the tab Guides (tab 3, shell pane 2), the only tab the scenarios name; with no omp pane, no chat folder was created. Each scenario started from a store with "Release" (P1, created 11-17 09:00) and "Fix login bug" (P3, 10:00), sorted by priority, new objectives at P3 on top, unless it says otherwise; the new objective got id o100.
+  - **First when sorted by priority:** "Write slides" (selected), "Release", "Fix login bug"; the kv dump listed "Write slides" first.
+  - **Its own controls keep it first:** after its badge (P2), "＋ Link" on Guides (kv `tabs` [3]) and Guides' header (drawn `ob-tsel`), the list read "Write slides" (selected), "Release", "Fix login bug" each time.
+  - **Deselected, it takes its place:** "Release", "Write slides", "Fix login bug".
+  - **Another objective selected:** a click on "Fix login bug" near the foot of its node gave "Release", "Write slides", "Fix login bug" (selected). A first try clicked the node's right end, its link button, which linked it to Guides without selecting it, so "Write slides" stayed first, as it should.
+  - **A second new objective** (⌥N, `ctl key alt+n`): "Write notes" (selected), "Release", "Write slides", "Fix login bug".
+  - **Bottom of Your order:** "Write slides" (selected), "Release", "Fix login bug"; after empty space, "Release", "Fix login bug", "Write slides", as the kv dump stores them.
+  - **Lifting a grip ends it:** "Release", "Write slides" (selected, drawn `ob-lifted`), "Fix login bug".
+  - **Marking it done ends it:** after the done box, "Release", "Fix login bug"; after the notice's Undo, "Release", "Write slides" (still selected), "Fix login bug".
+  - **Under a tag filter** ("#api" on, only "Fix login bug" tagged): "Fix login bug" before; "Write slides" (selected), "Fix login bug" after creating; only "Fix login bug" after empty space.
+  - **Link choices list it first:** the tab menu read "Write slides · 11-18 16:43", "Release · 11-17 09:00", "Fix login bug · 11-17 10:00", then Copy. The picker, opened with `ctl plugins run plugin.objectives.link_tab` from pane 2, read "Write slides", "Release", "Fix login bug". Escaping the menu left the graph and the order as they were.
+  - **Fresh open ends it:** the first ⌃⌘O closed the graph, the second opened it with "Release", "Write slides", "Fix login bug" and nothing selected.
+  - **Not for a tab's new objective:** "Objectives: New objective for this tab…" from pane 2 stored "Write slides" first, linked to tab 3; the graph opened with "Release", "Write slides", "Fix login bug", nothing selected.
+  - **"New objective defaults":**
+    - **Start at P1, at the bottom** (Your order, P1 and Bottom picked on the page): "Write slides" first while selected; after empty space, "Fix login bug", "Review pull requests", "Write slides" with a P1 badge. The kv dump held priority 1 for it and `start_priority` 1, `new_place` "bottom".
+    - **Bottom of its priority:** after empty space, "Release", "Write slides", "Fix login bug".
+    - **First when sorted newest first** (Release created at 10:00, after "Fix login bug"): "Write slides" (selected), "Release", "Fix login bug"; the kv dump listed "Write slides" last.
+  - **Unchanged:** "New objective on top" (Your order, top): "Write slides", "Fix login bug", "Review pull requests". "Sorted list": "Update dependencies", "Review pull requests", "Fix login bug", "Write slides", the kv dump in its old order. "Badge clicks hold the order": "Write slides" third at P2, then P1; "Another click sorts": "Fix login bug", "Write slides", "Review pull requests", kv priority 1.
+- [x] 1.2 The "New" chip, the button in review mode and the README (design D5, D6):
   - the chip in `objective_node`, after the creation time on the title's last line, and `.ob-newchip` in `styles.css`;
   - the `new` verb ends review mode;
   - README: the order paragraph says a new objective made with "＋ New objective" or ⌥N is listed first, with a "New" chip, while it stays selected, then moves to its place; the review-mode paragraph says "＋ New objective" leaves review mode as ⌥N does.
@@ -39,6 +58,16 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
   - a shot in light and dark (`ctl appearance light`, `ctl appearance dark`) with the chip's tint;
   - objectives-graph "New objective button", "Create and select" and "From review mode", with two due done objectives in the store; "New objective key", "From review mode", unchanged; "Graph returns after its pickers", "Clicking into a field";
   - render times in the serve log stay within the 20 ms target.
+
+  Result (harness, as task 1.1):
+  - **The chip:** `ctl tree '.ob-newchip'` found one chip, "New", with the tooltip "Just created · listed first while it stays selected". It was on "Write slides" in "First when sorted by priority" and after each click of "Its own controls keep it first", only on "Write notes" in "A second new objective", and on no node after deselecting, selecting another, the grip, done and Undo, empty space under the tag filter, and the fresh open.
+  - **At 1400 px** (crop `pn_1400_crop`): "P3 Write slides 11-18 16:44 New" on the title line, the chip 16 px tall, 5.9 px after the time, in the 18 px line. The node is 78 px tall, as the same node is when selected without the chip: 48 px plus its action bar. The unselected nodes are 48 px.
+  - **At 460 px** (crop `pn_460_crop`): the nodes are 117 px wide, and the grip, done box and badge fill the line, so no node shows its title, time or chip. "Release", with no chip, looks the same (`pn_460_release`), so this was already so.
+  - **The cut at middle widths:** at 760 px the time is whole and the chip is cut (`pn_760_crop`). At 700 and 640 px the chip is hidden and the time cut to "11-18 16:4" and "11-18". The same node unpinned at 700 px cuts the time at the same place (`pn_700_nopin_crop`), so the chip goes first and doesn't cost the time anything.
+  - **Light and dark** (`pn_light_crop`, `pn_dark_crop`): accent text on an accent tint, readable in both, like "review due".
+  - **"New objective button":** "Create and select" read P3 and the single tab node's "＋ Link". "From review mode" (two due done objectives, "Review (2)" active and listing them): after "＋ New objective" and "Write slides", the left column read "Write slides" (selected), "Release", "Fix login bug", the Done row and its two objectives, with "Review (2)" not active. The same with ⌥N ("New objective key", "From review mode").
+  - **"Clicking into a field":** a click on the field's input (`ctl tree input`), "Write slides" and Enter showed the graph with "Write slides" selected and first, with its chip. In this serve the click didn't close the graph.
+  - **Render times:** 87 renders on the small stores, the longest 1.7 ms. With the 10-objective demo store, creating, a badge click and empty space took 5 renders, the longest 6.0 ms. The only warning was the helper plugin's Esc probe, as before.
 
 ## 2. Release 0.30.0
 

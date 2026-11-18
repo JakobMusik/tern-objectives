@@ -46,6 +46,9 @@ export type Ui = {
 	-- While badge clicks hold the order (sort-by-priority, design D3): the priority each open objective
 	-- had at the first of them, which the sorted order keeps using until the hold ends.
 	held: { [string]: number }?,
+	-- The objective "＋ New objective" or ⌥N just created, while it stays selected: first in the open
+	-- list and the tab menu, past the tag filter, with a "New" chip (pin-new-objective, D3–D5).
+	pinned: string?,
 	-- The search's text while one is on (search-and-tab-marks, design D1): objectives that don't match
 	-- it are hidden, the selected one excepted (D3).
 	search: string?,
@@ -332,6 +335,11 @@ local function objective_node(o: Store.Objective, ui_state: Ui, first: string, t
 		if i == #title and created ~= nil then
 			table.insert(row, span("ob-created", created, { key = "created" }))
 		end
+		-- The new objective listed first ends its last line in a "New" chip, after the time, so a
+		-- narrow line cuts the chip first (pin-new-objective, D5).
+		if i == #title and ui_state.pinned == o.id then
+			table.insert(row, span("ob-chip ob-newchip", "New", { key = "new", title = "Just created · listed first while it stays selected" }))
+		end
 		table.insert(rows, el("div", { class = "ob-tline", key = "t" .. i }, row))
 	end
 	table.insert(l1, el("div", { class = "ob-name", key = "name" }, rows))
@@ -600,7 +608,8 @@ function M.build(state: Store.State, win: Model.Window, ui_state: Ui): Built
 	local words = if ui_state.search ~= nil then Store.search_words(ui_state.search) else nil
 
 	local function visible(o: Store.Objective): boolean
-		if view_state.tag ~= nil and table.find(o.tags, view_state.tag) == nil then
+		-- The new objective listed first shows whatever the tag (pin-new-objective, D4).
+		if view_state.tag ~= nil and o.id ~= ui_state.pinned and table.find(o.tags, view_state.tag) == nil then
 			return false
 		end
 		-- The selected objective stays, so one created or renamed during a search stays in view (D3).
@@ -621,7 +630,7 @@ function M.build(state: Store.State, win: Model.Window, ui_state: Ui): Built
 	-- Open objectives in the graph's order, by the sort method, and done ones in the Done group's, by
 	-- its own (sort-button, design D2; done-sort-button, D2); filters only leave some out.
 	local open_list, done_list = {}, {}
-	for _, o in Store.open_in_order(state, ui_state.held) do
+	for _, o in Store.open_in_order(state, ui_state.held, ui_state.pinned) do
 		if visible(o) then
 			table.insert(open_list, o)
 		end
@@ -929,8 +938,8 @@ function M.build(state: Store.State, win: Model.Window, ui_state: Ui): Built
 		return { unlink = sel_tabs[tab] == true, title = sel_obj.title }
 	end
 	-- The tab menu's rows: every open objective in the graph's order, whatever the filters (design P6;
-	-- sort-by-priority D2).
-	local menu_objs = Store.open_in_order(state, ui_state.held)
+	-- sort-by-priority D2; pin-new-objective D3).
+	local menu_objs = Store.open_in_order(state, ui_state.held, ui_state.pinned)
 	-- Each row's label carries the creation time; a menu row's `detail` is only a tooltip
 	-- (creation-time-suffix D3). Formatted once, not once per tab.
 	local menu_labels: { [string]: string } = {}
