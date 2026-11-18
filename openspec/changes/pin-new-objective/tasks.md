@@ -79,13 +79,15 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
   Verify `tern plugin list` shows `objectives 0.30.0 … ready`, with the other plugins untouched.
 
   Result: `installed objectives 0.30.0 → ~/Library/Application Support/Tern/plugins/objectives`. `tern plugin list` shows `objectives 0.30.0 … window ready`, and the other plugins ready as before: `external-editor 0.1.0`, `omp-narration 0.1.0`, `open-below 0.2.0`, `reply-selection 0.1.0` and `tabnav 0.1.0`. The tag `v0.30.0` (`75d01b0`) is signed and on GitHub.
-- [ ] 2.3 **(live)** With the user:
+- [x] 2.3 **(live)** With the user:
   - "＋ New objective" and ⌥N list the new objective first, selected, with a "New" chip after its creation time;
   - its badge, Note, Due, Tags, the tabs' link bars and selecting a tab keep it first;
   - clicking empty space or another objective moves it to its sorted place, and the chip goes;
   - under a tag filter it shows until it is deselected.
 
   Record the result here.
+
+  Result (user, 0.30.0): "checked, it's working", in reply to the four checks listed above. The user reported nothing more specific, so no single check is recorded on its own.
 
 ## Workflow follow-up
 
