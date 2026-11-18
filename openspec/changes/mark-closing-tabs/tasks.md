@@ -88,10 +88,38 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
   Verify `tern plugin list` shows `objectives 0.31.0 … ready`, with the other plugins untouched.
 
   Result: `installed objectives 0.31.0 → ~/Library/Application Support/Tern/plugins/objectives`. `tern plugin list` shows `objectives 0.31.0 … window ready`, and the other plugins ready as before: `external-editor 0.1.0`, `omp-narration 0.1.0`, `open-below 0.2.0`, `reply-selection 0.1.0` and `tabnav 0.1.0`. The tag `v0.31.0` (`ebacc58`) is signed and on GitHub.
-- [ ] 2.3 **(live)** With the user:
+
+The live check that was task 2.3 is now task 4.3. As the user chose on 2026-11-18, it covers 0.31.0's marks and 0.32.0's order together.
+
+## 3. Closing tabs listed first
+
+- [ ] 3.1 The "Closes" section (design D1, the header bullet, and D7):
+  - **`lib/view.luau`:**
+    - before the tab column is placed, add the header question's tabs to `closing`;
+    - count the shown closing tabs, then draw the "Closes" heading and `place(closing, "c")`;
+    - the linked section, the divider and their counts leave closing tabs out;
+    - `add_tab` marks a tab by `closing` alone.
+  - **`styles.css`:** `.ob-closehead`.
+  - **README:** the "Finish cleanly" item says the tabs are also listed first.
+
+  Verify, with task 1.1's layout (docs: A, B, C; ops: D), the graph opened from A, and the column read in order with `ctl tree '.ob-col-r > *'` (headings, sessions, divider and tab nodes):
+  - objectives-graph "Closing tabs listed first", every scenario. For "Lines follow", take a shot, then compare each of X's line ends in the gap crop with its tab header's vertical centre from the layout JSON;
+  - "Tabs marked while a close asks", every scenario again;
+  - "Linked tabs section": "Linked tabs on top", "Linking moves a tab up", "Last link removed" and "This session" still pass. Use this layout's tabs in place of the scenarios' names;
+  - shots at 1400 and 460 px with "Above the linked tabs" asking, showing the red "Closes" heading and the `Linked to` heading below it;
+  - render times in the serve log stay within the 20 ms target.
+
+## 4. Release 0.32.0
+
+- [ ] 4.1 Version `0.32.0` in `plugin.toml`. Verify that an isolated `tern plugin install` of the repo folder prints `installed objectives 0.32.0`. Tick this box, then commit, push `main` and tag `v0.32.0` (annotated, message "objectives 0.32.0").
+- [ ] 4.2 **(live)** After the push has finished, run `tern plugin install github.com/JakobMusik/tern-objectives --force` from a shell with no harness variables.
+
+  Verify `tern plugin list` shows `objectives 0.32.0 … ready`, with the other plugins untouched.
+- [ ] 4.3 **(live)** With the user:
   - "Close n done tabs" in the header, then the question: the tabs it would close show a red ring and "Closes", and its tooltip names them;
   - a done objective's "Close n tabs", in its button row and in the "Marked done" notice: only the tabs that close are marked, and not the ones an open objective keeps open;
-  - Cancel, or a click elsewhere, removes the marks.
+  - while each question shows, those tabs are listed first under a red "Closes" heading;
+  - Cancel, or a click elsewhere, removes the marks and puts the tabs back.
 
   Record the result here.
 

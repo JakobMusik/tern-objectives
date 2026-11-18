@@ -14,6 +14,11 @@ See proposal.md, "Why".
   - **Header:** in the header, when `#done_tabs > 0`.
 
   The left column is built before the right one, and the header last.
+- **The tab column's order** (`View.build`, linked-section D1):
+  - `placed` lists the shown sessions, the origin's first, each with its live tabs.
+  - `place(keep, prefix)` draws a session heading and that session's tabs for every session that has a tab `keep` accepts, then the "Closed tabs" and "Other windows" groups. `prefix` keeps the heading keys of the two passes apart.
+  - With an objective selected and one of its tabs shown, the column is `Linked to “X”` with `place(sel_tabs)`, then, if other tabs are shown, the "Other tabs" divider with `place(not sel_tabs)`; otherwise it is `place(nil)`.
+  - `Layout.add_group`, `add_divider`, `add_session` and `add_tab` stack each part's height in order, and each line's end comes from the tab's place in that stack. So a tab placed elsewhere takes its lines along.
 - **The tab node** (`tab_node`):
   - `.ob-tab`, `overflow: hidden`, with a 1 px border;
   - **origin ring:** an inset box-shadow;
@@ -48,7 +53,7 @@ See proposal.md, "Why".
 `View.build` keeps a set, `closing: {[number]: boolean}`, filled from the list the drawn question's Close uses:
 - **Bar:** in `add_node`, when it sets `ask = "close"`: the `tabs` that `M.closable` returned there.
 - **Notice:** before the columns, when `ui_state.undo_close` and `confirm` (`kind = "close"`, `where = "notice"`) name the same objective: `M.closable` for it. The header then reuses this list for its question rather than calling `closable` again.
-- **Header:** in `add_tab`, when `confirm.kind == "done_tabs"`, each tab that joins `done_tabs`. The test for joining `done_tabs` moves before the call to `tab_node`, so the node knows whether it closes.
+- **Header:** before the tab column is placed, when `confirm.kind == "done_tabs"`, each shown live tab (in `placed`) that only done objectives link: the same test `add_tab` uses to gather `done_tabs`. D7 needs the whole set before the first tab is drawn.
 
 Only live tab nodes are marked: `closable` and `done_tabs` hold only tabs that this window holds.
 
@@ -75,7 +80,7 @@ They go with the question, through the same conditions. A click clears `confirm`
 - `.ob-chip` is `flex: none`, so in a narrow column `.ob-line`, the "where" text, is cut first.
 
 ### D5. The tooltip names the tabs
-A helper, `names(list)`, quotes labels as the attention chip's tooltip does: “A”; “A” and “B”; “A”, “B” and “C”. Each question's tooltip starts with "Close " .. names .. "?":
+A helper, `quote_list(labels)`, quotes labels as the attention chip's tooltip does: “A”; “A” and “B”; “A”, “B” and “C”. It isn't named `names`, since `tab_mark` has a local of that name. Each question's tooltip starts with "Close " .. quote_list(…) .. "?":
 - **Bar** (`.ob-askrow`): this replaces today's "Close n tabs?". The kept-tab and Resume sentences follow as today.
 - **Notice** (`.ob-undo-text`): this goes before "Closing ends their programs; omp chats come back with Resume."
 - **Header** (`.ob-undo-text`): this goes before "Closing ends their programs; omp chats come back with Resume. No link changes."
@@ -85,13 +90,31 @@ The labels come from `win.tabs[tab].label` for the bar and the notice, and from 
 ### D6. No marking on hover
 The user chose marking only while the question shows. Marking on hover would need the button to be the DOM sibling just before `.ob-graph` (`.ob-closedone:hover + .ob-graph .ob-tclosing`), since `~` and `:has()` don't exist and a canvas gets no hover events. The header would then have to be rebuilt with CSS `order`.
 
+### D7. Listed first
+While `closing` holds a shown live tab, the column starts with a "Closes" section:
+- a group heading, `div.ob-group.ob-closehead` with the text "Closes" and the tooltip "These tabs close if you click Close", in `--bad` as `.ob-linkhead` is in the accent colour (`Layout.add_group`);
+- `place(closing, "c")`: the closing tabs under their session headings, in the column's usual session and tab order.
+
+The rest follows as the column would be without them, with each `keep` also refusing closing tabs:
+- **With an objective selected:** if any of its other tabs is shown, `Linked to “X”` and `place(sel_tabs and not closing, "l")` come next, then, if other tabs are shown, the divider and `place(neither, "")`.
+- **Otherwise,** if any other tab is shown, the divider and `place(not closing, "")`.
+
+The counts that decide on the heading and the divider (`n_top`, `n_rest`) leave closing tabs out. A session whose tabs all close shows its heading only in the "Closes" section.
+
+Only the tab column moves. The bar's answers are in the left column and the notice's and the header's are in the header, so nothing moves under the pointer. A tab's own "Close tab?" (`confirm.kind == "tab"`) sets no `closing` and moves nothing. Its Close button sits on the node, which must stay where it is.
+
+*Alternatives:*
+- **Closing tabs first inside the `Linked to` section** for the bar's question only. Rejected: the header's and the notice's tabs can be anywhere, and one rule for all three is easier to read.
+- **Scrolling to the first marked tab.** Rejected: `tern.d.luau` has no scroll call for a canvas (its only "scroll" lines, L496, L537 and L646, are about block and lens views), and the section is at the top anyway.
+
 ## Risks / Trade-offs
 
 - **The outline is clipped** past the right column's edge when the graph fills the window (task 1.2). → D3 draws it inside the border.
-- **Marked tabs out of view.** The right column can be taller than the window. → The tooltip names every tab. With the bar's question, the selected objective's tabs come first under "Linked tabs".
+- **Marked tabs out of view.** The right column can be taller than the window. → D7 lists them first, and the tooltip names every tab, including those the scope hides.
+- **The column jumps** when a question starts and ends. → This is the point of D7, and only the tab column moves, never the control under the pointer.
 - **A long tooltip** when many tabs close. → Acceptable: it is shown only on hover, and the count stays in the visible text.
 - **Cost:** one extra `closable` call per render, and only while the notice asks. → The harness checks renders stay within the 20 ms target.
 
 ## Migration Plan
 
-Nothing is stored. A rollback to 0.30.0 drops the marks and the names in the tooltips.
+Nothing is stored. A rollback to 0.31.0 keeps the marks and drops the order; a rollback to 0.30.0 drops the marks and the names in the tooltips.
