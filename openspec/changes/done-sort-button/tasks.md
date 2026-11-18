@@ -91,7 +91,7 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
 
 ## 2. The README screenshot
 
-- [ ] 2.1 Take `docs/graph.png` again, as select-tab-nodes 7.1 took it (`ctl resize 1045 1060`, the same crop), from the demo store with both methods by priority, so the open Done group's row ends in the button reading "Priority". Update its alt text to name the button. `docs/review.png` shows review mode, which has no Done group, and stays. Show the draft to the user before committing it.
+- [x] 2.1 Take `docs/graph.png` again, as select-tab-nodes 7.1 took it (`ctl resize 1045 1060`, the same crop), from the demo store with both methods by priority, so the open Done group's row ends in the button reading "Priority". Update its alt text to name the button. `docs/review.png` shows review mode, which has no Done group, and stays. Show the draft to the user before committing it.
 
   Verify:
   - plugin-package "README": "README contents" and "Graph screenshot first";
@@ -99,6 +99,19 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
   - the Done row ends in "⇅ Priority", and the header still shows its sort button after the Search button;
   - every line end in the shot sits within 2 px of its node and tab header centres, read from the layout JSON;
   - the user approved the draft.
+
+  Result (harness, 2026-11-18, the same serve as group 1):
+  - **Store and chats:**
+    - the demo store was written with today's dates, `sort` and `done_sort` both "priority";
+    - Server's omp chat was asked to ask "Restart the server before deploying?" and waited for input after 3.2 s;
+    - with Guides focused, Release notes' chat answered "In two short sentences, say what release notes for a web app should cover." in 3.2 s, `idle` with its alert.
+  - **`graph.png`** (1828 × 1856): at `ctl resize 1045 1060`, opened from Guides, the pointer at (3, 3), no banners. The glimpse was 914.31 × 928.2 at 65.34, 82.91, as in select-tab-nodes 7.1, and was cropped there; Benchmarks ends at 957.4, above the footer.
+    - **Contents:** the header reads All, This session, Search, ⇅ Priority, the tag chips, "Review (2)", ⚙, "＋ New objective". The open Done group's row ends in "⇅ Priority", and the group lists "Profile slow search queries", "Set up CI", "Restyle the docs site". Marks and tint are as in 0.28.2's shot. All 7 open nodes have grips, and no node has ⋯.
+    - **Line ends:** all 7 left and 6 right within 0.34 px.
+  - **Alt text:** it now says the open Done group's row ends in its own sort button reading "Priority", with its objectives by priority.
+  - **README checks:** two images, `docs/graph.png` first (line 5), then `docs/review.png` (line 26), unchanged. "README contents" still holds.
+  - **Approval:** the user approved the draft before it was committed.
+  - **Cleanup:** the serve was stopped, and the chat folders `--private-tmp-tobj-w-demo-notes--` and `--private-tmp-tobj-w-demo-serverchat--` were removed. The older `--private-tmp-tobj-w-docs--` and `--private-tmp-tobj-w-server--` were left.
 
 ## 3. Release 0.29.0
 
