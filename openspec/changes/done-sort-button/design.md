@@ -74,13 +74,17 @@ The click names the next method, as the header's button does (sort-button D3), s
 `.ob-dsortbtn` sits at the row's right end with `margin-left: auto`. It inherits the row's 11 px text, with `font-weight: 400` so it reads as a control rather than a heading. Inside the 24 px row it sets `line-height: 16px` and `padding: 1px 8px 1px 6px`, making it 18 px tall, so the row's height doesn't change. It may shrink (`flex: 0 1 auto; min-width: 0`), and its label is cut with "…", so on a narrow graph the icon stays and the label shortens. `.ob-sortt` in it gets `overflow: hidden; text-overflow: ellipsis`. The caret and "Done (n)" don't shrink.
 
 ### D6. The settings page
-The "Order" section gains `setting_row("dsort", "Sort Done by", …)` after "Sort by", with `segments` Recently done, Priority, Newest first and Next review on `setdsort`. The note becomes: "Priority keeps your order within each priority. The sort button in the graph's header changes "Sort by", and the one in the open Done group's row changes "Sort Done by"."
+The "Order" section gains `setting_row("dsort", "Sort Done by", …)` after "Sort by", with `segments` Recently done, Priority, Newest first and Next review on `setdsort`. The note becomes: "Priority keeps your order within each priority. The sort buttons in the graph's header and Done group change these too."
+
+The row is about 400 px wide, wider than the page at 460 px (task 1.1). `setting_row` takes an optional `wrap` flag, which adds the class `ob-srow-wrap`: `flex-wrap: wrap; row-gap: 4px`, with the segments at the right (`margin-left: auto`). On a narrow page the segments go onto a second line under the label; on a wide page the row is one line, 32 px tall like the others. Only this row wraps, so the shortcut rows keep cutting their labels as before.
+
+*Why a shorter note:* the first wording, naming both rows, was cut with "…" at the page's 760 px width (task 1.1).
 
 ## Risks / Trade-offs
 
 - **A narrow graph.** At 460 px the left column is about 140 px wide. "▾ Done (3)" and "⇅ Recently done" don't both fit. → D5: the label is cut, the icon stays. The harness records what shows at 460 px.
 - **The row's height.** A button taller than 24 px would be clipped by the row's `overflow: hidden`, and a taller row would move the done nodes off their lines. → D5's 18 px button; the harness checks the row's height and the done nodes' line ends at 1400 and 460 px.
-- **The settings row's width.** Four segments are wider than "Sort by"'s three. → The harness shoots the page at 460 px.
+- **The settings row's width.** Four segments are wider than "Sort by"'s three, and at 460 px they ran past the page, cutting "Next review" (task 1.1). → D6: the row wraps.
 - **Two buttons reading "Priority".** With both lists sorted by priority, the header and the Done row show the same label. → Each sits by the list it sorts; their tooltips say what a click does.
 - **Downgrade.** 0.28.2 drops `done_sort` at its next write, and its Done group follows `sort`. An upgrade back copies `sort` again. → Acceptable for a preference.
 - **Cost:** one sort of the done objectives per render, as today. → The harness checks renders stay within the 20 ms target.

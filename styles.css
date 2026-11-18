@@ -616,6 +616,29 @@
 	font-weight: 600;
 	user-select: none;
 }
+/* The open Done group's sort button (done-sort-button, design D5): the header's sort button, at the
+   row's right end and 18 px tall, so the 24 px row keeps its height and the done nodes their lines.
+   On a narrow graph its label is cut with "…" and the icon stays; the caret and "Done (n)" don't shrink. */
+[data-surface='plugin.tern.canvas'] .ob-root .ob-donegrp > .ob-caret,
+[data-surface='plugin.tern.canvas'] .ob-root .ob-donegrp > .ob-gtext {
+	flex: none;
+}
+[data-surface='plugin.tern.canvas'] .ob-root .ob-dsortbtn {
+	flex: 0 1 auto;
+	min-width: 0;
+	margin-left: auto;
+	padding: 1px 8px 1px 6px;
+	line-height: 16px;
+	font-weight: 400;
+}
+[data-surface='plugin.tern.canvas'] .ob-root .ob-dsortbtn svg {
+	flex: none;
+}
+[data-surface='plugin.tern.canvas'] .ob-root .ob-dsortbtn .ob-sortt {
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
 /* The selected objective's tabs, first in the right column (design D4), and the divider before the
    rest: a 3 px accent bar on both sides of an "Other tabs" pill (linked-section D2). Its height comes
    from the layout sheet (divider_h), so the lines below it stay on their nodes. */
@@ -1091,6 +1114,15 @@
 	text-overflow: ellipsis;
 	white-space: nowrap;
 	user-select: none;
+}
+/* A row whose controls go onto a second line, at the right, when the page is too narrow for both
+   (done-sort-button, design D6): "Sort Done by" and its four choices. */
+[data-surface='plugin.tern.canvas'] .ob-settings .ob-srow-wrap {
+	flex-wrap: wrap;
+	row-gap: 4px;
+}
+[data-surface='plugin.tern.canvas'] .ob-settings .ob-srow-wrap > .ob-seg {
+	margin-left: auto;
 }
 [data-surface='plugin.tern.canvas'] .ob-settings .ob-skeys {
 	flex: none;

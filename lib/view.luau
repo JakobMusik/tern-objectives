@@ -95,6 +95,14 @@ local SORTS: { [string]: { label: string, tip: string, next: string } } = {
 	created = { label = "Newest", tip = "Sorted newest first · click for your order", next = "own" },
 }
 
+-- The open Done group's sort button for each of its methods (done-sort-button, design D3), as SORTS.
+local DSORTS: { [string]: { label: string, tip: string, next: string } } = {
+	recent = { label = "Recently done", tip = "Most recently done first · click to sort by priority", next = "priority" },
+	priority = { label = "Priority", tip = "Sorted by priority · click to sort newest first", next = "created" },
+	created = { label = "Newest", tip = "Sorted newest first · click to sort by next review", next = "review" },
+	review = { label = "Next review", tip = "Soonest review first · click for the most recently done first", next = "recent" },
+}
+
 local function stamp(t: number?): string
 	return if t ~= nil then os.date("%Y-%m-%d %H:%M", t) :: string else ""
 end
@@ -610,8 +618,8 @@ function M.build(state: Store.State, win: Model.Window, ui_state: Ui): Built
 		return true
 	end
 
-	-- Open objectives in the graph's order, and done ones in the Done group's, by the sort method
-	-- (sort-button, design D2); filters only leave some out.
+	-- Open objectives in the graph's order, by the sort method, and done ones in the Done group's, by
+	-- its own (sort-button, design D2; done-sort-button, D2); filters only leave some out.
 	local open_list, done_list = {}, {}
 	for _, o in Store.open_in_order(state, ui_state.held) do
 		if visible(o) then
@@ -881,10 +889,20 @@ function M.build(state: Store.State, win: Model.Window, ui_state: Ui): Built
 	if #done_list > 0 and not reviewing then
 		local first = Layout.first(left)
 		Layout.add_group(left)
-		table.insert(left_kids, el("div", { class = "ob-group ob-donegrp" .. first, key = "donegrp", actions = { click = "donegrp=" } }, {
+		local row: { Node } = {
 			span("ob-caret", if view_state.done_open then "▾" else "▸", { key = "caret" }),
 			span("ob-gtext", string.format("Done (%d)", #done_list), { key = "text" }),
-		}))
+		}
+		-- While open, the row ends in the Done group's sort button (done-sort-button, design D3); its
+		-- click runs instead of the row's.
+		if view_state.done_open then
+			local dsort = DSORTS[state.settings.done_sort] or DSORTS.priority
+			table.insert(row, el("span", { class = "ob-btn ob-btn-quiet ob-sortbtn ob-dsortbtn", key = "sort", title = dsort.tip, actions = { click = "setdsort=" .. dsort.next } }, {
+				{ k = "icon", p = { name = "swap" } } :: any,
+				span("ob-sortt", dsort.label, { key = "t" }),
+			}))
+		end
+		table.insert(left_kids, el("div", { class = "ob-group ob-donegrp" .. first, key = "donegrp", actions = { click = "donegrp=" } }, row))
 		if view_state.done_open then
 			for _, o in done_list do
 				add_node(o)
@@ -1254,17 +1272,20 @@ local function segments(key: string, current: string, options: { { string } }, a
 	return el("div", { class = "ob-seg", key = key }, kids)
 end
 
-local function setting_row(key: string, label: string, kids: { Node }): Node
+-- `wrap`: the controls may go onto a second line on a narrow graph rather than run past the page
+-- (done-sort-button, design D6).
+local function setting_row(key: string, label: string, kids: { Node }, wrap: boolean?): Node
 	local row: { Node } = { span("ob-slabel", label, { key = "label" }) }
 	for _, k in kids do
 		table.insert(row, k)
 	end
-	return el("div", { class = "ob-srow", key = key }, row)
+	return el("div", { class = "ob-srow" .. (if wrap then " ob-srow-wrap" else ""), key = key }, row)
 end
 
 -- Configure's settings page, drawn in the graph's canvas in place of the columns (design D6): the
 -- plugin's shortcuts as Tern's keymap has them (`keys`, by command id; D7), the new-objective
--- defaults (D8) and the sort method (sort-by-priority D5; sort-button D7). No edges.
+-- defaults (D8) and both sort methods (sort-by-priority D5; sort-button D7; done-sort-button D6). No
+-- edges.
 function M.build_settings(state: Store.State, keys: { [string]: { string } }): Built
 	local rows: { Node } = { el("div", { class = "ob-sh", key = "h", text = "Shortcuts" }) }
 	for _, c in Keys.COMMANDS do
@@ -1306,7 +1327,10 @@ function M.build_settings(state: Store.State, keys: { [string]: { string } }): B
 		setting_row("sort", "Sort by", {
 			segments("seg", set.sort, { { "own", "Your order" }, { "priority", "Priority" }, { "created", "Newest first" } }, "setsort"),
 		}),
-		span("ob-line ob-dim ob-snote", "Priority keeps your order within each priority. The Done group follows this choice, and the sort button in the graph's header changes it too.", { key = "note" }),
+		setting_row("dsort", "Sort Done by", {
+			segments("seg", set.done_sort, { { "recent", "Recently done" }, { "priority", "Priority" }, { "created", "Newest first" }, { "review", "Next review" } }, "setdsort"),
+		}, true),
+		span("ob-line ob-dim ob-snote", "Priority keeps your order within each priority. The sort buttons in the graph's header and Done group change these too.", { key = "note" }),
 	}
 	local head: { Node } = {
 		span("ob-stitle", "Settings", { key = "title" }),

@@ -71,11 +71,13 @@ end
 
 -- Configure's defaults for new objectives (custom-order-and-direct-controls, design D8), and how
 -- open and done objectives are sorted (sort-button, design D1): "own" (the user's order), "priority"
--- or "created" (newest first).
+-- or "created" (newest first) for the open ones; "recent" (the most recently done first), "priority",
+-- "created" or "review" (the soonest next review first) for the Done group (done-sort-button, D1).
 export type Settings = {
 	start_priority: number, -- 0..3
 	new_place: string, -- "top" or "bottom"
 	sort: string,
+	done_sort: string,
 }
 
 export type State = {
@@ -99,7 +101,7 @@ local VERSION = 1
 local array = tern.json.array
 
 local function default_settings(): Settings
-	return { start_priority = 3, new_place = "top", sort = "priority" }
+	return { start_priority = 3, new_place = "top", sort = "priority", done_sort = "priority" }
 end
 
 local function default(): State
@@ -207,15 +209,22 @@ local function normalize(raw: any): State
 	-- Absent before 0.17.0 (design D8): Configure's defaults, with anything invalid replaced.
 	local set = (s.settings or {}) :: any
 	local start = set.start_priority
+	-- Absent before 0.27.0 (sort-button, design D1): 0.24.0–0.26.0 stored `sort_priority`, Off
+	-- meaning the user's order; anything else reads as the default, by priority.
+	local sort = if set.sort == "own" or set.sort == "priority" or set.sort == "created"
+		then set.sort
+		elseif set.sort_priority == false then "own"
+		else "priority"
 	s.settings = {
 		start_priority = if type(start) == "number" and start >= 0 and start <= 3 and start % 1 == 0 then start else 3,
 		new_place = if set.new_place == "bottom" then "bottom" else "top",
-		-- Absent before 0.27.0 (sort-button, design D1): 0.24.0–0.26.0 stored `sort_priority`, Off
-		-- meaning the user's order; anything else reads as the default, by priority.
-		sort = if set.sort == "own" or set.sort == "priority" or set.sort == "created"
-			then set.sort
-			elseif set.sort_priority == false then "own"
-			else "priority",
+		sort = sort,
+		-- Absent before 0.29.0 (done-sort-button, design D1): the open method, Your order read as the
+		-- most recently done first, so the Done group keeps the order it had.
+		done_sort = if set.done_sort == "recent" or set.done_sort == "priority" or set.done_sort == "created" or set.done_sort == "review"
+			then set.done_sort
+			elseif sort == "own" then "recent"
+			else sort,
 	}
 	if s.ordered ~= true then
 		migrate_order(s)
@@ -281,11 +290,12 @@ function M.open_in_order(s: State, held: { [string]: number }?): { Objective }
 	return list
 end
 
--- Sorts done objectives, in place, as the Done group lists them (sort-button, design D2): the most
--- recently done first; by priority first, or by creation time, newest first, as the open ones are.
--- `held` is open_in_order's.
+-- Sorts done objectives, in place, as the Done group lists them, by its own method
+-- (done-sort-button, design D2): the most recently done first; by priority first, by creation time,
+-- newest first, or by the next review, the soonest first, as `YYYY-MM-DD` strings compare. `held`
+-- is open_in_order's.
 function M.sort_done(s: State, list: { Objective }, held: { [string]: number }?)
-	local by = s.settings.sort
+	local by = s.settings.done_sort
 	local hold = held or {}
 	table.sort(list, function(a, b)
 		if by == "priority" then
@@ -297,6 +307,15 @@ function M.sort_done(s: State, list: { Objective }, held: { [string]: number }?)
 			local ca, cb = a.created or 0, b.created or 0
 			if ca ~= cb then
 				return ca > cb
+			end
+		elseif by == "review" then
+			-- normalize gives every done record a schedule; one without would come last.
+			local ra, rb = a.review, b.review
+			if (ra == nil) ~= (rb == nil) then
+				return rb == nil
+			end
+			if ra ~= nil and rb ~= nil and ra.due ~= rb.due then
+				return ra.due < rb.due
 			end
 		end
 		local ta, tb = a.done_at or 0, b.done_at or 0

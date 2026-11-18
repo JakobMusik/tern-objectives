@@ -1012,11 +1012,12 @@ function M.action(ev: Action, cx: WindowCx)
 			end
 		end
 	elseif act == "prio" then
-		-- Sorted by priority, the first badge click records every objective's priority, open and done,
-		-- which the order keeps until another click (sort-by-priority D3; sort-button D5).
+		-- With either list sorted by priority, the first badge click records every objective's
+		-- priority, open and done, which the order keeps until another click (sort-by-priority D3;
+		-- sort-button D5; done-sort-button D4).
 		if held == nil then
 			local state = Store.read()
-			if state.settings.sort == "priority" then
+			if state.settings.sort == "priority" or state.settings.done_sort == "priority" then
 				local record: { [string]: number } = {}
 				for _, o in state.objectives do
 					record[o.id] = o.priority
@@ -1143,6 +1144,18 @@ function M.action(ev: Action, cx: WindowCx)
 					return false
 				end
 				s.sort = value
+				return true
+			end)
+		end
+	elseif act == "setdsort" then
+		-- The open Done group's sort button and Configure's "Sort Done by" (done-sort-button, D4): the
+		-- Done group's method; anything else changes nothing.
+		if value == "recent" or value == "priority" or value == "created" or value == "review" then
+			Store.set_settings(function(s)
+				if s.done_sort == value then
+					return false
+				end
+				s.done_sort = value
 				return true
 			end)
 		end
