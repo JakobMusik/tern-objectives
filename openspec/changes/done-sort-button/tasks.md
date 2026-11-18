@@ -123,13 +123,15 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
   Verify `tern plugin list` shows `objectives 0.29.0 … ready`, with the other plugins untouched.
 
   Result: `installed objectives 0.29.0 → ~/Library/Application Support/Tern/plugins/objectives`. `tern plugin list` shows `objectives 0.29.0 … window ready`, and the other plugins ready as before: `external-editor 0.1.0`, `omp-narration 0.1.0`, `open-below 0.2.0`, `reply-selection 0.1.0` and `tabnav 0.1.0`. The tag `v0.29.0` (`aa75ef0`) is signed and on GitHub.
-- [ ] 3.3 **(live)** With the user:
+- [x] 3.3 **(live)** With the user:
   - the Done group lists the same order as before the upgrade, and, while open, its row ends in a sort button showing that method;
   - each click moves to the next method, Recently done → Priority → Newest → Next review, and re-sorts only the Done group;
   - the header's sort button re-sorts only the open objectives;
   - the settings page's "Sort Done by" row shows the Done group's method.
 
   Record the result here.
+
+  Result (user, 0.29.0): "checked, it's working", in reply to the four checks listed above. The user reported nothing more specific, so no single check is recorded on its own.
 
 ## Workflow follow-up
 
