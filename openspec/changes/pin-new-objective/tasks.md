@@ -74,9 +74,11 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
 - [x] 2.1 Version `0.30.0` in `plugin.toml`. Verify that an isolated `tern plugin install` of the repo folder prints `installed objectives 0.30.0`. Tick this box, then commit, push `main` and tag `v0.30.0` (annotated, message "objectives 0.30.0").
 
   Result: the install into `/tmp/tobj-inst300/config` printed `installed objectives 0.30.0 → /tmp/tobj-inst300/config/plugins/objectives`.
-- [ ] 2.2 **(live)** After the push has finished, run `tern plugin install github.com/JakobMusik/tern-objectives --force` from a shell with no harness variables.
+- [x] 2.2 **(live)** After the push has finished, run `tern plugin install github.com/JakobMusik/tern-objectives --force` from a shell with no harness variables.
 
   Verify `tern plugin list` shows `objectives 0.30.0 … ready`, with the other plugins untouched.
+
+  Result: `installed objectives 0.30.0 → ~/Library/Application Support/Tern/plugins/objectives`. `tern plugin list` shows `objectives 0.30.0 … window ready`, and the other plugins ready as before: `external-editor 0.1.0`, `omp-narration 0.1.0`, `open-below 0.2.0`, `reply-selection 0.1.0` and `tabnav 0.1.0`. The tag `v0.30.0` (`75d01b0`) is signed and on GitHub.
 - [ ] 2.3 **(live)** With the user:
   - "＋ New objective" and ⌥N list the new objective first, selected, with a "New" chip after its creation time;
   - its badge, Note, Due, Tags, the tabs' link bars and selecting a tab keep it first;
