@@ -108,6 +108,7 @@ Rollback: 0.32.0's `valid_session` drops every non-omp entry at its next write.
 - **As now:** at a turn's start or end, at plugin start, when the graph opens, and before the graph closes tabs.
 - **A command that starts an agent:** `window.luau` adds a `command_started` handler. If any word of `ev.line` has the base name `claude` or `agy`, it calls `Agents.request()`. Words are split at whitespace and `;`, `&`, `|`, `(` and `)`. That capture finds no transcript yet (S6), but it starts the next point.
 - **Every 30 s while a chat runs in its own interface:** after a capture that paired a `claude` or `agy` process with a terminal pane, `agents.luau` arms one `tern.timer(30000, …)` that calls `Agents.request()`. It isn't armed again while one is waiting, and it stops after a capture that finds no such chat.
+- **No request is lost:** a request that comes while a capture waits or runs used to be dropped. Now it queues one more capture after that one, and still at most one runs at a time. The new triggers (a command starting, the 30-second timer) overlap more often with a turn's start or end, and a dropped turn-end request would wait for the next trigger.
 
 Why: Claude's own interface only changes its title, and Antigravity's sends nothing (S15). Without this, a tab closed with ⌘W would keep no chat unless the graph had opened since the first message.
 
@@ -168,7 +169,8 @@ The toast for a tab with nothing to resume reads "That tab has no chat left to r
 - **Claude's records and folder names are not documented** (S5, S6). If Claude changes them, no transcript is found and nothing is saved; nothing wrong is resumed. A very long folder may get a different name from Claude [INFERENCE]; then nothing is saved either.
 - **`ps -E` splits values at spaces.** A `HOME` or `CLAUDE_CONFIG_DIR` with spaces gives a wrong folder, so nothing is saved.
 - **A Codex chat that never had a message** may have a rollout file already [untested]. Resuming it would open an empty chat, or Codex reports that the thread had no messages (codex-acp's own error text).
-- **A long-idle ACP Antigravity chat after `/new`** holds two `brain` folders and no conversation file (S12). Nothing new is saved, so Resume brings back the conversation saved before `/new`.
+- **An idle Antigravity chat after `/new` or `/clear`,** in either mode, holds two `brain` folders and no conversation file (S12; task 1.1, pane 162). Nothing new is saved until it writes again, so Resume brings back the conversation saved before. The one saved at its next message is the new one (task 1.1).
+- **omp holds its file open about 2 s after a turn ends** (task 1.1). This changed outside this plugin, and affects 0.32.0 the same way: the capture 0.5 s after the turn finds no file, and the chat is saved at the next capture.
 - **A command that runs `claude` or `agy` through an alias or script** isn't seen by D4's word check. It is saved at the next turn of another chat, plugin start or graph open; a tab closed before any of these keeps nothing.
 - **The 30-second save** costs one process run, about 150–200 ms off the UI thread (`resume-omp-chats` source record), every 30 s while a chat runs in its own interface.
 - **The live check of Claude** may meet the account error (S20). The transcript is still written (S6), so Resume shows the earlier message.

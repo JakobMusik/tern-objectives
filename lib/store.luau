@@ -46,27 +46,51 @@ export type ViewState = {
 	expanded: { [string]: boolean },
 }
 
--- An omp chat, saved while it ran so its tab can be resumed after it closes (resume-omp-chats,
--- design D3).
+-- A chat, saved while it ran so its tab can be resumed after it closes (resume-omp-chats, design D3;
+-- resume-more-agents, design D3).
 export type AgentSession = {
-	agent: string, -- "omp"
+	agent: string, -- "omp", "claude", "codex" or "agy"
 	session: string, -- the chat's file
-	cwd: string, -- the chat's folder, as Tern lists it
+	cwd: string, -- the chat's folder
 	seen: number, -- when it was saved
 }
 
--- Whether `s` is an omp chat file the plugin may save and type into a shell (design D3): an
--- absolute path to a `.jsonl` directly in a folder under a `sessions` folder, where subagents'
--- files sit a level deeper, with no control characters.
-function M.is_chat_file(s: any): boolean
-	if type(s) ~= "string" or string.sub(s, 1, 1) ~= "/" or string.find(s, "%c") ~= nil then
+-- A session id as Claude, Codex and Antigravity name their files: 8-4-4-4-12 hex digits (a pattern).
+M.UUID = "%x%x%x%x%x%x%x%x%-%x%x%x%x%-%x%x%x%x%-%x%x%x%x%-%x%x%x%x%x%x%x%x%x%x%x%x"
+local UUID = M.UUID
+
+-- How each agent's chat file ends (resume-more-agents, design D1, D3). omp's sit directly in a folder
+-- under a `sessions` folder, where subagents' sit a level deeper; Claude's transcripts in a folder
+-- under `projects`; Codex's rollouts in a dated folder under `sessions`; Antigravity's conversations
+-- under `conversations`. The last three capture the session id Resume types.
+local SHAPES: { [string]: string } = {
+	omp = "/sessions/[^/]+/[^/]+%.jsonl$",
+	claude = "/projects/[^/]+/(" .. UUID .. ")%.jsonl$",
+	codex = "/sessions/%d%d%d%d/%d%d/%d%d/rollout%-[^/]*%-(" .. UUID .. ")%.jsonl$",
+	agy = "/conversations/(" .. UUID .. ")%.db$",
+}
+
+-- Whether `file` is a chat file of `agent` the plugin may save and resume: an absolute path with no
+-- control characters, shaped as that agent's files are.
+function M.chat_file_ok(agent: any, file: any): boolean
+	local shape = if type(agent) == "string" then SHAPES[agent] else nil
+	if shape == nil or type(file) ~= "string" or string.sub(file, 1, 1) ~= "/" or string.find(file, "%c") ~= nil then
 		return false
 	end
-	return string.match(s, "/sessions/[^/]+/[^/]+%.jsonl$") ~= nil
+	return string.match(file, shape) ~= nil
+end
+
+-- The session id Resume types for a Claude, Codex or Antigravity chat: the one its file is named by.
+-- nil for omp, which resumes from the file itself, and for a file of the wrong shape.
+function M.chat_id(a: AgentSession): string?
+	if a.agent == "omp" or not M.chat_file_ok(a.agent, a.session) then
+		return nil
+	end
+	return string.match(a.session, SHAPES[a.agent])
 end
 
 local function valid_session(a: any): boolean
-	return type(a) == "table" and a.agent == "omp" and M.is_chat_file(a.session) and type(a.cwd) == "string"
+	return type(a) == "table" and M.chat_file_ok(a.agent, a.session) and type(a.cwd) == "string"
 end
 
 -- Configure's defaults for new objectives (custom-order-and-direct-controls, design D8), and how
@@ -409,19 +433,32 @@ end
 
 -- ---- tab snapshots (design D8) ----
 
--- What a snapshot records of a live tab; `seen` is when it last changed.
+-- What a snapshot records of a live tab; `seen` is when it last changed. A row's `info` is the live
+-- pane's, whose `running` tells a shell at work from an idle one.
 export type TabFacts = {
 	label: string,
 	session: number,
 	session_name: string,
 	position: number,
-	rows: { { pane: number, title: string, kind: string } },
+	rows: { { pane: number, title: string, kind: string, info: { running: any? }? } },
 }
 
-local function snapshot(t: TabFacts, window: string, now: number): TabSnap
+-- A shell running Claude or Antigravity in its own interface, with its chat saved, is stored as an
+-- agent row (resume-more-agents, design D5): the Resume button counts only agent rows, so a chat
+-- saved under a reused pane id can't turn an idle shell into a chat.
+local OWN_UI: { [string]: boolean } = { claude = true, agy = true }
+
+local function snapshot(t: TabFacts, window: string, now: number, agents: { [string]: AgentSession }): TabSnap
 	local panes: { PaneSnap } = array({})
 	for _, r in t.rows do
-		table.insert(panes, { pane = r.pane, title = r.title, kind = r.kind })
+		local kind = r.kind
+		if kind == "terminal" and r.info ~= nil and r.info.running ~= nil then
+			local a = agents[tostring(r.pane)]
+			if a ~= nil and OWN_UI[a.agent] then
+				kind = "agent"
+			end
+		end
+		table.insert(panes, { pane = r.pane, title = r.title, kind = kind })
 	end
 	return {
 		label = t.label,
@@ -475,7 +512,7 @@ function M.create(title: string, tab: number?, facts: TabFacts?, window: string?
 			table.insert(s.objectives, 1, record)
 		end
 		if tab ~= nil and facts ~= nil then
-			s.tabs[tostring(tab)] = snapshot(facts, window or "", os.time())
+			s.tabs[tostring(tab)] = snapshot(facts, window or "", os.time(), s.agents)
 		end
 		return true
 	end)
@@ -776,7 +813,7 @@ function M.toggle_link(id: string, tab: number, facts: TabFacts?, window: string
 			table.insert(o.tabs, tab)
 			result = "linked"
 			if facts ~= nil then
-				s.tabs[tostring(tab)] = snapshot(facts, window, os.time())
+				s.tabs[tostring(tab)] = snapshot(facts, window, os.time(), s.agents)
 			end
 		end
 		return true
@@ -794,7 +831,7 @@ function M.refresh_snapshots(s: State, live: { [number]: TabFacts }, window: str
 			local key = tostring(tab)
 			local facts = live[tab]
 			if facts ~= nil and stale[key] == nil then
-				local fresh = snapshot(facts, window, now)
+				local fresh = snapshot(facts, window, now, s.agents)
 				local old = s.tabs[key]
 				if old == nil or not same(old, fresh) then
 					stale[key] = fresh
@@ -817,7 +854,7 @@ function M.refresh_snapshots(s: State, live: { [number]: TabFacts }, window: str
 	end
 end
 
--- ---- saved omp chats (resume-closed-agents D3, resume-omp-chats D3) ----
+-- ---- saved chats (resume-closed-agents D3, resume-omp-chats D3, resume-more-agents D3) ----
 
 -- A session saved this recently is kept even when its pane is neither live nor in a snapshot yet:
 -- a resumed chat's new pane is listed only after the call that opened it (design D6).

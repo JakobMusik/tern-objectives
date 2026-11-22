@@ -121,7 +121,6 @@ for _, name in {
 	"tab_created",
 	"tab_closed",
 	"title",
-	"command_started",
 	"command_finished",
 	"float_moved",
 	"session_ended",
@@ -130,6 +129,15 @@ for _, name in {
 		Refresh.request(cx)
 	end)
 end
+
+-- A shell started a command: redraw, and when it runs Claude or Antigravity, maybe in its own
+-- interface, which sends no turn events, save chats from here on (resume-more-agents, design D4).
+tern.on("command_started", function(ev: CommandStartedEvent, cx: WindowCx)
+	Refresh.request(cx)
+	if Agents.starts_agent(ev.line) then
+		Agents.request()
+	end
+end)
 
 -- An agent's state changed: redraw, and at a turn's start save omp chats (resume-omp-chats, D2).
 tern.on("agent_state", function(ev: AgentStateEvent, cx: WindowCx)

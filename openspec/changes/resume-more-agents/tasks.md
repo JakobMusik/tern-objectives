@@ -29,7 +29,7 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
 
 ## 1. Saving the chats of more agents
 
-- [ ] 1.1 Finding and storing the chats (design D1, D2, D3):
+- [x] 1.1 Finding and storing the chats (design D1, D2, D3):
   - **`tern.d.luau`:** regenerate it with `tern plugin types .` (Tern 0.9.30).
   - **`lib/agents.luau`:**
     - the script's `pgrep` pattern, its `ps -wwE` tokens (`HOME=`, `CLAUDE_CONFIG_DIR=`) and its `lsof` filter (`/conversations/<uuid>.db`, `/brain/<uuid>`);
@@ -49,7 +49,35 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
   - "Saved omp chats", "First message saves the chat" again: omp is unchanged.
 
   For each saved entry, also check that `Store.chat_id` gives the id the processes show (`ptree.sh`).
-- [ ] 1.2 When chats are saved, and their rows (design D4, D5):
+
+  Result (harness, 2026-11-22, Tern 0.9.30):
+  - **Setup:** each agent ran in its own tab, in a folder under `/tmp/tobj/w/`. "Saved" times count from when polling saw the chat idle. Claude's replies were the account error (design S20), which ends the turn and writes the transcript.
+  - **Harness timers:** the headless serve fires plugin timers only on window activity. The pump opens and closes a tab with `reveal {focus = false}`; `reveal false` raised "error converting Lua boolean to table".
+  - **Saved Claude chats:**
+    - *First message saves the chat* (`keep_tui` []): before the message, the kv dump held nothing for pane 21. 0.4 s after the turn, it held agent "claude", cwd `/private/tmp/tobj/w/clD` (Claude's record names the folder by its real path), and `~/.claude/projects/-private-tmp-tobj-w-clD/e7b8c796-….jsonl`. That is the `sessionId` in `~/.claude/sessions/56617.json`, the record of that pane's `claude`.
+    - *In Claude's own interface* (`keep_tui` ["claude"], pane 32, a terminal running `claude`): with no graph opened, the 30-second capture ("…, watching") saved `…-clE/c2479dc5-….jsonl`. That is the sessionId of record 56921, whose `entrypoint` is "cli".
+    - *A new session after /clear*: after `/clear` and a second message, a graph open replaced the entry within 0.8 s with `559ef61c-….jsonl`, the record's new sessionId.
+    - *No message, nothing saved:* checked in the first scenario.
+  - **Saved Codex chats:**
+    - *First message saves the chat* (pane 129): 0.4 s after the turn the entry read agent "codex", cwd `/tmp/tobj/w/cxA`, `~/.codex/sessions/2026/11/22/rollout-…-01a203dd-b026-….jsonl`, the file `codex app-server` 58264 holds open.
+    - *Codex's own interface saves nothing* (`keep_tui` ["codex"], pane 134): Codex recorded the message in thread `01a203de-…` (originator `codex-tui`). 2.2 s after a graph open, the kv dump held nothing for the pane. A Codex chat in Tern's chat with no message (pane 145) saved nothing either.
+  - **Saved Antigravity chats:**
+    - *As Tern's chat* (`tern acp antigravity`, pane 157): 0.4 s after the turn, `~/.gemini/antigravity-cli/conversations/937744e1-….db`, the file `agy acp` 67166 holds open.
+    - *In its own interface* (`command agy`, pane 162): the 30-second capture saved `a3a69285-….db`, with no graph opened. The first message had been typed before agy was ready and never sent, so it was sent again.
+    - *A new conversation after /clear:* after `/clear` and a second message, a graph open replaced it within 0.5 s with `260b1a2b-….db`.
+  - **Saved entries are checked:** both scenarios were written into `kv.json` under closed tabs linked to Y:
+    - "Legacy": a Claude entry holding a bare id;
+    - "Odd": a Codex entry whose existing rollout file has no thread id.
+
+    Neither ghost showed `.ob-resume`, and both rows read "agent". After Y's badge was clicked (P1 to P0), the kv dump held neither entry.
+  - **Ids:** each saved file is named by the id its process shows: Claude's record `sessionId`, the rollout file held by the chat's `codex app-server`, and the conversation file held by `agy`. Task 2.1 checks the ids Resume types from them (`Store.chat_id`).
+  - **omp, compared with 0.32.0:** the omp path is unchanged; the same check was also run on 0.32.0's code (`git archive HEAD` into the fixtures). The current omp creates its session file during the reply, but holds it open only about 2 s after the turn ends. In one run, polling `lsof` every 0.1 s found the file 4.4 s after the message was sent, while the chat read idle at 2.4 s. The capture 0.5 s after the turn's end therefore finds no file.
+
+    0.32.0's code saved its one run in 2.8 s, and this version saved 2 of 8 runs within 4 s, each by a capture that came later. Otherwise the chat is saved at the next capture: a graph open (within 1 s), the next turn, or the 30-second capture while a chat runs in its own interface. So omp's "within 3 seconds of the reply ending" no longer holds. That predates this change, and is reported to the user.
+  - **Request queue:** a request made while a capture waits or runs now queues one more, instead of being dropped (design D4).
+  - **Side effect of the 0.32.0 run:** that code's next write dropped every non-omp entry, the rollback design "Migration Plan" describes. Later captures saved them again, except pane 162: its agy, idle after `/clear`, holds two conversation folders and no conversation file. Design "Risks" names this.
+  - **Captures:** 210–290 ms each in the serve log, with no warning.
+- [x] 1.2 When chats are saved, and their rows (design D4, D5):
   - **`window.luau`:** a `command_started` handler calls `Agents.request()` when a word of the line runs `claude` or `agy`.
   - **`lib/agents.luau`:** the 30-second timer, armed after a capture that paired a chat in its own interface; and save before refreshing the snapshots.
   - **`lib/store.luau`:** `snapshot` stores a running terminal row with a saved "claude" or "agy" chat as "agent". `TabFacts` rows carry `running`.
@@ -59,6 +87,16 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
   - the serve log shows a "chat capture" line at the command's start, then one about every 30 s while `command agy` runs, and none 30 s after it quits;
   - "Saved chats follow their tabs", "Unlinked with its tab", again, with a Claude chat in its own interface;
   - render times in the serve log stay within the 20 ms target.
+
+  `TabFacts` rows carry the live pane's `info`, whose `running` `snapshot` reads.
+
+  Result (harness, 2026-11-22):
+  - **Saved before the tab closes:** a linked tab (Y) ran `command agy` in `/tmp/tobj/w/agC`. One message was sent, and agy then held `conversations/8178cd55-….db`. 23 s later the 30-second capture saved that file under pane 656, and the snapshot stored the row as `kind "agent"`. The tab was then closed with the graph never opened. On opening the graph, the closed tab read "command agy · Resume · closed · Default · tab 3", and its row "agy".
+
+    A first run of this check typed the message before agy was ready, so it was never sent. With no conversation, nothing was saved, and the closed tab showed no Resume and a "shell" row. That is right, as nothing could be resumed.
+  - **Capture times:** the capture after `command agy` started ran on the next window activity, as harness timers do, and was logged with ", watching". Later captures came about 30 s apart (23.1 s after sending, then 34.6 s after an earlier start). Before `command agy`, with no chat in its own interface, 33 s brought one capture with no ", watching".
+  - **Unlinked with its tab:** Y linked tab 33, whose shell ran Claude in its own interface (pane 32), and its snapshot row was stored as `kind "agent"`. With the tab closed, its ghost showed "Resume" and the row "claude". After selecting Y and clicking "× Unlink" on the ghost, the kv dump held neither the tab's snapshot nor pane 32's saved chat, and Y linked only tab 3.
+  - **Render times:** the harness window had grown to 21 tabs, and its renders reached 22.7 ms, as the window grew. On that window, eight opens and closes rendered at most 3.9 ms with 0.32.0's code (from `git archive HEAD`) and 4.5 ms with this change. The first open after a reload rendered 8.8 ms once; a rerun gave 4.0 ms. Captures took 208–302 ms off the UI thread.
 
 ## 2. Resume, names and marks
 

@@ -783,7 +783,7 @@ local function resume(cx: WindowCx, tab: number)
 		local s = if p.kind == "agent" then state.agents[tostring(p.pane)] else nil
 		-- Only an agent row's chat, and only a chat file that is still there, is ever typed into
 		-- the shell; the store holds no other kind of entry (design D3).
-		if s ~= nil and Store.is_chat_file(s.session) and tern.fs.exists(s.session) then
+		if s ~= nil and s.agent == "omp" and Store.chat_file_ok("omp", s.session) and tern.fs.exists(s.session) then
 			table.insert(chats, s)
 		end
 	end
