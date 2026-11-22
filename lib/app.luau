@@ -727,8 +727,8 @@ local function jump_pane(cx: WindowCx, pane: number)
 	cx.layout:focus(pane)
 end
 
--- ---- resuming a closed tab's omp chats (resume-closed-agents D5, D6; resume-omp-chats D5;
--- resume-in-original-session D1–D4) ----
+-- ---- resuming a closed tab's chats (resume-closed-agents D5, D6; resume-omp-chats D5;
+-- resume-in-original-session D1–D4; resume-more-agents D6) ----
 
 -- The session a closed tab's chats come back in (resume-in-original-session, D1): the one with the
 -- snapshot's session id, else the first with its name, exactly, then ignoring case; nil when none.
@@ -770,6 +770,27 @@ local function on_this_mac(cx: WindowCx, id: number): boolean
 	return false
 end
 
+-- The line Resume types for a saved chat (resume-more-agents, design D6): omp reopens its file; Claude,
+-- Codex and Antigravity their session id, which their files are named by. Typed into a shell, `claude`
+-- and `codex` open as Tern's chat or in their own interface as Tern's settings say; `agy` with
+-- arguments always opens in its own interface. nil when the entry can't be resumed.
+local function resume_line(s: Store.AgentSession): string?
+	if s.agent == "omp" then
+		return if Store.chat_file_ok("omp", s.session) then "omp --resume " .. Agents.quote(s.session) else nil
+	end
+	local id = Store.chat_id(s)
+	if id == nil then
+		return nil
+	elseif s.agent == "claude" then
+		return "claude --resume " .. id
+	elseif s.agent == "codex" then
+		return "codex resume " .. id
+	elseif s.agent == "agy" then
+		return "agy --conversation " .. id
+	end
+	return nil
+end
+
 local function resume(cx: WindowCx, tab: number)
 	local state = Store.read()
 	local win = Model.read(cx, Surface.find(cx))
@@ -778,17 +799,18 @@ local function resume(cx: WindowCx, tab: number)
 		cx:toast("info", "That tab is no longer closed")
 		return
 	end
-	local chats: { Store.AgentSession } = {}
+	local chats: { { session: Store.AgentSession, line: string } } = {}
 	for _, p in snap.panes do
 		local s = if p.kind == "agent" then state.agents[tostring(p.pane)] else nil
 		-- Only an agent row's chat, and only a chat file that is still there, is ever typed into
-		-- the shell; the store holds no other kind of entry (design D3).
-		if s ~= nil and s.agent == "omp" and Store.chat_file_ok("omp", s.session) and tern.fs.exists(s.session) then
-			table.insert(chats, s)
+		-- the shell, as a line built from its checked file name (design D3, D6).
+		local line = if s ~= nil then resume_line(s) else nil
+		if s ~= nil and line ~= nil and tern.fs.exists(s.session) then
+			table.insert(chats, { session = s, line = line })
 		end
 	end
 	if #chats == 0 then
-		cx:toast("info", "That tab has no omp chat left to resume")
+		cx:toast("info", "That tab has no chat left to resume")
 		return
 	end
 	-- Its own session, else the current one (D1); never one on another machine (D2).
@@ -814,14 +836,15 @@ local function resume(cx: WindowCx, tab: number)
 	local moved: { [string]: Store.AgentSession } = {}
 	local first: number? = nil
 	local previous: number? = nil
-	for _, s in chats do
+	for _, chat in chats do
+		local s = chat.session
 		local pane = if previous == nil
 			then cx.layout:new_tab({ cwd = s.cwd })
 			else cx.layout:split(previous, "right", { cwd = s.cwd }, { focus = false })
 		if pane == nil then
 			break
 		end
-		cx:run(pane, "omp --resume " .. Agents.quote(s.session) .. "\r")
+		cx:run(pane, chat.line .. "\r")
 		moved[tostring(pane)] = { agent = s.agent, session = s.session, cwd = s.cwd, seen = os.time() }
 		first = first or pane
 		previous = pane
@@ -841,8 +864,8 @@ local function resume(cx: WindowCx, tab: number)
 		cx:toast("info", if name ~= "" then "Session “" .. name .. "” is gone: resumed here" else "Its session is gone: resumed here")
 	end
 	Store.adopt(tab, new_tab, moved)
-	-- The window lists the new tab only after this call: store its snapshot once it does. Its panes
-	-- are still shells starting omp, so the resumed ones are stored as agents, as they will be.
+	-- The new panes may still be shells. Codex must actually become an agent block: a native
+	-- Codex TUI isn't captured. The initial agent-state event refreshes its snapshot once ready.
 	tern.timer(250, function(cx2: WindowCx?)
 		if cx2 == nil then
 			return
@@ -851,7 +874,8 @@ local function resume(cx: WindowCx, tab: number)
 		local t = w.tabs[new_tab]
 		if t ~= nil then
 			for _, r in t.rows do
-				if moved[tostring(r.pane)] ~= nil then
+				local s = moved[tostring(r.pane)]
+				if s ~= nil and s.agent ~= "codex" then
 					r.kind = "agent"
 				end
 			end

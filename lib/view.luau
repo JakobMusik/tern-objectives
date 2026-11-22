@@ -32,7 +32,7 @@ export type Ui = {
 	undo_close: { id: string, n: number }?,
 	-- Review mode: the due done objectives with their rating buttons (review design D4).
 	reviewing: boolean,
-	-- An omp row's call: "wait", "replied", "working" or nil (attention-marks-and-titles D3,
+	-- A live agent block's call: "wait", "replied", "working" or nil (attention-marks-and-titles D3,
 	-- working-mark D1).
 	attention: (row: Model.Row) -> string?,
 	-- The open objective lifted by its grip, until it is dropped or the move ends
@@ -59,7 +59,7 @@ export type Ui = {
 type Mark = { kind: string, names: { string } }
 
 local MARK_CHIP = { wait = "needs you", replied = "replied", working = "working" }
-local MARK_TIP = { wait = "omp is waiting in ", replied = "omp replied in ", working = "omp is working in " }
+local MARK_TIP = { wait = "Waiting for input in ", replied = "Unseen reply in ", working = "Working in " }
 -- The strongest mark wins (working-mark D2); no call ranks 0.
 local RANK: { [string]: number } = { wait = 3, replied = 2, working = 1 }
 
@@ -214,7 +214,7 @@ local function action_bar(o: Store.Objective, acts: Acts): { Node }
 			shown ..= " · " .. acts.kept .. (if acts.kept == 1 then " stays" else " stay") .. " open"
 			tip ..= " " .. plural(acts.kept, "tab") .. " linked to an open objective " .. (if acts.kept == 1 then "stays" else "stay") .. " open."
 		end
-		tip ..= " Closing ends their programs; omp chats come back with Resume."
+		tip ..= " Closing ends their programs; saved chats come back with Resume."
 		return {
 			el("div", { class = "ob-askrow", key = "ask", title = tip }, { span("ob-ask", shown, { key = "q" }) }),
 			el("div", { class = "ob-acts ob-acts-ask", key = "acts" }, {
@@ -420,8 +420,9 @@ type Shown = { tab: Model.Tab, status: string }
 -- The link bar a tab node shows while an objective, open or done, is selected (design P6, D10).
 type Link = { unlink: boolean, title: string }
 
--- `resume`: a closed tab with a saved omp chat shows "Resume" (resume-omp-chats, design D4). `linked`:
--- any objective links it. `asking`: its trash icon's question is open (close-tab-from-node, D3).
+-- `resume`: a closed tab with a saved chat shows "Resume" (resume-omp-chats D4, resume-more-agents
+-- D6). `linked`: any objective links it. `asking`: its trash icon's question is open
+-- (close-tab-from-node, D3).
 -- `mark`: a live tab's attention mark (search-and-tab-marks, D7). `chosen`: it is the selected tab
 -- (select-tab-nodes, D6).
 -- `closing`: Close in the question on show would close this tab (mark-closing-tabs D1, D3, D4).
@@ -456,7 +457,7 @@ local function tab_node(t: Model.Tab, status: string, first: string, linked_open
 		-- In place of the label line, same height (close-tab-from-node D3): the question, cut first,
 		-- then Cancel, and Close where the icon was.
 		local tip = if linked
-			then "Closing ends its programs; omp chats come back with Resume."
+			then "Closing ends its programs; saved chats come back with Resume."
 			else "Closing ends its programs. No objective links it, so it won't show under Closed tabs."
 		th1 = {
 			span("ob-ask", "Close tab?", { key = "q", title = tip }),
@@ -469,7 +470,7 @@ local function tab_node(t: Model.Tab, status: string, first: string, linked_open
 			-- Its own click, so the rest of the header still says the tab is closed.
 			table.insert(th1, span("ob-resume", "Resume", {
 				key = "resume",
-				title = "Reopen this tab's omp chats in a new tab",
+				title = "Reopen this tab's chats in a new tab",
 				actions = { click = "resume=" .. t.id },
 			}))
 		end
@@ -830,7 +831,7 @@ function M.build(state: Store.State, win: Model.Window, ui_state: Ui): Built
 	local left_kids: { Node } = {}
 	local obj_cy: { [string]: number } = {}
 	-- Attention (attention-marks-and-titles D3; search-and-tab-marks D6): each live tab's mark, worked
-	-- out once: the strongest omp call over its rows, ranked by RANK (working-mark D2), and the titles
+	-- out once: the strongest agent call over its rows, ranked by RANK (working-mark D2), and the titles
 	-- of the rows making it. Closed and elsewhere tabs have no live rows, so they never mark.
 	local tab_marks: { [number]: Mark } = {}
 	local tab_seen: { [number]: boolean } = {}
@@ -1309,7 +1310,7 @@ function M.build(state: Store.State, win: Model.Window, ui_state: Ui): Built
 			kids = {
 				span("ob-undo-text", "Close " .. plural(n, "tab") .. " of “" .. target.title .. "”? ·", {
 					key = "text",
-					title = "Close " .. quote_list(tab_labels(win, notice_tabs)) .. "? Closing ends their programs; omp chats come back with Resume.",
+					title = "Close " .. quote_list(tab_labels(win, notice_tabs)) .. "? Closing ends their programs; saved chats come back with Resume.",
 				}),
 				span("ob-undo-btn ob-undo-close", "Close", { key = "cfm", actions = { click = "cfm=" } }),
 				span("ob-undo-sep", "·", { key = "sep" }),
@@ -1334,7 +1335,7 @@ function M.build(state: Store.State, win: Model.Window, ui_state: Ui): Built
 			table.insert(head, el("div", { class = "ob-undo ob-ask-head", key = "closedone" }, {
 				span("ob-undo-text", "Close " .. what .. "? ·", {
 					key = "text",
-					title = "Close " .. quote_list(done_labels) .. "? Closing ends their programs; omp chats come back with Resume. No link changes.",
+					title = "Close " .. quote_list(done_labels) .. "? Closing ends their programs; saved chats come back with Resume. No link changes.",
 				}),
 				span("ob-undo-btn ob-undo-close", "Close", { key = "cfm", actions = { click = "cfm=" } }),
 				span("ob-undo-sep", "·", { key = "sep" }),

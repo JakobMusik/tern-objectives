@@ -23,7 +23,7 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
 - **Claude replies** fail with the user's account error (design S20). The turn still ends and the transcript is still written.
 - **After the checks:**
   - stop the service;
-  - delete `~/.claude/projects/-private-tmp-tobj-*`;
+  - remove only Claude and omp test transcripts created by these checks, not other transcripts sharing a parent directory;
   - check that `readlink ~/.local/bin/claude` points into `~/.local/share/claude/versions/`;
   - leave the Codex and Antigravity test chats, as design "Risks" says.
 
@@ -71,9 +71,7 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
 
     Neither ghost showed `.ob-resume`, and both rows read "agent". After Y's badge was clicked (P1 to P0), the kv dump held neither entry.
   - **Ids:** each saved file is named by the id its process shows: Claude's record `sessionId`, the rollout file held by the chat's `codex app-server`, and the conversation file held by `agy`. Task 2.1 checks the ids Resume types from them (`Store.chat_id`).
-  - **omp, compared with 0.32.0:** the omp path is unchanged; the same check was also run on 0.32.0's code (`git archive HEAD` into the fixtures). The current omp creates its session file during the reply, but holds it open only about 2 s after the turn ends. In one run, polling `lsof` every 0.1 s found the file 4.4 s after the message was sent, while the chat read idle at 2.4 s. The capture 0.5 s after the turn's end therefore finds no file.
-
-    0.32.0's code saved its one run in 2.8 s, and this version saved 2 of 8 runs within 4 s, each by a capture that came later. Otherwise the chat is saved at the next capture: a graph open (within 1 s), the next turn, or the 30-second capture while a chat runs in its own interface. So omp's "within 3 seconds of the reply ending" no longer holds. That predates this change, and is reported to the user.
+  - **omp first-turn timing:** polling `lsof` every 0.1 s in the initial implementation found the file 4.4 s after sending the message; the pane had already gone idle at 2.4 s. The ordinary turn-end scan could miss the file. The single comparison run on 0.32.0 saved in 2.8 s; that alone does not establish the failure rate on 0.32.0. D4 and the final check under 2.2 address this timing without changing the three-second requirement.
   - **Request queue:** a request made while a capture waits or runs now queues one more, instead of being dropped (design D4).
   - **Side effect of the 0.32.0 run:** that code's next write dropped every non-omp entry, the rollback design "Migration Plan" describes. Later captures saved them again, except pane 162: its agy, idle after `/clear`, holds two conversation folders and no conversation file. Design "Risks" names this.
   - **Captures:** 210–290 ms each in the serve log, with no warning.
@@ -100,7 +98,7 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
 
 ## 2. Resume, names and marks
 
-- [ ] 2.1 Resume each agent's chat (design D6, D8):
+- [x] 2.1 Resume each agent's chat (design D6, D8):
   - **`lib/app.luau`:** `resume` types the command for each entry's agent; the toast says "chat".
   - **`lib/view.luau`:** the Resume tooltip and the close tooltips say "chats".
 
@@ -110,7 +108,24 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
   - "Resume button on a closed tab", "A chat in its own interface" and "Chat file gone" (with an Antigravity conversation file moved away);
   - "Where a chat resumes", "Back in its own session", with a Claude chat;
   - `ctl tree '.ob-resume'` shows the tooltip "Reopen this tab's chats in a new tab".
-- [ ] 2.2 Names and marks (design D7):
+
+  Result (harness, 2026-11-22/23):
+  - **Harness:** the shell Resume opens reads the harness's temporary `.zshrc`, so `HOME`, `PATH` (`~/.local/bin`, omp's bin) and the unset `XDG_*` went there. Before that, the first Resume typed `codex resume <id>` into a shell where `codex` wasn't on `PATH`.
+  - **Codex comes back as Tern's chat** (`keep_tui` []): after "Reply with exactly: resume-two", the closed tab showed Resume and a "codex" row. Resume opened a tab whose process was `tern acp --typed=codex resume 01a203f4-fdef-…`, the id in the saved rollout's name. The chat was an agent block (program "codex", idle, last reply "resume-two"), and shot `t21_codex_acp` shows the message and the reply.
+  - **Codex keeps its own interface:** saved as Tern's chat, then `keep_tui` ["codex"] before Resume. The new pane was a terminal running `codex resume 01a203f5-bf00-…`. Shot `t21_codex_own` shows Codex's own interface with "Reply with exactly: own-ui" and the reply "own-ui".
+  - **Claude comes back by Tern's settings:** both runs typed `claude --resume <id>` in `/private/tmp/tobj/w/clD`.
+    - With `keep_tui` ["claude"], the pane was a terminal running `claude --resume ee78b972-…`. Shot `t21_claude_own` shows Claude's own interface with the earlier message "Reply with exactly: ['claude']" and the account error as its reply.
+    - With `keep_tui` [], the pane was an agent block (program "claude"), started as `tern acp --typed=claude --resume 5fd8d8d5-…`. Shot `t21_claude_acp` shows Tern's chat with "Reply with exactly: acp" and the same error.
+  - **Antigravity comes back in its own interface:** saved as Tern's chat (`conversations/3fd47580-….db`). Resume opened a terminal running `agy --conversation 3fd47580-…`. After agy's folder-trust prompt, shot `t21_agy_own2` shows "Reply with exactly: agy-back" and the reply "agy-back".
+  - **Links move to the new tab** (Codex): X and Y both linked closed tab 5. After Resume, the kv dump showed both linked to the new tab 21, the closed tab's snapshot gone, and the saved rollout moved to the new pane 20.
+  - **Resume button:**
+    - *A chat in its own interface:* in task 1.2, Claude's own interface (tab 33) and Antigravity's (`command agy`) both showed Resume, with rows "claude" and "agy".
+    - *Chat file gone:* a closed tab whose saved Antigravity conversation was moved away (with its `-wal` and `-shm`) showed no Resume, then showed it again once the files were moved back. The row still read "agy", the saved entry's agent ("Pane type").
+    - *Tooltip:* `.ob-resume` read "Reopen this tab's chats in a new tab".
+  - **Back in its own session** (Claude): session "work" held three tabs, and the Claude chat in its third was saved (`799f34e3-….jsonl`), linked to X and closed. The harness then switched to "Default" and clicked Resume. Tern showed "work", and its tabs went from [177, 181] to [177, 181, 216]: the chat came back as its third tab, where it was, as `tern acp --typed=claude --resume 799f34e3-…`. Default's tabs were unchanged.
+
+    An earlier run hung: that `claude` stayed "working" and never wrote a session record, so nothing was saved. It didn't recur. A later click went off-screen, below the 800-px window, until the old test tabs were closed.
+- [x] 2.2 Names and marks (design D7):
   - **`lib/details.luau`:** `agent_name` uses the program and the saved chat; `attention` marks every agent block.
 
   Verify:
@@ -119,7 +134,17 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
   - "Attention marks clear": "Focusing a Codex pane clears its reply";
   - "Tab attention marks": "A Codex chat's reply";
   - "Attention marks", "Chat working", again with an omp chat.
-- [ ] 2.3 README (design D8): "See what needs you", "Jump anywhere" and "Finish cleanly" name the agents, plus the limits note. Verify by reading the four places in `README.md`.
+
+  Result (isolated Tern 0.9.30):
+  - The mixed tab read `shell`, `file` and `omp · idle`. Its closed rows read `shell`, `file` and `omp`. The live agent rows read `claude · idle`, `codex · idle` and `agy · idle`, including bare `agy` through the actual zsh shortcut. A closed Claude pane with no message read `agent`, its shell sibling read `shell`, and the tab offered no Resume.
+  - Codex showed `working` on both its tab and X, then a green `replied` chip on both. The tooltips named the tab and pane, not omp. Focusing the replying pane cleared its alert and both chips. The omp control showed `working` on its own tab and Y. Evidence: `r33-codex-working`, `r33-codex-replied`, `r33-omp-working`.
+  - A linked tab holding both Codex and Antigravity closed with the correct ghost names. One Resume click restored both conversations, in order: `codex resume …` in an ACP block, `agy --conversation …` in a terminal. X and Y both linked the replacement; the old snapshot was gone. The native agy row read `agy` without state. Its reply `native-only-33` did not mark the tab or X; after agy quit and `sleep` ran in the same pane, both its live and snapshot row were shells. Evidence: `r33-native-no-marks`, `r33-agy-native-reply`.
+  - **First-turn timing correction:** each scan belongs to a specific command in its pane. A finished omp turn that still lacks an open file gets one late sample; a later command cannot inherit either that sample or the captured native file. For fresh omp pane 226 there was no entry before the turn; the saved timestamp, at one-second resolution, was within approximately 1.1 s of the observed `agent_finished` event. No file-order heuristic is used.
+  - The acceptance run from `r33-mixed-rows` through the native-shell check logged 89 renders, maximum 12.6 ms, with no Objectives warnings or errors.
+
+- [x] 2.3 README (design D8): "See what needs you", "Jump anywhere" and "Finish cleanly" name the agents, plus the limits note. Verify by reading the four places in `README.md`.
+
+  Result: verified the Features text and “Resuming chats” in Use. The README distinguishes ACP states from native terminals, omp's last-user-message detail from other agents' replies, which UI Resume opens, and the native Codex capture limit.
 
 ## 3. Release 0.33.0
 

@@ -22,16 +22,6 @@ function M.base_name(s: any): string?
 	return string.match(first, "([^/]+)$") or first
 end
 
--- Whether an agent is a Claude chat, which names its row (pane-details "Pane type"): its command
--- runs claude or, with no command (a chat typed at a shell prompt), its pane's program is claude.
-function M.is_claude(a: AgentBlock, program: string?): boolean
-	local cmd = M.base_name(a.command)
-	if cmd ~= nil then
-		return cmd == "claude"
-	end
-	return program == "claude"
-end
-
 -- `s` quoted for a POSIX shell (design D5).
 function M.quote(s: string): string
 	return "'" .. (string.gsub(s, "'", "'\\''")) .. "'"
@@ -50,6 +40,11 @@ local SCRIPT = table.concat({
 }, "\n")
 
 local AGENTS: { [string]: boolean } = { omp = true, claude = true, codex = true, agy = true }
+
+function M.agent_program(command: any): string?
+	local base = M.base_name(command)
+	return if base ~= nil and AGENTS[base] then base else nil
+end
 
 export type Proc = {
 	agent: string?, -- its command's base name, when that is omp, claude, codex or agy
@@ -81,8 +76,7 @@ function M.parse(out: string): { [number]: Proc }
 			if pid ~= nil and args ~= nil then
 				local p = get(tonumber(pid) :: number)
 				p.args = args
-				local base = M.base_name(args)
-				p.agent = if base ~= nil and AGENTS[base] then base else nil
+				p.agent = M.agent_program(args)
 			end
 		elseif tag == "e " then
 			local pid = string.match(line, "^e (%d+)$")
@@ -188,7 +182,8 @@ local function claude_file(pid: number, p: Proc, io: Io): (string?, string?)
 		return nil, nil
 	end
 	local ok, rec = pcall(tern.json.decode, raw)
-	if not ok or type(rec) ~= "table" or rec.kind ~= "interactive" or type(rec.sessionId) ~= "string" or type(rec.cwd) ~= "string" then
+	if not ok or type(rec) ~= "table" or rec.pid ~= pid or rec.kind ~= "interactive" or type(rec.sessionId) ~= "string"
+		or not string.match(rec.sessionId, "^" .. Store.UUID .. "$") or type(rec.cwd) ~= "string" or string.sub(rec.cwd, 1, 1) ~= "/" then
 		return nil, nil
 	end
 	local f = dir .. "/projects/" .. claude_folder(rec.cwd) .. "/" .. rec.sessionId .. ".jsonl"
@@ -242,7 +237,7 @@ end
 
 -- A pane this window may save a chat for (design D2), with its folder: an agent block, or a shell
 -- running a command, where an agent's own interface runs (`block` false).
-export type Candidate = { cwd: string, block: boolean }
+export type Candidate = { cwd: string, block: boolean, run: Model.ChatRun }
 
 -- Whether `p` can be the chat of pane `c`: omp, and Codex's chat server, only in an agent block;
 -- Claude and Antigravity there or in a running shell.
@@ -259,27 +254,26 @@ end
 -- chat process names saves that chat's file. Also says whether a Claude or Antigravity chat runs in
 -- its own interface in one of the shells, which the 30-second save watches (design D4).
 function M.pair(procs: { [number]: Proc }, panes: { [number]: Candidate }, io: Io, now: number): ({ [string]: Store.AgentSession }, boolean)
-	local by_pane: { [number]: { number } } = {}
+	local by_pane: { [number]: number } = {} -- pid, or 0 for an ambiguous pane
 	local own = false
 	for pid, p in procs do
 		local pane = p.tern_pane or p.window_pane
 		local c = if pane ~= nil then panes[pane] else nil
-		if pane ~= nil and c ~= nil and chat_of(p, c) then
-			local list = by_pane[pane]
-			if list == nil then
-				list = {}
-				by_pane[pane] = list
-			end
-			table.insert(list, pid)
+		if pane ~= nil and c ~= nil and not c.run.ended and chat_of(p, c) then
+			by_pane[pane] = if by_pane[pane] == nil then pid else 0
 			own = own or not c.block
 		end
 	end
 	local found: { [string]: Store.AgentSession } = {}
-	for pane, pids in by_pane do
-		if #pids == 1 then
-			local pid = pids[1]
+	for pane, pid in by_pane do
+		if pid ~= 0 then
 			local p = procs[pid]
-			local cwd: string? = panes[pane].cwd
+			local c = panes[pane]
+			if c.run.agent ~= p.agent then
+				c.run.file = nil
+			end
+			c.run.agent = p.agent
+			local cwd: string? = c.cwd
 			local file: string? = nil
 			if p.agent == "omp" then
 				file = omp_file(p, io)
@@ -291,6 +285,7 @@ function M.pair(procs: { [number]: Proc }, panes: { [number]: Candidate }, io: I
 				file = agy_file(p, io)
 			end
 			if file ~= nil and cwd ~= nil and p.agent ~= nil then
+				c.run.file = file
 				found[tostring(pane)] = { agent = p.agent, session = file, cwd = cwd, seen = now }
 			end
 		end
@@ -351,12 +346,12 @@ local function candidates(cx: WindowCx): { [number]: Candidate }
 	local out: { [number]: Candidate } = {}
 	for _, a in cx.agents:list() do
 		if here[a.pane] and type(a.cwd) == "string" and a.cwd ~= "" then
-			out[a.pane] = { cwd = a.cwd, block = true }
+			out[a.pane] = { cwd = a.cwd, block = true, run = Model.chat_run(a.pane) }
 		end
 	end
 	for _, p in cx.session:panes() do
 		if here[p.pane] and out[p.pane] == nil and p.kind == "terminal" and p.running ~= nil and type(p.cwd) == "string" and p.cwd ~= "" then
-			out[p.pane] = { cwd = p.cwd, block = false }
+			out[p.pane] = { cwd = p.cwd, block = false, run = Model.chat_run(p.pane) }
 		end
 	end
 	return out
@@ -483,6 +478,20 @@ function M.request()
 			finish()
 		end
 	end)
+end
+
+-- omp can publish its first transcript before it holds the file open. After the normal capture,
+-- sample once more near the end of the three-second save window, only for that unsaved chat.
+function M.turn_finished(pane: number)
+	local run = Model.chat_run(pane)
+	M.request()
+	if run.file == nil and (run.agent == nil or run.agent == "omp") then
+		tern.timer(1950, function(cx: WindowCx?)
+			if cx ~= nil and not run.ended and run.agent == "omp" and run.file == nil then
+				M.request()
+			end
+		end)
+	end
 end
 
 -- Captures at once, whether or not one is under way, and calls `done(ok, cx)` once, when it has

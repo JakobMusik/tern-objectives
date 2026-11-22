@@ -34,3 +34,7 @@ Each pane row SHALL start with its pane's type: the agent's name for an agent, "
 #### Scenario: Closed Codex chat
 - **WHEN** a linked tab holding a Codex chat with a saved rollout file is closed and shown under "Closed tabs"
 - **THEN** that row starts with "codex"
+
+#### Scenario: Native interface followed by a shell command
+- **WHEN** a linked pane runs a recognized native Antigravity chat, then quits it and runs `sleep` in the same shell
+- **THEN** its live row first reads "agy" without a state or an attention chip, then "shell"; the snapshot of the running shell is a terminal row, not a resumable agent row

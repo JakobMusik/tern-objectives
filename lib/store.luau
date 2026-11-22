@@ -433,28 +433,24 @@ end
 
 -- ---- tab snapshots (design D8) ----
 
--- What a snapshot records of a live tab; `seen` is when it last changed. A row's `info` is the live
--- pane's, whose `running` tells a shell at work from an idle one.
+-- A snapshot can promote a running terminal only on evidence from this invocation of the command.
 export type TabFacts = {
 	label: string,
 	session: number,
 	session_name: string,
 	position: number,
-	rows: { { pane: number, title: string, kind: string, info: { running: any? }? } },
+	rows: { { pane: number, title: string, kind: string, info: { running: any? }?, chat: { agent: string?, file: string? }? } },
 }
-
--- A shell running Claude or Antigravity in its own interface, with its chat saved, is stored as an
--- agent row (resume-more-agents, design D5): the Resume button counts only agent rows, so a chat
--- saved under a reused pane id can't turn an idle shell into a chat.
-local OWN_UI: { [string]: boolean } = { claude = true, agy = true }
 
 local function snapshot(t: TabFacts, window: string, now: number, agents: { [string]: AgentSession }): TabSnap
 	local panes: { PaneSnap } = array({})
 	for _, r in t.rows do
 		local kind = r.kind
-		if kind == "terminal" and r.info ~= nil and r.info.running ~= nil then
+		local chat = r.chat
+		if kind == "terminal" and r.info ~= nil and r.info.running ~= nil and chat ~= nil
+			and (chat.agent == "claude" or chat.agent == "agy") then
 			local a = agents[tostring(r.pane)]
-			if a ~= nil and OWN_UI[a.agent] then
+			if a ~= nil and a.agent == chat.agent and a.session == chat.file then
 				kind = "agent"
 			end
 		end

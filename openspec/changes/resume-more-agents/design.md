@@ -109,6 +109,7 @@ Rollback: 0.32.0's `valid_session` drops every non-omp entry at its next write.
 - **A command that starts an agent:** `window.luau` adds a `command_started` handler. If any word of `ev.line` has the base name `claude` or `agy`, it calls `Agents.request()`. Words are split at whitespace and `;`, `&`, `|`, `(` and `)`. That capture finds no transcript yet (S6), but it starts the next point.
 - **Every 30 s while a chat runs in its own interface:** after a capture that paired a `claude` or `agy` process with a terminal pane, `agents.luau` arms one `tern.timer(30000, …)` that calls `Agents.request()`. It isn't armed again while one is waiting, and it stops after a capture that finds no such chat.
 - **No request is lost:** a request that comes while a capture waits or runs used to be dropped. Now it queues one more capture after that one, and still at most one runs at a time. The new triggers (a command starting, the 30-second timer) overlap more often with a turn's start or end, and a dropped turn-end request would wait for the next trigger.
+- **First omp turn:** the turn-end scan may beat the first open file by about two seconds (task 1.1). Give that finished pane one later sample inside the existing three-second window, only if the first scan identified the same running omp and still has no file. This uses no directory or time-based guess for the session id.
 
 Why: Claude's own interface only changes its title, and Antigravity's sends nothing (S15). Without this, a tab closed with ⌘W would keep no chat unless the graph had opened since the first message.
 
@@ -118,11 +119,9 @@ Alternatives:
 
 ### D5. Snapshot rows of chats in their own interface
 
-`snapshot` stores a terminal row as "agent" when the pane runs a command (`info.running`) and the store holds a "claude" or "agy" chat for that pane. The Resume button keeps its rule that only agent rows count (`resume-closed-agents` D4). So a saved chat under a reused pane id still can't turn an idle shell into a chat.
+The process scan associates a confirmed agent and file with the **current command**, not just its pane number. A new command, a finished command or a closed pane invalidates that association. A scan returning after the command ended must not reattach its result to the next command.
 
-`TabFacts` rows gain `running: boolean`, which `Model.read` already has in `info`.
-
-A capture now saves first and refreshes the snapshots after it. So a tab closed right after its chat is first saved still has an agent row. Live rows stay "shell", with the running command in their details.
+`Model.read` passes this window-local observation with the live row. A running terminal becomes an agent in a snapshot only if its observed file matches its saved entry. Thus `sleep` after a Claude chat cannot inherit that chat. Live Claude and agy terminals can show their name without claiming Tern reports an agent state. With no match they remain shells. Nothing is added to the stored format.
 
 ### D6. Resume
 
@@ -140,25 +139,21 @@ The toast for a tab with nothing to resume reads "That tab has no chat left to r
 
 ### D7. Names and marks
 
-`agent_name(a, program, saved)`:
-- the command's base name, if there is one;
-- else "claude", "codex" or "agy" when the pane's program has that base name (S16);
-- else the pane's saved chat's agent;
-- else "omp".
+For a live block, use its explicit agent command or known program when available. A launch through `tern acp`, a shell function or a wrapper may not give the program's name; the agent process observed for the current command then names the row, even before a transcript is available. A saved agent name is a fallback. An explicit unrelated block command keeps its name, and the established fallback for an unlabelled omp block remains "omp".
 
-`Details.attention` drops its omp-only check: every agent block marks by its state and the pane's `alert` (S17). Chats in an agent's own interface are terminals, with no agent block, so they never mark.
+`Details.attention` uses Tern's state and unseen-reply `alert` for every live agent block (S17), independent of its display name. A native terminal, a snapshot or a missing agent block never contributes a mark.
 
 ### D8. Wording
 
 - `lib/view.luau`:
   - the Resume tooltip: "Reopen this tab's chats in a new tab";
-  - the close tooltips: "…; chats come back with Resume.";
+  - the close tooltips: "…; saved chats come back with Resume.";
   - the `.ob-tclose` question's tooltip.
 - README:
   - "See what needs you": agent chats;
-  - "Jump anywhere": an agent's last message and reply;
+  - "Jump anywhere": the last reply for a chat block; the last user message as well for omp;
   - "Finish cleanly": Resume brings back omp, Claude Code, Codex and Antigravity chats. Claude and Codex come back as Tern's chat or in their own interface, as Tern's settings say; Antigravity in its own interface;
-  - a short limits note: Codex's own interface, chats that never had a message, and several chats in one pane get no Resume.
+  - a limits note: native Codex is not captured, the file must exist, and several candidate sessions never replace a confirmed entry.
 
 ### D9. Release
 
@@ -170,13 +165,13 @@ The toast for a tab with nothing to resume reads "That tab has no chat left to r
 - **`ps -E` splits values at spaces.** A `HOME` or `CLAUDE_CONFIG_DIR` with spaces gives a wrong folder, so nothing is saved.
 - **A Codex chat that never had a message** may have a rollout file already [untested]. Resuming it would open an empty chat, or Codex reports that the thread had no messages (codex-acp's own error text).
 - **An idle Antigravity chat after `/new` or `/clear`,** in either mode, holds two `brain` folders and no conversation file (S12; task 1.1, pane 162). Nothing new is saved until it writes again, so Resume brings back the conversation saved before. The one saved at its next message is the new one (task 1.1).
-- **omp holds its file open about 2 s after a turn ends** (task 1.1). This changed outside this plugin, and affects 0.32.0 the same way: the capture 0.5 s after the turn finds no file, and the chat is saved at the next capture.
+- **omp's first transcript may not yet be open when the first scan runs** (task 1.1). D4 checks again once for that finished command. If the file still cannot be identified, leave it unsaved rather than matching by folder.
 - **A command that runs `claude` or `agy` through an alias or script** isn't seen by D4's word check. It is saved at the next turn of another chat, plugin start or graph open; a tab closed before any of these keeps nothing.
 - **The 30-second save** costs one process run, about 150–200 ms off the UI thread (`resume-omp-chats` source record), every 30 s while a chat runs in its own interface.
 - **The live check of Claude** may meet the account error (S20). The transcript is still written (S6), so Resume shows the earlier message.
 - **Harness checks reach outside `/tmp`:**
-  - they use the user's model accounts, with one short message per chat;
-  - Claude's test transcripts under `~/.claude/projects/-private-tmp-tobj-*` are deleted after;
+  - the integration checks use the user's model accounts for short turns;
+  - only identified test transcripts created by the checks are removed from the Claude and omp test projects;
   - Codex's and Antigravity's test chats stay in their own history, since deleting their files would leave their indexes pointing at missing files;
   - every agent check starts its shell with `HOME=/Users/macintosh` and `XDG_*` unset (S19). After the checks, `readlink ~/.local/bin/claude` must still point into `~/.local/share/claude/versions/`.
 - **Remote sessions** stay untested, as for omp: panes in sessions on other hosts are skipped.

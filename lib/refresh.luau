@@ -8,6 +8,7 @@
 
 local Surface = require("./surface")
 local Details = require("./details")
+local Model = require("./model")
 
 local M = {}
 
@@ -26,9 +27,9 @@ local function signature(cx: WindowCx): string
 	for _, s in cx.session:sessions() do
 		table.insert(parts, string.format("s%d%s:%s", s.id, if s.current then "*" else "", table.concat(s.tabs, ",")))
 	end
-	-- An unseen alert counts too (attention-marks-and-titles D3): it comes and goes with no state change.
+	-- An unseen reply or an asynchronously identified chat can change the row without a title change.
 	for _, p in cx.session:panes() do
-		table.insert(parts, string.format("p%d@%s%s=%s%s", p.pane, tostring(p.tab), if p.parked then "^" else "", p.title, if p.alert then "!" else ""))
+		table.insert(parts, string.format("p%d@%s%s=%s%s:%s", p.pane, tostring(p.tab), if p.parked then "^" else "", p.title, if p.alert then "!" else "", Model.observed_agent(p.pane) or ""))
 	end
 	for _, t in cx.session:tabs() do
 		if t.name ~= nil then

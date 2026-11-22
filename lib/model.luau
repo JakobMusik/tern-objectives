@@ -4,7 +4,33 @@
 
 local M = {}
 
-export type Row = { pane: number, title: string, kind: string, info: PaneInfo? }
+-- An observation belongs to one shell command, not every future use of its pane id.
+export type ChatRun = { agent: string?, file: string?, ended: boolean }
+local runs: { [number]: ChatRun } = {}
+
+function M.chat_run(pane: number): ChatRun
+	local run = runs[pane]
+	if run == nil then
+		run = { ended = false }
+		runs[pane] = run
+	end
+	return run
+end
+
+function M.observed_agent(pane: number): string?
+	local run = runs[pane]
+	return if run ~= nil then run.agent else nil
+end
+
+function M.forget_run(pane: number)
+	local run = runs[pane]
+	if run ~= nil then
+		run.ended = true -- a process scan for this command may still be in flight
+		runs[pane] = nil
+	end
+end
+
+export type Row = { pane: number, title: string, kind: string, info: PaneInfo?, chat: ChatRun? }
 
 export type Tab = {
 	id: number,
@@ -87,7 +113,7 @@ function M.read(cx: WindowCx, skip: number?): Window
 					return
 				end
 				listed[id] = true
-				table.insert(rows, { pane = id, title = p.title, kind = p.kind or "terminal", info = p })
+				table.insert(rows, { pane = id, title = p.title, kind = p.kind or "terminal", info = p, chat = runs[id] })
 			end
 			for _, id in order do
 				add(id)

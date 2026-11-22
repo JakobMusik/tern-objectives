@@ -28,7 +28,7 @@ local STATE_TEXT: { [string]: string } = {
 
 -- Agents of the current render, by pane.
 local agents: { [number]: AgentBlock } = {}
--- Saved omp chats by pane id, which name closed tabs' chats.
+-- Saved chat entries name rows in closed tabs and blocks without a program name.
 local saved: { [string]: Store.AgentSession } = {}
 
 -- Transcript cache: the user's last message per agent pane, valid while `key` matches.
@@ -81,34 +81,35 @@ local function home_short(path: string): string
 	return path
 end
 
--- An agent's name (design R4). An agent block's command names its program. A chat typed at a shell
--- prompt has no command (`tern.json.null`, SDK "Agent cx"): it is Claude when its pane's program is
--- claude (resume-closed-agents, design D1), else omp. Beyond that the program is no guide: it is the
--- foreground process, which can be zsh while Tern still lists omp in the pane (task 8.1).
-local function agent_name(a: AgentBlock?, program: string?): string
-	if a == nil then
-		return "agent"
+local function agent_name(a: AgentBlock, row: Model.Row): string
+	local name = Agents.agent_program(a.command) or (if row.info ~= nil then Agents.agent_program(row.info.program) else nil)
+	if name ~= nil then
+		return name
 	end
-	if Agents.is_claude(a, program) then
-		return "claude"
+	-- A shell function or `tern acp` need not name the agent in its first word.
+	if row.chat ~= nil and row.chat.agent ~= nil then
+		return row.chat.agent
 	end
-	return Agents.base_name(a.command) or "omp"
+	local entry = saved[tostring(row.pane)]
+	return if entry ~= nil then entry.agent else Agents.base_name(a.command) or "omp"
 end
 
 -- The type a pane row starts with, and the class that colours it: an agent's name with its state,
 -- "shell", "note", "file", or the pane's kind (design R4). Ghost rows have only their stored kind.
 function M.type(row: Model.Row): (string, string?)
-	local a = agents[row.pane]
 	local info = row.info
+	local a = if info ~= nil then agents[row.pane] else nil
 	-- A snapshot written before kinds were stored has none: those panes were terminals.
 	local kind = (if info ~= nil and info.kind ~= nil then info.kind else row.kind) or "terminal"
 	if a ~= nil then
-		return agent_name(a, if info ~= nil then info.program else nil) .. " · " .. (STATE_TEXT[a.state] or a.state), "ob-d-" .. a.state
+		return agent_name(a, row) .. " · " .. (STATE_TEXT[a.state] or a.state), "ob-d-" .. a.state
 	elseif kind == "agent" then
-		-- A closed tab's chat: its saved omp chat names it (resume-omp-chats, design D4).
 		local s = saved[tostring(row.pane)]
-		return if s ~= nil then s.agent else agent_name(nil, nil), nil
+		return if s ~= nil then s.agent else "agent", nil
 	elseif kind == "terminal" then
+		if info ~= nil and info.running ~= nil and row.chat ~= nil and (row.chat.agent == "claude" or row.chat.agent == "agy") then
+			return row.chat.agent, nil
+		end
 		return "shell", nil
 	elseif kind == "file" then
 		local path = if info ~= nil then info.path else nil
@@ -117,19 +118,16 @@ function M.type(row: Model.Row): (string, string?)
 	return kind, nil
 end
 
--- An omp row's call on the user (attention-marks-and-titles D3): "wait" while its chat waits for
--- input, "replied" while it sits idle with a reply the user hasn't seen (Tern's unseen alert, cleared
--- once that pane gets focus, not by focusing another pane of its tab), "working" while it works on a
--- turn (working-mark D1), else nil. Other agents never call.
+-- Only live agent blocks report these states. Native terminals and saved snapshots never mark a node.
 function M.attention(row: Model.Row): string?
 	local a = agents[row.pane]
 	local info = row.info
-	if a == nil or agent_name(a, if info ~= nil then info.program else nil) ~= "omp" then
+	if a == nil or info == nil then
 		return nil
 	end
 	if a.state == "waiting_input" then
 		return "wait"
-	elseif a.state == "idle" and info ~= nil and info.alert == true then
+	elseif a.state == "idle" and info.alert == true then
 		return "replied"
 	elseif a.state == "working" then
 		return "working"
@@ -142,7 +140,7 @@ end
 -- get the reply line alone and no transcript read (fix-spec-drift D2).
 local function agent_lines(row: Model.Row, a: AgentBlock): { Line }
 	local out: { Line } = {}
-	local name = agent_name(a, if row.info ~= nil then row.info.program else nil)
+	local name = agent_name(a, row)
 	if name == "omp" then
 		local key = agent_key(a)
 		local entry = cache[row.pane]
@@ -158,7 +156,7 @@ local function agent_lines(row: Model.Row, a: AgentBlock): { Line }
 	end
 	if type(a.last_message) == "string" and a.last_message ~= "" then
 		-- omp ends a turn's text with a footer block ("\n·\n1.6s · 557 tok · …"): not part of the reply.
-		local reply = string.match(a.last_message, "^(.-)\n·\n[^\n]*$") or a.last_message
+		local reply = if name == "omp" then string.match(a.last_message, "^(.-)\n·\n[^\n]*$") or a.last_message else a.last_message
 		local head, tail = Text.split_end(Text.squeeze(reply, SQUEEZE), TAIL)
 		table.insert(out, { label = name .. ":", text = head, tail = tail })
 	end
