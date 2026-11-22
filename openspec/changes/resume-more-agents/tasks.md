@@ -156,7 +156,7 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
   Verify `tern plugin list` shows `objectives 0.33.0 … ready`, with the other plugins untouched.
 
   Result: the signed tag `v0.33.0` points to `340f71a` on GitHub. The live install reported `installed objectives 0.33.0 (340f71a)` and `tern plugin list` reported `window ready`. The five other plugin listings were identical before and after: `external-editor 0.1.0`, `omp-narration 0.1.0`, `open-below 0.2.0`, `reply-selection 0.1.0`, `tabnav 0.1.0`. The isolated server was stopped, its 22 identified Claude/omp test transcripts removed, and the Claude executable link verified. Codex and agy test chats were left in their agents' own histories.
-- [ ] 3.3 **(live)** With the user:
+- [x] 3.3 **(live)** With the user:
   - a linked tab with a Codex chat, as Tern's chat, that had a message: close it, then Resume. It comes back as Tern's chat, or in Codex's own interface if Codex is set to keep it;
   - the same for Claude, in either mode;
   - an Antigravity chat, opened with `agy`: close its tab, then Resume. It comes back in Antigravity's own interface;
@@ -164,6 +164,8 @@ Checks run in the headless harness at `/tmp/tobj` unless marked **(live)**.
   - a Codex chat's reply marks its objective and tab "replied".
 
   Record the result here.
+
+  Result (user, 0.33.0): "it's working", in reply to the live checks listed above. The user reported nothing more specific, so no single check is recorded on its own.
 
 ## Workflow follow-up
 
