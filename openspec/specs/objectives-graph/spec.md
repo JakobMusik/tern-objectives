@@ -520,12 +520,12 @@ A click on an objective's title SHALL open the one-line Rename field, filled wit
 - **THEN** the Rename field opens holding the whole title
 
 ### Requirement: Attention marks
-An objective node SHALL show the first mark that applies to the omp chats in the live tabs of this window that it links:
+An objective node SHALL show the first mark that applies to the agent chats in the live tabs of this window that it links:
 - **needs you:** one waits for the user's input. An amber ring, and a "needs you" chip first on its second line.
 - **replied:** one finished a reply the user hasn't seen yet. A green ring and a "replied" chip.
 - **working:** one is working. An accent-coloured "working" chip, and no ring.
 
-Other agents SHALL NOT mark it. The chip's tooltip SHALL name the tabs.
+Agents' own interfaces SHALL NOT mark it. The chip's tooltip SHALL name the tabs.
 
 #### Scenario: Question waiting
 - **WHEN** "Fix login bug" links tab "Server", and the omp chat there asks the user a question while the user is in another tab
@@ -563,8 +563,16 @@ Other agents SHALL NOT mark it. The chip's tooltip SHALL name the tabs.
 - **WHEN** the omp chat in tab "Server" waits for input, and "Write slides" doesn't link "Server"
 - **THEN** "Write slides" has no ring and no chip of any kind
 
+#### Scenario: A Codex chat marks too
+- **WHEN** "Fix login bug" links tab "Server", whose Codex chat, opened as Tern's chat, is working on a turn, and then finishes its reply while the user is in another tab
+- **THEN** "Fix login bug" first shows the "working" chip naming "Server", then the green ring and the "replied" chip
+
+#### Scenario: An agent's own interface doesn't mark
+- **WHEN** "Fix login bug" links tab "Server", whose shell runs Antigravity in its own interface, and it finishes a reply while the user is in another tab
+- **THEN** "Fix login bug" has no ring and no chip
+
 ### Requirement: Attention marks clear
-A "replied" mark SHALL go once the user has focused the omp pane that replied, as Tern's own unseen-reply marker does. Looking at its tab while another pane there has focus SHALL NOT clear it. A "needs you" mark SHALL stay until the chat stops waiting for input, even after the user has focused it. Marks SHALL show on open, done and review nodes. A selected node SHALL show its selection ring and its mark together.
+A "replied" mark SHALL go once the user has focused the chat's pane that replied, as Tern's own unseen-reply marker does. Looking at its tab while another pane there has focus SHALL NOT clear it. A "needs you" mark SHALL stay until the chat stops waiting for input, even after the user has focused it. Marks SHALL show on open, done and review nodes. A selected node SHALL show its selection ring and its mark together.
 
 #### Scenario: Focusing the pane clears a reply
 - **WHEN** "Fix login bug" shows "replied" for tab "Server", and the user focuses the omp pane there and opens the graph again
@@ -581,6 +589,10 @@ A "replied" mark SHALL go once the user has focused the omp pane that replied, a
 #### Scenario: Selected and marked
 - **WHEN** "Fix login bug" shows "needs you" and the user selects it
 - **THEN** the screenshot shows the accent selection ring and the amber ring together, and the "needs you" chip
+
+#### Scenario: Focusing a Codex pane clears its reply
+- **WHEN** "Fix login bug" shows "replied" for tab "Server", whose Codex chat replied, and the user focuses that pane and opens the graph again
+- **THEN** "Fix login bug" has no ring and no chip
 
 ### Requirement: Custom order
 Open objectives SHALL be listed in the order the user sets, which is kept with the objectives and shared by every window; sorted by priority, it applies within each priority. Priority, due date and badge clicks SHALL NOT change it. A new objective SHALL take the place set in Configure, top by default. The first open after updating to this version SHALL list the open objectives as before: by priority, P0 first, then by due date, earliest first and none last, then by created time, oldest first.
@@ -1011,7 +1023,7 @@ The search SHALL apply together with the scope and tag filters, and in review mo
 - **THEN** the prompt shows "fF", and no field or toast appears
 
 ### Requirement: Tab attention marks
-A live tab node SHALL show the first mark that applies to the omp chats in its panes, as an objective node does: an amber ring and a "needs you" chip, a green ring and a "replied" chip, or a "working" chip and no ring. The chip SHALL come first on the node's second line, and its tooltip SHALL name the panes. Other agents SHALL NOT mark it. Marks SHALL clear as on objective nodes. Closed and other-window tabs SHALL show none. The origin tab SHALL show its origin ring and its mark together.
+A live tab node SHALL show the first mark that applies to its panes' agent chats, as an objective node does: an amber ring and a "needs you" chip, a green ring and a "replied" chip, or a "working" chip and no ring. The chip SHALL come first on the node's second line, and its tooltip SHALL name the panes. Agents' own interfaces SHALL NOT mark it. Marks SHALL clear as on objective nodes. Closed and other-window tabs SHALL show none. The origin tab SHALL show its origin ring and its mark together.
 
 #### Scenario: Question waiting
 - **WHEN** the omp chat in tab "Server" asks the user a question while the user is in another tab
@@ -1048,6 +1060,10 @@ A live tab node SHALL show the first mark that applies to the omp chats in its p
 #### Scenario: Closed tab
 - **WHEN** a linked tab whose omp chat waited for input is closed
 - **THEN** its node under "Closed tabs" shows no ring and no chip
+
+#### Scenario: A Codex chat's reply
+- **WHEN** the Codex chat in tab "Release notes", opened as Tern's chat, finishes a reply while the user is in another tab
+- **THEN** the "Release notes" node shows a green ring and a "replied" chip, whose tooltip names the Codex pane's title
 
 ### Requirement: Sort button
 The graph's header SHALL show a sort button after the search control, holding a sort icon and the current method's name: "Your order", "Priority" or "Newest". A click SHALL switch to the next method, Your order, Priority, Newest, then Your order again, and sort the open objectives at once. Its tooltip SHALL name the current method and the next. The click SHALL keep the selection and store the method as the settings page's "Sort by" does. Dragging across it SHALL NOT select its text.
